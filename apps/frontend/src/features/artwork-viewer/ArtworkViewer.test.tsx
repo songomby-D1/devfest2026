@@ -12,7 +12,7 @@ const ALT = 'Sculpture en bois';
 
 function renderViewer(overrides: Partial<ArtworkViewerProps> = {}) {
   const loadModelViewer = vi.fn(() => Promise.resolve());
-  render(
+  const view = render(
     <ArtworkViewer
       poster={POSTER}
       model1k={MODEL_1K}
@@ -24,7 +24,7 @@ function renderViewer(overrides: Partial<ArtworkViewerProps> = {}) {
       {...overrides}
     />,
   );
-  return { loadModelViewer, user: userEvent.setup() };
+  return { loadModelViewer, rerender: view.rerender, user: userEvent.setup() };
 }
 
 function modelViewer(): ModelViewerHandle {
@@ -186,6 +186,30 @@ describe('ArtworkViewer', () => {
       'Chargement du modèle 3D…',
     );
     expect(loadModelViewer).toHaveBeenCalledTimes(2);
+  });
+
+  it('resets the error state when the item changes', () => {
+    const { rerender } = renderViewer();
+    dispatchModelViewerEvent('error', 'loadfailure');
+
+    rerender(
+      <ArtworkViewer
+        poster="/other/poster.webp"
+        model1k="/other/model-1k.glb"
+        alt={ALT}
+        bottomScanned={false}
+        detectWebGL={() => true}
+        loadModelViewer={() => Promise.resolve()}
+      />,
+    );
+
+    expect(modelViewer()).toHaveAttribute('src', '/other/model-1k.glb');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Chargement du modèle 3D…',
+    );
+    expect(
+      screen.queryByRole('button', { name: 'Haute définition (HD)' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows the error state when model-viewer itself cannot be loaded', async () => {

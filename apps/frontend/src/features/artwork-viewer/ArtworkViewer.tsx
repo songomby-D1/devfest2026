@@ -20,7 +20,7 @@ export interface ArtworkViewerProps {
 const WEBGL_UNAVAILABLE_MESSAGE =
   'La 3D n’est pas disponible sur cet appareil. Voici une photo de l’œuvre.';
 
-export function ArtworkViewer({
+function ArtworkViewerContent({
   poster,
   model1k,
   model2k,
@@ -133,5 +133,15 @@ export function ArtworkViewer({
         </div>
       )}
     </section>
+  );
+}
+
+// Remounting on a new item resets the load, quality and error state of the previous one.
+export function ArtworkViewer(props: ArtworkViewerProps) {
+  return (
+    <ArtworkViewerContent
+      key={`${props.model1k}|${props.model2k ?? ''}`}
+      {...props}
+    />
   );
 }

@@ -4,7 +4,9 @@ export function isWebGLAvailable(
 ): boolean {
   try {
     const canvas = createCanvas();
-    return Boolean(canvas.getContext('webgl2') ?? canvas.getContext('webgl'));
+    const context = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+    context?.getExtension('WEBGL_lose_context')?.loseContext();
+    return context !== null;
   } catch {
     return false;
   }
