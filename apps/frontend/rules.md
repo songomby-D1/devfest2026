@@ -1,6 +1,6 @@
 # Frontend rules
 
-These rules apply to everyone working in `apps/frontend/`, people and agents alike. They extend the repository rules and never relax them: [AGENTS.md](../../AGENTS.md), [CONTRIBUTING.md](../../CONTRIBUTING.md), the [shared code policy](../../docs/development/code-policy.md) and the [CI guide](../../docs/development/ci.md). If a rule here conflicts with one of those, the repository rule wins and this file gets fixed.
+These rules apply to everyone working in `apps/frontend/`, people and agents alike. The [frontend README](README.md) explains how the app is built; this page says what every change must respect. They extend the repository rules and never relax them: [AGENTS.md](../../AGENTS.md), [CONTRIBUTING.md](../../CONTRIBUTING.md), the [shared code policy](../../docs/development/code-policy.md) and the [CI guide](../../docs/development/ci.md). If a rule here conflicts with one of those, the repository rule wins and this file gets fixed.
 
 Tags follow the repository convention. `[CONFIRMED]` rules come from approved documents or decisions. `[RECOMMENDED]` rules are proposed for this app and await confirmation by the frontend owner.
 
