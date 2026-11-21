@@ -2,12 +2,21 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: NFT lot L0 (salandri-42)
+
+- [IMPLEMENTED, IN REVIEW] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), on `feature/dev-nft`. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
+- Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
+- [NOT IMPLEMENTED] When endy-rkt-19 lands the root workspace and lockfile, delete `apps/backend/nft/package-lock.json` and `.npmrc`, run `npm install` at the root and switch the Dockerfile to the root `npm ci`. Align the Docker image and engines to the exact Node patch from endy-rkt-18.
+- [DECISION REQUIRED: salandri-42] The [decision register](../decisions/project-decisions.md) resolves gaps E3 to E6 of spec §4.0.4 against the spec's assumptions: synchronous HTTP with gateway polling instead of a shared Redis queue (D16), an NFT database with Prisma (D04), SeaweedFS media instead of a shared volume (D05) and a mint started by an eligible user (D01, D13). Reconcile spec §3 and lots L2, L3, L6 and L7 under NFT-01 and endy-rkt-06 before L2. Runtime validators stay in the NFT service rather than a shared package (D14). Prisma is not set up yet. Lot L1, the smart contract, is unaffected.
+- [HUMAN] salandri-42 creates a dedicated testnet wallet, gets Fuji test AVAX, creates a Pinata account and JWT, and fills `apps/backend/nft/.env` from `.env.example`.
+- Next: lot L1 once salandri-42 validates L0.
+
 ## NestJS lint compatibility
 
 - On `fix/nestjs-eslint-rules`, [the ESLint override](../../eslint.config.mjs) allows decorated empty classes and disables class-instance assignment linting for backend TypeScript. Undecorated empty classes still fail. Frontend TypeScript and backend JavaScript retain their existing rules.
 - Temporary NestJS fixtures passed in all five backend paths using ESLint 9.39.5 and TypeScript 6.0.3. The root workspace checks still depend on the root tooling rollout.
 
-## Latest session: CONTENT-05 status (papangoo)
+## Earlier session: CONTENT-05 status (papangoo)
 
 - [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) and CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)) move to In progress. CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) stays Groomed and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)) stays Backlog.
 - [CONFIRMED] D18 is confirmed in the [decision register](../decisions/project-decisions.md#d18-editorial-policy-and-demo-content), so these rows no longer wait on it. [DECISION REQUIRED: endy-rkt] Explicit clearance is still required before cultural media is sent to an external AI API. papangoo's position is recorded on [#57](https://github.com/songomby-D1/devfest2026/issues/57): the sample media may be sent, papangoo holds the API keys, and one vision API is enough.
