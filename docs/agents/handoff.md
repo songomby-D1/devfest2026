@@ -12,7 +12,7 @@
 - [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) is groomed as an exploration only, split into CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)), CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)). The sub-issues are linked to the Content & Verification umbrella ([#18](https://github.com/songomby-D1/devfest2026/issues/18)). CONTENT-08 ([#87](https://github.com/songomby-D1/devfest2026/issues/87)) records content moderation as a post-MVP idea.
 - [CONFIRMED] The signals are advisory. They never grant or remove a verified status ([MVP section B](../product/MVP.md#b-content-and-verification)). The two signals explored are AI-generated detection (05a) and the coherence of a description with its media, with angle pictures for 3D models (05b). Findings go in `docs/architecture/ai-assisted-analysis-spike.md`, which does not exist yet.
 - [NOT IMPLEMENTED] No exploration has run in this repository. A local NestJS prototype for 05a exists outside the repository. Sample media stays outside Git.
-- [DECISION REQUIRED: endy-rkt] D18 still blocks the start: does an AI exploration fit the deadline, and may cultural media be sent to an external AI API. The questions are listed in [#57](https://github.com/songomby-D1/devfest2026/issues/57). CONTENT-05 moves to In progress when D18 is decided.
+- [DECISION REQUIRED: endy-rkt] Confirm the scope and timebox of AI exploration and obtain explicit clearance before sending cultural media to any external AI API. The questions are listed in [#57](https://github.com/songomby-D1/devfest2026/issues/57). CONTENT-05 remains subject to those approvals.
 
 ## Earlier session: D12 proposal (shidoAdr)
 
@@ -33,22 +33,22 @@
 
 - [CREATED, NOT EXECUTED] Added [CI](../../.github/workflows/ci.yml), [Dependabot](../../.github/dependabot.yml) and the [CI guide](../development/ci.md). Contributor and agent docs point to the guide and the required `ci-ok` status.
 - PyYAML 6.0.3 parsed both YAML files. `actionlint` was unavailable. No hosted jobs, scans, builds or tests ran.
-- [NOT IMPLEMENTED] Root npm manifests, installs, app projects and workspace scripts are still pending. Without the root manifest, CI warns and skips JS jobs. Local quality tooling and CI rollout are tracked in endy-rkt-13–endy-rkt-24.
+- [NOT IMPLEMENTED] Root npm manifests, installs, app projects and workspace scripts are still pending in this decision-only baseline. Without the root manifest, CI warns and skips JS jobs. Local quality tooling and CI rollout are tracked in endy-rkt-13–endy-rkt-24.
 - The [shared quality configs](../development/code-policy.md) are unchanged. CI explicitly selects `.prettierrc.json`. GitHub settings remain a [manual checklist for endy-rkt](../development/ci.md#repository-settings-checklist).
 
 - endy-rkt defines the MVP and system overview. Each app and service owner writes their own tests, Dockerfile and root Compose entry when implementation starts. [Task ownership](../team/responsibilities.md#task-ownership)
-- [CONFIRMED] Stateful services use Prisma with one shared PostgreSQL instance per environment. D04 still covers isolation within that instance. [Data ownership](../architecture/data-storage.md#postgresql-isolation)
+- [CONFIRMED] Stateful services use Prisma with one shared PostgreSQL instance per environment. D04 approves separate databases and scoped migration and runtime roles. [Data ownership](../architecture/data-storage.md#postgresql-isolation)
 - The [README](../../README.md) presents the LOVA museum vision in English and retains its French subtitle. The [language rule](../development/code-policy.md#code-conventions) requires English for repository documentation and variable names.
 - [CONFIRMED] endy-rkt uses Codex only. The other team members use Claude. [Team responsibilities](../team/responsibilities.md)
+- [CONFIRMED] App and service owners take work from initialization through integration, including their API, tests, service-local dependencies, container setup and any service-specific PostgreSQL and Prisma work.
+- [CONFIRMED] D02 is resolved. endy-rkt owns the gateway and [shared PostgreSQL and SeaweedFS setup](../team/responsibilities.md#shared-local-infrastructure), shidoAdr owns Auth and LiDAR, and Sesedra owns frontend and design. Service owners maintain their own Prisma schemas and migrations. MVP planning proceeds without a deadline.
 
-## Open decisions for endy-rkt
+## Decision handoff
 
-- [DECISION REQUIRED: endy-rkt] D14 shared contracts, import aliases and Docker build context. D15 runtime version management. D17 tooling rollout, audit policy and whether to defer hooks.
-- [DECISION REQUIRED: endy-rkt] D01 deadline and demo scope. D02 Auth, gateway, frontend and shared local infrastructure owners. D04 database isolation. D05 object storage and delivery. D06 gateway and Nginx. D07 identity propagation and logout.
-- [DECISION REQUIRED: salandri-42] D08–D11 NFT implementation choices. [CONFIRMED] D12: option A, ADR 0001 accepted.
-- [DECISION REQUIRED: endy-rkt] D13 role model. D16 system-wide async processing. D18 review and media policy. DEMO-01 demo host.
-- [DECISION REQUIRED: endy-rkt] CI settings: admin bypass, approval count, strict up-to-date policy, merge method, CodeQL, CODEOWNERS and push scan scope. D18 also covers cultural-media licensing and consent for public Git history. See the [CI guide](../development/ci.md).
+- D01 is committed. D04, D06, D07, D13, D14, D15, D16, D17, D18, the demo host plan and GitHub rollout defaults are recorded. D05 is conditional on the SeaweedFS spike. [Decision register](../decisions/project-decisions.md)
+- Sesedra can start UX-01. shidoAdr's D12 choice is accepted in [ADR 0001](../decisions/0001-d12-3d-demo-experience.md). The preparation procedure and feasibility evidence are on develop. Real-device and service integration checks remain open. papangoo can propose rights-cleared fixtures and reviewer coverage.
+- Finish endy-rkt-18 and endy-rkt-19 for root tooling. Run endy-rkt-03 for storage evidence. Confirm service and authorization contracts in endy-rkt-05 and endy-rkt-08. Record demo and hosted CI evidence before sign-off or protection rollout.
+- The [NFT service proposal](../../apps/backend/nft/nft_context.md) gives salandri-42 a starting point for NFT-01. Resolve its divergence from the approved mint trigger, service data ownership and HTTP baseline before integration.
+- CODEOWNERS awaits reviewer coverage. The [backlog](../product/task.md) tracks owner handoffs and remaining verification.
 
-## Next approved work
-
-Take work from the relevant task owner. Use the [session protocol](../../AGENTS.md#session-protocol) and [session log](log.md) to resume from repository evidence.
+Take implementation work from the relevant task owner.
