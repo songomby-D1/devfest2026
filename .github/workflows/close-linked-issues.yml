@@ -34,10 +34,18 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           set -euo pipefail
+          # Only prose lines count: a closing keyword must start the line (after
+          # optional whitespace or a Markdown list marker). Fenced blocks, inline
+          # code, HTML comments, blockquotes and example/sample/test/documentation
+          # lines are dropped first, so sample text cannot close an issue.
           # Same keywords as GitHub: close(s|d), fix(es|ed), resolve(s|d), optional colon,
           # same-repository references only (#123).
           numbers="$(printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" \
-            | grep -oiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?):?[[:space:]]+#[0-9]+\b' \
+            | awk '/^[[:space:]]*(```|~~~)/ { fenced = !fenced; next } !fenced' \
+            | sed -E 's/`[^`]*`//g; s/`.*$//; s/<!--.*-->//g' \
+            | grep -viE '^[[:space:]]*>' \
+            | grep -viE '\b(example|sample|test|tests|testing|fixture|docs?|documentation|e\.g\.|i\.e\.|for instance|such as)\b' \
+            | grep -oiE '^[[:space:]]*(([-*+]|[0-9]+[.)])[[:space:]]*)?(close[sd]?|fix(e[sd])?|resolve[sd]?):?[[:space:]]+#[0-9]+\b' \
             | grep -oE '[0-9]+$' | sort -un || true)"
 
           if [[ -z "$numbers" ]]; then
