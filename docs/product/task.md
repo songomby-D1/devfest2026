@@ -133,7 +133,7 @@ All Auth items await D02.
 | 3D-07 | Initialize LiDAR with Prisma, write its initial tests and Dockerfile, and register it in root Compose. | P0 | endy-rkt-07, INFRA-01 | Backlog |
 | 3D-01 | Investigate LiDAR and viewing feasibility. | P0 | endy-rkt-01 | Backlog |
 | 3D-02 | Choose the 3D delivery approach within the agreed MVP for D12. | P0 | 3D-01 | Backlog |
-| 3D-03 | Document the scanning and asset preparation workflow. D12: option A chosen by shidoAdr, ADR 0001 pending endy-rkt approval | P1 | 3D-02 | Backlog |
+| 3D-03 | Document the scanning and asset preparation workflow. D12: option A, ADR 0001 accepted | P1 | 3D-02 | Backlog |
 | 3D-04 | Process, store and associate the demo 3D asset. [DECISION REQUIRED: endy-rkt] D05 | P0 | 3D-03, 3D-07, CONTENT-02 | Backlog |
 | 3D-05 | Provide the frontend 3D display and fallback. | P1 | 3D-04, UX-02, FE-01 | Backlog |
 | 3D-06 | Defer automated 3D reconstruction. | P2 | | Backlog |

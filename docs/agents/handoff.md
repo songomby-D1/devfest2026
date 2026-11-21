@@ -2,10 +2,15 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: D12 proposal (shidoAdr)
+## Latest session: 3D asset procedure (shidoAdr)
+
+- [CONFIRMED] 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)): drafted the [3D asset procedure](../architecture/3d-asset-procedure.md) for D12 option A, with `prepare.sh` and `poster.mjs`. The USDZ is withheld until 3D-04a strips its device metadata and checks its references. The documented commands reproduced the reference run byte for byte from a clean directory.
+- [NOT IMPLEMENTED] Another team member must follow the procedure alone, and shidoAdr must confirm the Reality Composer menu steps.
+
+## Earlier session: D12 proposal (shidoAdr)
 
 - [CONFIRMED] 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)): proposed [ADR 0001](../decisions/0001-d12-3d-demo-experience.md) for D12, with options A to E. The recommendation is offline-prepared GLB at 1K by default and 2K on demand, a poster, a still-image fallback and optional AR.
-- [CONFIRMED] shidoAdr chose option A for D12. [DECISION REQUIRED: endy-rkt] Approve ADR 0001; it stays Proposed until then. 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)) waits on that decision through endy-rkt-06.
+- [CONFIRMED] shidoAdr chose option A for D12, and endy-rkt approved ADR 0001 in [PR #83](https://github.com/songomby-D1/devfest2026/pull/83).
 
 ## Earlier session: 3D real scan (shidoAdr)
 
@@ -33,7 +38,7 @@
 
 - [DECISION REQUIRED: endy-rkt] D14 shared contracts, import aliases and Docker build context. D15 runtime version management. D17 tooling rollout, audit policy and whether to defer hooks.
 - [DECISION REQUIRED: endy-rkt] D01 deadline and demo scope. D02 Auth, gateway, frontend and shared local infrastructure owners. D04 database isolation. D05 object storage and delivery. D06 gateway and Nginx. D07 identity propagation and logout.
-- [DECISION REQUIRED: salandri-42] D08–D11 NFT implementation choices. [CONFIRMED] shidoAdr chose option A for D12 (ADR 0001, pending endy-rkt approval).
+- [DECISION REQUIRED: salandri-42] D08–D11 NFT implementation choices. [CONFIRMED] D12: option A, ADR 0001 accepted.
 - [DECISION REQUIRED: endy-rkt] D13 role model. D16 system-wide async processing. D18 review and media policy. DEMO-01 demo host.
 - [DECISION REQUIRED: endy-rkt] CI settings: admin bypass, approval count, strict up-to-date policy, merge method, CodeQL, CODEOWNERS and push scan scope. D18 also covers cultural-media licensing and consent for public Git history. See the [CI guide](../development/ci.md).
 
