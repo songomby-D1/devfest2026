@@ -4,13 +4,13 @@ This report records the 3D feasibility spike for backlog item 3D-01, groomed as 
 
 - **Owner:** shidoAdr
 - **Date:** 2026-11-21. Web sources were consulted on that date.
-- **Status:** [CONFIRMED] The conversion and viewing pipeline ran on Apple's photogrammetry sample. [NOT IMPLEMENTED] Capture on a device remains unverified until 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)).
+- **Status:** [CONFIRMED] The conversion and viewing pipeline ran on Apple's photogrammetry sample. [CONFIRMED] 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)) ran a real Reality Composer scan through the same pipeline ([real scan](#real-scan-3d-01b)). [NOT IMPLEMENTED] Display on demo devices moved to 3D-05b ([#15](https://github.com/songomby-D1/devfest2026/issues/15)).
 
 ## Summary
 
 [RECOMMENDED] The intended pipeline uses free tools:
 
-1. Capture and reconstruct on an iPhone Pro with Apple Object Capture, through Reality Composer, which exports `.usdz`. This step is a hypothesis for 3D-01b to verify. If Reality Composer falls short, the fallback is a custom iOS app with Object Capture.
+1. Capture and reconstruct on an iPhone Pro through Reality Composer, which exports `.usdz`. A real scan in 3D-01b produced a usable file. If Reality Composer falls short, the fallback is a custom iOS app with Object Capture.
 2. Convert USDZ to binary glTF (GLB) with the three.js `USDLoader` and `GLTFExporter`.
 3. Optimize with glTF-Transform (Draco geometry, WebP textures, 1K and 2K variants).
 4. Display with `<model-viewer>`, including orbit controls and preset views. AR Quick Look on iOS is an option that the spike did not test.
@@ -22,13 +22,13 @@ This report records the 3D feasibility spike for backlog item 3D-01, groomed as 
 - Side-by-side screenshots of the 2K variant showed no visible difference from the unoptimized model.
 - Converting and producing both variants took 12.4 s on the spike laptop.
 
-[RECOMMENDED] Prepare 3D assets offline for the MVP, as D12 and D16 recommend. Capture and on-device reconstruction were not timed (unverified, measured in 3D-01b). The conversion takes seconds. Live server-side conversion would add work and cross-team dependencies without shortening what an audience waits for. It remains a later option in 3D-06 ([#16](https://github.com/songomby-D1/devfest2026/issues/16)).
+[RECOMMENDED] Prepare 3D assets offline for the MVP, as D12 and D16 recommend. The real scan in 3D-01b took about 1 min 30 s on the iPhone, as reported by shidoAdr, and the conversion takes seconds. Live server-side conversion would add work and cross-team dependencies without shortening what an audience waits for. It remains a later option in 3D-06 ([#16](https://github.com/songomby-D1/devfest2026/issues/16)).
 
 ## Capture options
 
 | Option                                | Reconstruction runs on | Cost                                                                              | Platforms             | Assessment                                                                                                                                        |
 | ------------------------------------- | ---------------------- | --------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Reality Composer (Apple app)          | iPhone                 | Free                                                                              | iPhone Pro with LiDAR | No app to build. Object Capture support rests on a developer forum answer and is unverified until 3D-01b.                                         |
+| Reality Composer (Apple app)          | iPhone                 | Free                                                                              | iPhone Pro with LiDAR | No app to build. 3D-01b confirmed the `.usdz` export. Object Capture as the engine rests on a developer forum answer and is unverified.           |
 | Custom iOS app with Object Capture    | iPhone                 | Free with an Apple ID                                                             | iPhone Pro with LiDAR | Needs Swift, a Mac with Xcode and testing on a device. Not needed if Reality Composer is enough.                                                  |
 | Mac with `PhotogrammetrySession`      | Mac                    | Free                                                                              | Photos from any phone | Fallback for phones without LiDAR. Mac hardware requirements come from forum reports and are unverified.                                          |
 | KIRI Engine API                       | Vendor cloud           | Vendor page: 20 free credits, then $1 per call with a $500 minimum recharge       | Any phone             | Too limited for repeated tests.                                                                                                                   |
@@ -111,13 +111,41 @@ Compressed downloads expand in GPU memory. `gltf-transform inspect` reports a `g
 
 These figures are estimates and were not measured on a device. The three textures that were already 1024 × 1024 in the source keep that size in both variants. KTX2 textures would reduce GPU memory, but the spike did not test them because the `toktx` encoder was not installed.
 
+## Real scan (3D-01b)
+
+[CONFIRMED] shidoAdr scanned a phone charger owned by the team with Reality Composer and exported `chargeur.usdz`. The iPhone model was not recorded. The ticket planned an iPhone Pro with LiDAR. The file is a test object, not demo content, and is not committed. It ran through the appendix scripts unchanged.
+
+| Item                                  | Value                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Capture to export on the iPhone       | About 1 min 30 s, reported by shidoAdr. The iPhone model and iOS version were not recorded. |
+| USDZ                                  | 4,923,295 bytes: one USDC mesh of 167,046 bytes and three 2048 × 2048 PNG textures          |
+| Textures                              | Base color, normal and ambient occlusion                                                    |
+| Raw GLB                               | 6,815,224 bytes, 1 mesh, 6,328 triangles, converted in 0.96 s                               |
+| Optimized, Draco and WebP, 2K         | **147,960 bytes**, 6,294 triangles, optimized in 2.1 s                                      |
+| Optimized, Draco and WebP, 1K         | **73,760 bytes**                                                                            |
+| `USDCParser` warning on array type 10 | Not emitted                                                                                 |
+
+Observations:
+
+- Six preset views and a close-up showed no visible difference between the raw, 2K and 1K variants. The comparison was visual only and used no diff tool. Base color and normal textures render in every view, with no missing or black texture apart from the bottom face described below.
+- `optimize` dropped the ambient occlusion texture. Rerunning with `--prune-solid-textures false` kept it and produced 155,664 bytes, The occlusion texture is uniform white, which means no occlusion, so `optimize` removed it. The rendering is unchanged.
+- The bottom face is dark and smooth because the object stood on a surface during capture. [RECOMMENDED] For an artwork that can be handled, capture a second pass with the object turned over. Otherwise, frame the default views so the bottom stays hidden by limiting the camera orbit.
+- The archive holds only the USDC file and its three textures. The USDC was not checked for external asset references, because its token table is compressed and the spike has no USD tool. [RECOMMENDED] Run that check before storage in 3D-04.
+- The real scan is about twenty times lighter than Apple's sample after optimization. A 2K variant of this size makes the network cost negligible compared with `model-viewer.min.js`.
+
+Constraints and fallback:
+
+- The scanning iPhone was not recorded. Support on other devices remains unverified ([device and platform constraints](#capture-options)).
+- [RECOMMENDED] Keep the prepared GLB and a poster image as the demo fallback if the live scan fails.
+- [RECOMMENDED] If Reality Composer becomes unavailable, use a custom iOS app with Object Capture, or photos processed with `PhotogrammetrySession` on a Mac ([capture options](#capture-options)).
+
 ## Issues found
 
 | Issue                                                    | Cause                                                                                                                                                                                                                                                         | Resolution                                                                                                                   |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Export failed with `getImageData: The source width is 0` | `USDComposer` creates each texture without an image. It sets `texture.image` inside `image.onload`, after `loadAsync` resolves (`three/examples/jsm/loaders/usd/USDComposer.js:3317-3319`). The composer has no `onerror` handler.                            | Wait until every texture on every material has a decoded image before export. Name pending textures on timeout.              |
 | Raw GLB 2.4 times larger than the USDZ                   | `gltf-transform inspect` showed 20 identical 1024 × 1024 metallic-roughness textures. `GLTFExporter` merges metalness and roughness per material (`three/examples/jsm/exporters/GLTFExporter.js:939` and `1613`), which duplicates the shared source texture. | glTF-Transform `optimize` removed the duplicates. Its pipeline starts with `dedup()` (`@gltf-transform/cli/src/cli.ts:376`). |
-| Warning `USDCParser: Unsupported array type 10`          | Type 10 is `String` (`three/examples/jsm/loaders/usd/USDCParser.js:27`)                                                                                                                                                                                       | No visible effect on the sample. Recheck on the real scan in 3D-01b.                                                         |
+| Warning `USDCParser: Unsupported array type 10`          | Type 10 is `String` (`three/examples/jsm/loaders/usd/USDCParser.js:27`)                                                                                                                                                                                       | No visible effect on the sample. The real scan in 3D-01b did not emit it.                                                    |
 | The gallery link returned an HTML 404 page               | The file is served from `https://developer.apple.com/quick-look-gallery/models/pancakes/pancakes_photogrammetry.usdz`                                                                                                                                         | Use that URL                                                                                                                 |
 
 ## Implications
@@ -141,11 +169,9 @@ General limits:
 
 For 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)):
 
-- Confirm that Reality Composer captures with Object Capture and exports `.usdz` on the team's iPhone.
-- Measure the capture and reconstruction time on the device.
-- Run a real export through the pipeline. Apple produced the sample and may have cleaned it, so a real export may differ in size, texture layout or USD features.
-- Check whether the `USDCParser: Unsupported array type 10` warning has a visible effect.
-- Load the result on at least one iPhone and one Android phone.
+- [CONFIRMED] Done in the [real scan](#real-scan-3d-01b) section: export, timing, pipeline run and the warning check.
+- [NOT IMPLEMENTED] Record the iPhone model and iOS version used for the scan.
+- Moved to 3D-05b ([#15](https://github.com/songomby-D1/devfest2026/issues/15)): loading the result on at least one iPhone and one Android phone.
 
 For 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)):
 
