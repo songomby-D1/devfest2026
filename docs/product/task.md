@@ -28,7 +28,7 @@ The owner completes this checklist and then moves the item to `Groomed`.
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| endy-rkt-01 | Define the scope of the first integrated MVP demo (D01). | P0 | | Backlog |
+| endy-rkt-01 | Record the approved [D01 demo scope](../decisions/project-decisions.md#d01-first-integrated-mvp-demo) for one item. Sign-off requires interactive 3D and a confirmed NFT mint in the same run. Live phone capture is optional. Label runs with an unavailable gate **Rehearsal** and record each missing gate. | P0 | | Done |
 | endy-rkt-02 | Approve the shared package and Docker build context, runtime, and tooling under D14, D15 and D17. | P0 | endy-rkt-01 | Backlog |
 | endy-rkt-03 | Validate SeaweedFS for local storage with representative assets. | P0 | endy-rkt-01 | Backlog |
 | endy-rkt-04 | Decide service data isolation within one PostgreSQL instance, media delivery and the gateway approach (D04–D06). | P0 | endy-rkt-03 | Backlog |

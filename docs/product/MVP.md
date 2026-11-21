@@ -4,7 +4,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 
 [CONFIRMED] endy-rkt defines the MVP goals and scope. Each [owner](../team/responsibilities.md#task-ownership) refines their own tasks and decides how to deliver their part within those constraints.
 
-[NOT IMPLEMENTED] All capabilities below describe planned behavior. [CONFIRMED] A deadline is unnecessary for MVP planning. [DECISION REQUIRED: endy-rkt] **D01 Demo scope.** [RECOMMENDED] Plan one end-to-end content journey and reserve time to integrate and rehearse it.
+[NOT IMPLEMENTED] All capabilities below describe planned behavior. [CONFIRMED] A deadline is unnecessary for MVP planning. [CONFIRMED] endy-rkt approved one item for the first integrated demo, from authenticated submission through human review, publication and guest browsing. Integrated sign-off requires a working interactive 3D model and a confirmed NFT mint for that same item in the same run. A rights-cleared pre-produced model can satisfy the 3D gate. Live phone capture is optional. If either gate is unavailable, label the run **Rehearsal** and record each missing gate. Follow the evidence checklist for DEMO-03. [D01 demo scope](../decisions/project-decisions.md#d01-first-integrated-mvp-demo)
 
 ## A. Authentication
 

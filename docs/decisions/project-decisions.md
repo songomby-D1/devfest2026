@@ -10,13 +10,30 @@ Use this register to see which decisions need endy-rkt, which belong to app or s
 - **D02 is resolved.** endy-rkt owns the gateway and shared local infrastructure, shidoAdr owns Auth and LiDAR, and Sesedra owns frontend implementation and design. MVP planning proceeds without a deadline. [Team responsibilities](../team/responsibilities.md)
 - **D05 storage provider.** SeaweedFS is the local S3-compatible object store, and endy-rkt owns setup. Media delivery is still open. [Data and storage](../architecture/data-storage.md#s3-compatible-option)
 
+## D01 First integrated MVP demo
+
+[CONFIRMED] endy-rkt approved a single-item journey for the first integrated MVP demo. Use the same Content item ID from authenticated submission through human review, publication, guest browsing, interactive 3D and confirmed NFT minting. Frontend application requests go through the dedicated gateway. Auth owns identity and assigned permissions, Content owns review and publication, LiDAR owns 3D asset readiness, and NFT owns token association and confirmation. The item ID and publication status are the handoffs from Content. [Service boundaries](../architecture/services.md)
+
+### Demo script and evidence checklist
+
+Record the evidence against the same item ID under DEMO-03. [Demo backlog](../product/task.md#integration--demo-endy-rkt)
+
+1. [ ] A signed-in contributor submits one item with rights-cleared media, author information and a description. Record the item ID and fixture rights clearance.
+2. [ ] As a guest, check that the draft is absent from public browsing and direct access to its detail is denied. An authorized human then records separate outcomes for item claims and description claims before the item is published under the agreed policy. Record both outcomes and the publication status. [D18](#decisions-for-endy-rkt)
+3. [ ] As a guest, find and open the same published item and verify that the applicable item and description review labels match the recorded outcomes.
+4. [ ] On each agreed demo device, open the published item detail as a visitor and verify that the associated 3D model loads and rotates in response to input. Record the device and result. A rights-cleared pre-produced model can satisfy this gate. Live phone capture is optional.
+5. [ ] An eligible user starts a mint from the same published item and reaches confirmed status on the chosen demo network. Verify that the user can inspect the chain, token and transaction references, and record those references with the item ID. Check that the displayed provenance explains the digital mint event and the scope of its claims. Verify that public token metadata is approved and that it and the on-chain data contain no private media, credentials or personal data.
+
+**Integrated sign-off** requires the full journey with both a working interactive model and a confirmed mint in the same run. Record both results under DEMO-03.
+
+If either gate is unavailable, label the run **Rehearsal** and record each missing gate. A still image can support a rehearsal. During DEMO-03, check the outcome for each gate independently. A still image in place of the model or a pending or failed mint in place of confirmation requires the rehearsal label and the corresponding missing gate, even when the other gate passes.
+
 ## Decisions for endy-rkt
 
 The options below are recommendations for review. Each remains open until endy-rkt records a decision.
 
 | Decision | Recommended choice | Decide before |
 |---|---|---|
-| D01 Demo scope | Prioritize one complete visitor and contributor path with human review, interactive 3D and a working NFT integration. Keep live phone capture conditional on feasibility. [MVP](../product/MVP.md) | Agreeing the first integrated demo |
 | D04 PostgreSQL isolation | Use a separate database and service role per stateful service within the single PostgreSQL instance. The shared infrastructure owner coordinates provisioning. Service owners control their own schemas and migrations. [Data isolation](../architecture/data-storage.md#postgresql-isolation) | Shared PostgreSQL provisioning |
 | D05 Media delivery | Validate SeaweedFS with Content and LiDAR. Start with gateway-mediated access and review a change to that boundary if measurements justify it. [Storage and delivery](../architecture/data-storage.md#s3-compatible-option) | Connecting upload and 3D storage |
 | D06 Gateway deployment boundary | Use the dedicated NestJS gateway. Defer Nginx until a concrete edge requirement appears. [Gateway design](../architecture/overview.md#gateway-and-networking) | Initializing the gateway |
