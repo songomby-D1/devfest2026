@@ -2,7 +2,19 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: NFT lot L0 (salandri-42)
+## Latest session: Agent 3 frontend start (Claude, agent N3)
+
+- [IMPLEMENTED] On branch `agent3-ux-fe-3d`, stacked on FE-01 ([#80](https://github.com/songomby-D1/devfest2026/pull/80)) with `develop` merged in, following the [parallel workflow](parallel-workflow.md). The doc-only merge conflicts in this log and the backlog were resolved by keeping both sides.
+- [IMPLEMENTED] Wired the ArtworkViewer (3D-05a) into the FE-01 workspace, the follow-up announced in [#94](https://github.com/songomby-D1/devfest2026/pull/94): `@google/model-viewer` 4.4.0, `three` 0.183.2, `@testing-library/jest-dom` and `user-event` in `apps/frontend/package.json`, Draco copied before `dev` and `build`, and `copy-draco.mjs` now resolves `three` through Node because the root workspace hoists it.
+- [IMPLEMENTED] Added `apps/frontend/src/lib/api/`: contract types for the Gate 0 freeze, an HTTP client for the eight `/api/items` routes and an in-memory mock selected by `VITE_API_MODE=mock`, with fixtures covering every publication, claim, 3D and mint status.
+- Checks run: typecheck, 42 Vitest tests, Vite build, ESLint and Prettier on `apps/frontend` pass on Node 22.23.4, with `public/draco/` excluded by hand.
+- [BLOCKER: Agent 1] Gate 0 has not happened: no contract-freeze PR exists. The client follows the contract as written in the parallel workflow.
+- [CONTRACT CHANGE] The frozen contract does not define the item fields or request bodies. `title`, `description`, `imageUrl`, the `POST /api/items` and review bodies, and `tokenId`/`transactionHash` on provenance are marked provisional in `contract.ts`.
+- [BLOCKER: Agent 1] The root lockfile is out of sync: the `apps/backend/*` workspace glob picks up `nft-service`, so `npm ci` fails on `develop` + #80. The new frontend dependencies also need a lockfile regeneration. The lockfile was left untouched; checks ran after a local `npm install`.
+- [BLOCKER: Agent 1] `eslint.config.mjs` and `.prettierignore` must ignore `apps/frontend/public/draco/`, the copied decoder, or `npm run lint` and `format:check` fail after a `dev` or `build`.
+- Next: integrate #96 and #102 (FE-02) onto the mock client, then review #101 (LiDAR).
+
+## Earlier session: NFT lot L0 (salandri-42)
 
 - [IMPLEMENTED] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), merged into `develop` through [#100](https://github.com/songomby-D1/devfest2026/pull/100) with endy-rkt's approval. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
 - Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
