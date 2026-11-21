@@ -6,11 +6,11 @@ This note describes how to run the three [task allocation](../agents/task-alloca
 
 Start from `develop` and create three isolated worktrees, one per agent:
 
-| Agent | Branch | Worktree |
-|---|---|---|
-| Agent 1 — Foundations | `agent1-foundation` | `.worktrees/agent1` |
-| Agent 2 — Content/NFT | `agent2-content-nft` | `.worktrees/agent2` |
-| Agent 3 — UX/Frontend/3D | `agent3-ux-fe-3d` | `.worktrees/agent3` |
+| Agent                    | Branch               | Worktree            |
+| ------------------------ | -------------------- | ------------------- |
+| Agent 1 — Foundations    | `agent1-foundation`  | `.worktrees/agent1` |
+| Agent 2 — Content/NFT    | `agent2-content-nft` | `.worktrees/agent2` |
+| Agent 3 — UX/Frontend/3D | `agent3-ux-fe-3d`    | `.worktrees/agent3` |
 
 **Absolute rule: nobody pushes directly to `develop` or `main`.** Each agent works in its own worktree, commits on its own branch, opens a pull request to `develop`, and rebases on `develop` at least once a day.
 
@@ -25,15 +25,15 @@ Start from `develop` and create three isolated worktrees, one per agent:
 
 This matrix is the key to avoiding conflicts.
 
-| Area | Agent 1 | Agent 2 | Agent 3 |
-|---|:---:|:---:|:---:|
+| Area                                                                                                                                                                     |  Agent 1  |       Agent 2       |       Agent 3       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :-------: | :-----------------: | :-----------------: |
 | Root: `package.json`, lockfile, `Taskfile.yml`, `tsconfig.base.json`, `eslint.config.mjs`, `.github/workflows/`, `.env.example`, `docker-compose.yml`, `infrastructure/` | **Owner** | Proposes a fragment | Proposes a fragment |
-| `docs/product/`, `docs/decisions/`, `docs/development/`, `docs/api/gateway.*` | **Owner** | Read only | Read only |
-| `apps/backend/gateway/`, `apps/backend/auth/` | **Owner** | — | — |
-| `apps/backend/content/`, `apps/backend/nft/`, `docs/api/content.*`, `docs/api/nft.*` | — | **Owner** | — |
-| `apps/backend/lidar/`, `docs/api/lidar.*` | — | — | **Owner** |
-| `apps/frontend/**` | — | — | **Owner** |
-| `docs/agents/task-allocation.md`, `docs/agents/parallel-workflow.md` | **Owner** | Read only | Read only |
+| `docs/product/`, `docs/decisions/`, `docs/development/`, `docs/api/gateway.*`                                                                                            | **Owner** |      Read only      |      Read only      |
+| `apps/backend/gateway/`, `apps/backend/auth/`                                                                                                                            | **Owner** |          —          |          —          |
+| `apps/backend/content/`, `apps/backend/nft/`, `docs/api/content.*`, `docs/api/nft.*`                                                                                     |     —     |      **Owner**      |          —          |
+| `apps/backend/lidar/`, `docs/api/lidar.*`                                                                                                                                |     —     |          —          |      **Owner**      |
+| `apps/frontend/**`                                                                                                                                                       |     —     |          —          |      **Owner**      |
+| `docs/agents/task-allocation.md`, `docs/agents/parallel-workflow.md`                                                                                                     | **Owner** |      Read only      |      Read only      |
 
 For `docker-compose.yml` and the root lockfile: Agents 2 and 3 do not edit them. They deliver, for example, `apps/backend/content/compose.fragment.yml` or `apps/frontend/compose.fragment.yml`, and Agent 1 integrates those fragments at merge time. For npm dependencies, they add the line to their own app `package.json` and ask Agent 1 to regenerate the root lockfile.
 
@@ -49,6 +49,8 @@ Agent 1 publishes this before the other agents start:
 - Public errors: `{ code, message, requestId }`, with no internal details.
 - 3D: `{ contentId, status: ready|processing|missing, variants: { poster, glb1k, glb2k } }`.
 - Mint: `pending | confirmed | failed`, with a mandatory idempotency key.
+
+[CONFIRMED] Published in the [platform contract](../specs/platform-contract.md), the [gateway OpenAPI document](../api/gateway.openapi.yaml) and the type-only declarations in [`packages/shared`](../../packages/shared/src/index.ts). They add the auth and operator routes, `SubmissionStatus`, the media and review decision routes and the internal route mapping.
 
 Any change to this contract goes through a pull request titled `[CONTRACT CHANGE]` agreed by all three agents.
 
