@@ -2,6 +2,11 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
+## NestJS lint compatibility
+
+- On `fix/nestjs-eslint-rules`, [the ESLint override](../../eslint.config.mjs) allows decorated empty classes and disables class-instance assignment linting for backend TypeScript. Undecorated empty classes still fail. Frontend TypeScript and backend JavaScript retain their existing rules.
+- Temporary NestJS fixtures passed in all five backend paths using ESLint 9.39.5 and TypeScript 6.0.3. The root workspace checks still depend on the root tooling rollout.
+
 ## Latest session: 3D asset procedure (shidoAdr)
 
 - [CONFIRMED] 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)): drafted the [3D asset procedure](../architecture/3d-asset-procedure.md) for D12 option A, with `prepare.sh` and `poster.mjs`. The USDZ is withheld until 3D-04a strips its device metadata and checks its references. Two successive runs of the documented commands from clean directories gave identical outputs.
