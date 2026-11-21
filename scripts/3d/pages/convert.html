@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>USDZ converter</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+      import { USDLoader } from 'three/addons/loaders/USDLoader.js';
+      import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+      import { toBase64 } from '/base64.js';
+
+      const TEXTURE_TIMEOUT_MS = 30000;
+
+      function collectTextureLabels(root) {
+        const labelsByTexture = new Map();
+        root.traverse((object) => {
+          if (!object.isMesh) return;
+          for (const material of [].concat(object.material ?? [])) {
+            for (const [slot, value] of Object.entries(material)) {
+              if (!value?.isTexture) continue;
+              const labels = labelsByTexture.get(value) ?? [];
+              labels.push(`${material.name || material.uuid}.${slot}`);
+              labelsByTexture.set(value, labels);
+            }
+          }
+        });
+        return labelsByTexture;
+      }
+
+      function countMeshes(root) {
+        let count = 0;
+        root.traverse((object) => {
+          if (object.isMesh) count++;
+        });
+        return count;
+      }
+
+      // USDComposer sets texture.image in Image.onload, after loadAsync resolves, and has no onerror handler.
+      async function waitForTextures(root) {
+        const labelsByTexture = collectTextureLabels(root);
+        const pendingLabels = () =>
+          [...labelsByTexture]
+            .filter(([texture]) => !(texture.image?.width > 0))
+            .flatMap(([, labels]) => labels);
+        const deadline = Date.now() + TEXTURE_TIMEOUT_MS;
+        while (pendingLabels().length > 0) {
+          if (Date.now() > deadline) {
+            throw new Error(
+              `Textures not decoded after ${TEXTURE_TIMEOUT_MS} ms: ${pendingLabels().join(', ')}`,
+            );
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+
+      window.convertUsdz = async (url) => {
+        const root = await new USDLoader().loadAsync(url);
+        if (countMeshes(root) === 0) throw new Error('No mesh found');
+        await waitForTextures(root);
+        const glb = await new GLTFExporter().parseAsync(root, { binary: true });
+        return toBase64(glb);
+      };
+    </script>
+  </body>
+</html>

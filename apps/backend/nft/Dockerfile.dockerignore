@@ -1,0 +1,20 @@
+# Exclusions for builds of apps/backend/nft/Dockerfile from the repository
+# root. Everything is excluded, then only what the image needs is allowed.
+**
+
+!tsconfig.base.json
+!apps/backend/nft/package.json
+!apps/backend/nft/package-lock.json
+!apps/backend/nft/.npmrc
+!apps/backend/nft/nest-cli.json
+!apps/backend/nft/tsconfig.json
+!apps/backend/nft/tsconfig.build.json
+!apps/backend/nft/src/**
+
+# Never send these, even inside allowed folders.
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+**/*.spec.ts

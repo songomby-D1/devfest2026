@@ -1,0 +1,17 @@
+# The NFT service is a standalone npm project until the root workspace lands.
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Hardhat output (lot L1).
+artifacts/
+cache/
+typechain-types/
+
+# Local environment files: commit only the example.
+.env
+.env.*
+!.env.example
+
+*.log
