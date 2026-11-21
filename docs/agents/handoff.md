@@ -2,7 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: CONTENT-05 status (papangoo)
+## Latest session: Auth contract (shidoAdr)
+
+- [PROPOSED] AUTH-01 to AUTH-07 ([#46](https://github.com/songomby-D1/devfest2026/issues/46)–[#51](https://github.com/songomby-D1/devfest2026/issues/51), [#97](https://github.com/songomby-D1/devfest2026/issues/97)): drafted the [Auth contract specification](../specs/auth-contract.md) for endy-rkt-05 and endy-rkt-08. It covers the internal Auth API, opaque sessions with a 2 h idle and 7-day absolute limit, the caller-context headers, per-pair service secrets, the D13 permission matrix and the error shape, with 16 acceptance criteria.
+- [DECISION REQUIRED: endy-rkt] Confirm the header names, service secrets, public routes, CSRF safeguard and rate limits. Open questions for papangoo and salandri-42 are listed in the spec.
+- [NOT IMPLEMENTED] No Auth code exists. AUTH-07 waits on endy-rkt-07 and INFRA-01.
+
+## Earlier session: CONTENT-05 status (papangoo)
 
 - [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) and CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)) move to In progress. CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) stays Groomed and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)) stays Backlog.
 - [CONFIRMED] D18 is confirmed in the [decision register](../decisions/project-decisions.md#d18-editorial-policy-and-demo-content), so these rows no longer wait on it. [DECISION REQUIRED: endy-rkt] Explicit clearance is still required before cultural media is sent to an external AI API. papangoo's position is recorded on [#57](https://github.com/songomby-D1/devfest2026/issues/57): the sample media may be sent, papangoo holds the API keys, and one vision API is enough.
