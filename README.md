@@ -78,7 +78,7 @@ Themed rooms, traditional music, educational experiences, and more ways to showc
 
 The React and TypeScript frontend reaches the NestJS services through a dedicated gateway. Auth, Content & Verification, NFT, and LiDAR are independent services. Stateful services use **Prisma with one shared PostgreSQL instance per environment**, with each service owning its data.
 
-Each owner refines their tasks and makes technical decisions within the agreed MVP. For their app or service, they write **unit and integration tests**, create a **Dockerfile** in its directory, and add its entry to the root **`docker-compose.yml`**. endy-rkt defines the MVP and maintains the system overview. [Team responsibilities](docs/team/responsibilities.md#task-ownership)
+Each owner takes their app or service from initialization through integration. They own its API or client integration, unit and integration tests, Dockerfile, and root Compose entry. Stateful service owners also own their PostgreSQL data boundary, Prisma schema, and migrations. endy-rkt defines the MVP and maintains the system overview. [Team responsibilities](docs/team/responsibilities.md#task-ownership)
 
 ## Documentation
 
@@ -86,6 +86,7 @@ Each owner refines their tasks and makes technical decisions within the agreed M
 |---|---|
 | [MVP scope](docs/product/MVP.md) | Capabilities, owners, and acceptance criteria |
 | [Backlog](docs/product/task.md) | Tasks, dependencies, and open decisions |
+| [Project decisions](docs/decisions/project-decisions.md) | Team authority and decisions that need endy-rkt |
 | [Architecture overview](docs/architecture/overview.md) | System layout and gateway |
 | [Services](docs/architecture/services.md) | Responsibilities, contracts, and Dockerfiles |
 | [Data and storage](docs/architecture/data-storage.md) | PostgreSQL, Prisma, media, and backups |

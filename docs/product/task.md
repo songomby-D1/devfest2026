@@ -4,7 +4,7 @@
 
 This high-level backlog tracks decisions, foundation work, MVP features and demo preparation.
 
-Each owner can edit, add, split and reprioritize their own tasks within the agreed MVP. See the [ownership rules](../team/responsibilities.md#task-ownership).
+Each owner can edit, add, split and reprioritize their own tasks within the agreed MVP. Owners deliver their apps and services end to end. See the [ownership rules](../team/responsibilities.md#task-ownership) and [project decisions](../decisions/project-decisions.md).
 
 References: [MVP](MVP.md), [architecture](../architecture/overview.md), [service contracts](../architecture/services.md), [data and storage](../architecture/data-storage.md), [owners](../team/responsibilities.md), [agent workflow](../agents/workflow.md), [development](../development/workflow.md), and [quality gates](../development/quality-gates.md).
 
@@ -28,16 +28,16 @@ The owner completes this checklist and then moves the item to `Groomed`.
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| endy-rkt-01 | Confirm the hackathon deadline and scope and assign delivery owners (D01, D02). | P0 | | Backlog |
+| endy-rkt-01 | Define the scope of the first integrated MVP demo (D01). | P0 | | Backlog |
 | endy-rkt-02 | Approve the shared package and Docker build context, runtime, and tooling under D14, D15 and D17. | P0 | endy-rkt-01 | Backlog |
-| endy-rkt-03 | Evaluate object storage in a spike for D05. | P0 | endy-rkt-01 | Backlog |
-| endy-rkt-04 | Decide service data isolation within one PostgreSQL instance, object storage and the gateway approach (D04–D06). | P0 | endy-rkt-03 | Backlog |
+| endy-rkt-03 | Validate SeaweedFS for local storage with representative assets. | P0 | endy-rkt-01 | Backlog |
+| endy-rkt-04 | Decide service data isolation within one PostgreSQL instance, media delivery and the gateway approach (D04–D06). | P0 | endy-rkt-03 | Backlog |
 | endy-rkt-05 | Decide identity propagation, roles and review policy (D07, D13, D18). | P0 | endy-rkt-01 | Backlog |
 | endy-rkt-06 | Align the NFT and 3D proposals with MVP goals and coordinate any system-wide async decision under D16. | P0 | NFT-01, 3D-02 | Backlog |
 
 ## endy-rkt: Foundation
 
-The backend service directories are placeholders. Each app or service owner writes its tests, Dockerfile and root Compose entry. Stateful owners use Prisma with the shared PostgreSQL instance.
+The backend service directories are placeholders. Each owner initializes their app or service and owns its API, tests, Dockerfile and root Compose entry. Stateful service owners own their data, Prisma schema and migrations within the shared PostgreSQL instance.
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
@@ -68,21 +68,21 @@ The backend service directories are placeholders. Each app or service owner writ
 | endy-rkt-23 | Provide one disposable PostgreSQL instance in CI for the Prisma-backed integration suites. | P1 | endy-rkt-04, endy-rkt-20 | Backlog |
 | endy-rkt-24 | Decide CODEOWNERS scope and confirm available reviewers. [DECISION REQUIRED: endy-rkt] CODEOWNERS | P2 | endy-rkt-01 | Backlog |
 
-## Shared local infrastructure, owner TBD
+## endy-rkt: Shared local infrastructure
+
+endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibilities.md#shared-local-infrastructure). Each service owner owns their Prisma schema and migrations.
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| INFRA-01 | Set up one shared PostgreSQL instance and object storage in root Compose. [DECISION REQUIRED: endy-rkt] D02, D04, D05 | P0 | endy-rkt-07, endy-rkt-04 | Backlog |
+| INFRA-01 | Set up one shared PostgreSQL instance and SeaweedFS in root Compose, with volumes, health checks and local service provisioning. [DECISION REQUIRED: endy-rkt] D04 | P0 | endy-rkt-07, endy-rkt-04 | Backlog |
 
-## Gateway, owner TBD
+## endy-rkt: Gateway
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| GATEWAY-01 | Initialize the gateway, write its initial tests and Dockerfile, and register it in root Compose. [DECISION REQUIRED: endy-rkt] D02, D06 | P0 | endy-rkt-07, endy-rkt-08 | Backlog |
+| GATEWAY-01 | Initialize the gateway, write its initial tests and Dockerfile, and register it in root Compose. [DECISION REQUIRED: endy-rkt] D06 | P0 | endy-rkt-07, endy-rkt-08 | Backlog |
 
-## Auth, OWNER TBD [DECISION REQUIRED: endy-rkt]
-
-All Auth items await D02.
+## shidoAdr: Auth
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
@@ -138,13 +138,11 @@ All Auth items await D02.
 | 3D-05 | Provide the frontend 3D display and fallback. | P1 | 3D-04, UX-02, FE-01 | Backlog |
 | 3D-06 | Defer automated 3D reconstruction. | P2 | | Backlog |
 
-## Frontend integration, owner TBD
-
-Frontend implementation and containerization await an owner under D02. Sesedra owns design.
+## Sesedra: Frontend integration
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| FE-01 | Scaffold the React app shell. [DECISION REQUIRED: endy-rkt] D02, D15 | P0 | endy-rkt-01, endy-rkt-02 | Backlog |
+| FE-01 | Scaffold the React app shell. [DECISION REQUIRED: endy-rkt] D15 | P0 | endy-rkt-01, endy-rkt-02 | Backlog |
 | FE-05 | Write the frontend's initial tests and Dockerfile, and register it in root Compose. | P0 | FE-01 | Backlog |
 | FE-02 | Implement the main screens from Sesedra's mockups. | P0 | FE-01, UX-02 | Backlog |
 | FE-03 | Connect discovery, account, upload and verification flows through the gateway. | P0 | FE-02, GATEWAY-01, AUTH-03, AUTH-04, CONTENT-03, CONTENT-04 | Backlog |

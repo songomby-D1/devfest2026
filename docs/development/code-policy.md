@@ -71,13 +71,14 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 ## Dependencies and hooks
 
 - [CONFIRMED] Justify new dependencies and verify maintenance before adoption. Prefer standard library or framework features. Commit the lockfile and run a dependency audit where practical. Enforced in review and CI.
+- [CONFIRMED] App and service owners approve dependencies scoped to their workspace. Declare them in that workspace and coordinate shared lockfile changes. Dependencies added to shared workspaces or root tooling require agreement on the shared change under the [decision register](../decisions/project-decisions.md).
 - [RECOMMENDED] Defer Husky and lint-staged and use CI plus local scripts for the hackathon. This keeps setup light and applies identical checks to all contributors. [DECISION REQUIRED: endy-rkt] Confirm the hooks choice under D17 before wiring optional hooks.
 
 ## PRs and agents
 
 - [CONFIRMED] Use the [PR checklist](../../.github/PULL_REQUEST_TEMPLATE.md) for scope, checks, contracts and approvals. Review behavior, service boundaries and security. Formatting belongs to the formatter.
 - [CONFIRMED] Agent changes use the same checks and [report format](../agents/workflow.md#agent-report-template). Include changed files, exact commands and results, tests and assumptions. Use “not runnable yet” when checks are unavailable.
-- [CONFIRMED] Agents need approval from endy-rkt for config changes and new dependencies. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
+- [CONFIRMED] Agents follow the dependency policy above and need approval from endy-rkt for changes to shared quality configs. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
 
 ## Enforcement map
 
