@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: LiDAR service API
+  version: 0.1.0
+  description: >-
+    Internal API of the LiDAR service, reached through the gateway. Owned by shidoAdr (D14).
+    Object keys and credentials never appear in responses. The content ID format and the Content
+    publication check are provisional until the Content contract (CONTENT-02) is agreed.
+servers:
+  - url: http://lidar:3000
+    description: Service address inside Compose
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Report liveness and database connectivity
+      responses:
+        '200':
+          description: The service and its database answer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { const: ok }
+        '503':
+          description: The database is unreachable
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, reason]
+                properties:
+                  status: { const: error }
+                  reason: { const: database_unavailable }
+  /assets:
+    post:
+      operationId: registerAsset
+      summary: Register an asset prepared offline for a published content item
+      description: >-
+        Interim protection by a service token until gateway authentication (D07). The content ID is
+        confirmed with Content before the record is stored.
+      security:
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterAssetRequest' }
+      responses:
+        '201':
+          description: Asset registered
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegisteredAsset' }
+        '400':
+          description: Invalid body
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+        '401':
+          description: Missing or wrong service token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: An asset is already registered for this content
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: Content is unknown or not published
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503':
+          description: Content could not confirm publication
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /assets/by-content/{contentId}:
+    get:
+      operationId: getAssetByContent
+      summary: Display metadata of the 3D asset of a content item
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/ContentId' }
+      responses:
+        '200':
+          description: A ready asset, or the defined "none" response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ReadyAssetDisplay'
+                  - $ref: '#/components/schemas/NoAssetDisplay'
+        '400':
+          description: Malformed content ID
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidationError' }
+components:
+  securitySchemes:
+    adminToken:
+      type: apiKey
+      in: header
+      name: x-lidar-admin-token
+  schemas:
+    ContentId:
+      type: string
+      format: uuid
+    ObjectKey:
+      type: string
+      minLength: 1
+      maxLength: 512
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._/-]*$'
+      description: Relative storage key. Must not contain "..".
+    ByteSize:
+      type: integer
+      minimum: 1
+      maximum: 2147483647
+    AssetStatus:
+      type: string
+      enum: [pending, ready]
+    RegisterAssetRequest:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          contentId,
+          objectKey1k,
+          objectKey2k,
+          posterKey,
+          size1kBytes,
+          size2kBytes,
+          posterBytes,
+        ]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        objectKey1k: { $ref: '#/components/schemas/ObjectKey' }
+        objectKey2k: { $ref: '#/components/schemas/ObjectKey' }
+        posterKey: { $ref: '#/components/schemas/ObjectKey' }
+        usdzKey:
+          oneOf:
+            - $ref: '#/components/schemas/ObjectKey'
+            - type: 'null'
+          default: null
+        size1kBytes: { $ref: '#/components/schemas/ByteSize' }
+        size2kBytes: { $ref: '#/components/schemas/ByteSize' }
+        posterBytes: { $ref: '#/components/schemas/ByteSize' }
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+          default: ready
+    RegisteredAsset:
+      type: object
+      required: [id, contentId, status]
+      properties:
+        id: { type: string, format: uuid }
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { $ref: '#/components/schemas/AssetStatus' }
+    DeliveryVariant:
+      type: object
+      required: [url, bytes]
+      properties:
+        url:
+          type: string
+          description: Gateway delivery path, for example /api/lidar/files/{assetId}/1k
+        bytes: { $ref: '#/components/schemas/ByteSize' }
+    ReadyAssetDisplay:
+      type: object
+      required: [contentId, status, variants, poster, ar]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { const: ready }
+        variants:
+          type: object
+          required: ['1k', '2k']
+          properties:
+            '1k': { $ref: '#/components/schemas/DeliveryVariant' }
+            '2k': { $ref: '#/components/schemas/DeliveryVariant' }
+        poster:
+          type: object
+          required: [url]
+          properties:
+            url: { type: string }
+        ar:
+          type: 'null'
+          description: Always null while the USDZ is withheld (ADR 0001).
+    NoAssetDisplay:
+      type: object
+      required: [contentId, status]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { const: none }
+    Error:
+      type: object
+      description: NestJS default error body until the gateway error contract is agreed.
+      required: [statusCode, message]
+      properties:
+        statusCode: { type: integer }
+        message: { type: string }
+        error: { type: string }
+    ValidationError:
+      type: object
+      required: [message, issues]
+      properties:
+        message: { const: Validation failed }
+        issues:
+          type: array
+          items:
+            type: object
+            required: [path, message]
+            properties:
+              path: { type: string }
+              message: { type: string }
