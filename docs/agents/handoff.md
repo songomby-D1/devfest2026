@@ -2,7 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: NFT lot L0 (salandri-42)
+## Latest session: UX-01 primary user journey (rivon0507, Agent 3)
+
+- [PROPOSED] UX-01 ([#65](https://github.com/songomby-D1/devfest2026/issues/65)): drafted the [primary user journey](../../apps/frontend/docs/user-journey.md) with personas, the eight journey steps, screens, the gateway route behind each step, states (loading, empty, error, 3D processing and missing, mint pending, confirmed and failed), desktop and mobile notes and proposed acceptance criteria.
+- [DECISION REQUIRED: Sesedra] Confirm or amend the journey before UX-02. Open questions Q1 to Q6 in the document go to papangoo, endy-rkt and salandri-42, notably the missing publish route (Q1) and caller-scoped item lists (Q2). The frozen contract is unchanged.
+
+## Earlier session: NFT lot L0 (salandri-42)
 
 - [IMPLEMENTED] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), merged into `develop` through [#100](https://github.com/songomby-D1/devfest2026/pull/100) with endy-rkt's approval. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
 - Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
