@@ -8,6 +8,11 @@
 - [DECISION REQUIRED: endy-rkt] Confirm the header names, service secrets, public routes, CSRF safeguard and rate limits. Open questions for papangoo and salandri-42 are listed in the spec.
 - [NOT IMPLEMENTED] No Auth code exists. AUTH-07 waits on endy-rkt-07 and INFRA-01.
 
+## NestJS lint compatibility
+
+- On `fix/nestjs-eslint-rules`, [the ESLint override](../../eslint.config.mjs) allows decorated empty classes and disables class-instance assignment linting for backend TypeScript. Undecorated empty classes still fail. Frontend TypeScript and backend JavaScript retain their existing rules.
+- Temporary NestJS fixtures passed in all five backend paths using ESLint 9.39.5 and TypeScript 6.0.3. The root workspace checks still depend on the root tooling rollout.
+
 ## Earlier session: CONTENT-05 status (papangoo)
 
 - [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) and CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)) move to In progress. CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) stays Groomed and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)) stays Backlog.
