@@ -17,7 +17,7 @@ List the commands and results. Mark unavailable checks “not runnable yet”.
 ## Scope and guardrails
 
 - [ ] Covers one logical task and stays within the owner's service or the agreed cross-service scope.
-- [ ] New dependencies and lint, formatting or TypeScript config changes have CTO approval.
+- [ ] New dependencies and lint, formatting or TypeScript config changes have approval from endy-rkt.
 - [ ] Any lint suppression includes a reason.
 
 ## Contract changes

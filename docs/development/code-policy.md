@@ -19,11 +19,11 @@ This policy applies to every contributor and to the React frontend, gateway, Aut
 - [CREATED, NOT EXECUTED] Use `ban-ts-comment` to reject `@ts-ignore` and `@ts-nocheck`. A line using `@ts-expect-error` requires a description.
 - [CREATED, NOT EXECUTED] Each app has a boundary override. `no-restricted-imports` checks static specifiers and allows only type imports from the literal `packages/shared` path. `import/no-restricted-paths` uses TypeScript resolution to reject peer source paths, including relative paths and configured aliases. Review checks computed specifiers.
 - [CONFIRMED] The frontend uses the gateway and backend services use HTTP contracts. Keep `packages/shared` limited to types and contracts. Review ownership and integration at the API boundary.
-- [CTO DECISION REQUIRED] D14 still governs shared exports and aliases. Review enforces type-only use until the import spelling is approved and covered by lint.
+- [DECISION REQUIRED: endy-rkt] D14 still governs shared exports and aliases. Review enforces type-only use until the import spelling is approved and covered by lint.
 - [CREATED, NOT EXECUTED] `apps/frontend/**` gets browser globals, Hooks rules for call order and dependencies, and `jsx-a11y` recommended checks on JSX/TSX files.
 - [CREATED, NOT EXECUTED] Each of `apps/backend/{gateway,auth,content,nft,lidar}/**` gets Node globals. For Nest legacy decorators with emitted metadata, the typed parser uses the service TS config and `consistent-type-imports` leaves decorated files alone. Review imports used as runtime DI tokens. The backend uses the same strict preset and rules.
 - [CREATED, NOT EXECUTED] Only `**/*.spec.ts` and `**/*.test.{ts,tsx}` relax `unbound-method` so assertions can take spy method references. Promise and boundary rules still apply.
-- [CONFIRMED] Use line-scoped ESLint suppressions with a one-line reason and a task ID for temporary exceptions. File-wide suppressions require CTO approval and PR review.
+- [CONFIRMED] Use line-scoped ESLint suppressions with a one-line reason and a task ID for temporary exceptions. File-wide suppressions require approval from endy-rkt and PR review.
 - [CREATED, NOT EXECUTED] Load `eslint-config-prettier/flat` last to turn off competing style rules. [NOT IMPLEMENTED] CI will enforce zero warnings with `--max-warnings 0`.
 - [RECOMMENDED] Skip a generic security lint plugin for the MVP. Prioritize Gitleaks, dependency checks and review of input validation, authorization and logging to keep triage focused. [Security plugin scope and triage](https://github.com/eslint-community/eslint-plugin-security)
 
@@ -69,24 +69,24 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 ## Dependencies and hooks
 
 - [CONFIRMED] Justify new dependencies and verify maintenance before adoption. Prefer standard library or framework features. Commit the lockfile and run a dependency audit where practical. Enforced in review and CI.
-- [RECOMMENDED] Defer Husky and lint-staged and use CI plus local scripts for the hackathon. This keeps setup light and applies identical checks to all contributors. [CTO DECISION REQUIRED] Confirm the hooks choice under D17 before wiring optional hooks.
+- [RECOMMENDED] Defer Husky and lint-staged and use CI plus local scripts for the hackathon. This keeps setup light and applies identical checks to all contributors. [DECISION REQUIRED: endy-rkt] Confirm the hooks choice under D17 before wiring optional hooks.
 
 ## PRs and agents
 
 - [CONFIRMED] Use the [PR checklist](../../.github/PULL_REQUEST_TEMPLATE.md) for scope, checks, contracts and approvals. Review behavior, service boundaries and security. Formatting belongs to the formatter.
 - [CONFIRMED] Agent changes use the same checks and [report format](../agents/workflow.md#agent-report-template). Include changed files, exact commands and results, tests and assumptions. Use “not runnable yet” when checks are unavailable.
-- [CONFIRMED] Agents need CTO approval for config changes and new dependencies. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
+- [CONFIRMED] Agents need approval from endy-rkt for config changes and new dependencies. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
 
 ## Enforcement map
 
 | Rule group | Mechanism | Status | Backlog |
 |---|---|---|---|
-| Lint, app boundaries and comments | Root ESLint config and first lint verification | [CREATED, NOT EXECUTED] | [CTO-13, CTO-17](../product/task.md#cto-code-quality-follow-up) |
-| Formatting and editor defaults | Prettier and EditorConfig | [CREATED, NOT EXECUTED] | [CTO-13](../product/task.md#cto-code-quality-follow-up) |
-| Strict compiler defaults | Root TypeScript base | [CREATED, NOT EXECUTED] | [CTO-14](../product/task.md#cto-code-quality-follow-up) |
-| Local lint, formatting and type-check commands | Root package scripts and app project configs | [NOT IMPLEMENTED] | [CTO-13, CTO-14](../product/task.md#cto-code-quality-follow-up) |
-| PR quality, tests and security | CI jobs and required status | [NOT IMPLEMENTED] | [CTO-11](../product/task.md#cto-foundation), [CTO-15](../product/task.md#cto-code-quality-follow-up) |
-| Hooks | Optional Husky and lint-staged | [NOT IMPLEMENTED] | [CTO-16](../product/task.md#cto-code-quality-follow-up) |
+| Lint, app boundaries and comments | Root ESLint config and first lint verification | [CREATED, NOT EXECUTED] | [endy-rkt-13, endy-rkt-17](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Formatting and editor defaults | Prettier and EditorConfig | [CREATED, NOT EXECUTED] | [endy-rkt-13](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Strict compiler defaults | Root TypeScript base | [CREATED, NOT EXECUTED] | [endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Local lint, formatting and type-check commands | Root package scripts and app project configs | [NOT IMPLEMENTED] | [endy-rkt-13, endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up) |
+| PR quality, tests and security | CI jobs and required status | [NOT IMPLEMENTED] | [endy-rkt-11](../product/task.md#endy-rkt-foundation), [endy-rkt-15](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Hooks | Optional Husky and lint-staged | [NOT IMPLEMENTED] | [endy-rkt-16](../product/task.md#endy-rkt-code-quality-follow-up) |
 
 ## CI script contract
 
