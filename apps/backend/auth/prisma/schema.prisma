@@ -1,0 +1,52 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Permission {
+  reviewer
+}
+
+model Account {
+  id           String              @id @default(uuid()) @db.Uuid
+  email        String              @unique @db.VarChar(254)
+  displayName  String?             @map("display_name") @db.VarChar(60)
+  passwordHash String              @map("password_hash")
+  createdAt    DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime            @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sessions     Session[]
+  permissions  AccountPermission[]
+
+  @@map("accounts")
+}
+
+model Session {
+  id                String    @id @default(uuid()) @db.Uuid
+  accountId         String    @map("account_id") @db.Uuid
+  tokenHash         String    @unique @map("token_hash") @db.Char(64)
+  createdAt         DateTime  @map("created_at") @db.Timestamptz(3)
+  lastSeenAt        DateTime  @map("last_seen_at") @db.Timestamptz(3)
+  absoluteExpiresAt DateTime  @map("absolute_expires_at") @db.Timestamptz(3)
+  revokedAt         DateTime? @map("revoked_at") @db.Timestamptz(3)
+  account           Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([absoluteExpiresAt])
+  @@map("sessions")
+}
+
+model AccountPermission {
+  accountId  String     @map("account_id") @db.Uuid
+  permission Permission
+  grantedAt  DateTime   @default(now()) @map("granted_at") @db.Timestamptz(3)
+  account    Account    @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, permission])
+  @@map("account_permissions")
+}
