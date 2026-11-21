@@ -19,9 +19,23 @@ This page is the reference for CI, Dependabot and manual GitHub settings. CI val
 
 Detection checks `apps/frontend`, each immediate child under `apps/backend/`, and each immediate child under `packages/`. A directory without a `package.json` is a placeholder and generates a warning. Without a root manifest, detection warns and skips both JS jobs. With a root manifest and zero workspaces, root lint and formatting still run and the matrix skips with a warning. Once a workspace has a manifest and a root exists, its matrix entry runs regardless of which files changed.
 
-For full checks, commit the root npm workspace manifest and lockfile, install the [quality dev dependencies](code-policy.md#eslint), and give each initialized workspace the [required scripts](code-policy.md#ci-script-contract) and TypeScript project configuration extending the shared base. The `test` script must run unit and integration coverage as those suites land. The current default is Node 22, pending alignment under D15.
+For full checks, endy-rkt-19 supplies the root npm workspace manifest, lockfile and [pinned quality dependencies](code-policy.md#eslint). Every initialized workspace provides the [required scripts](code-policy.md#ci-script-contract) and a TypeScript project extending the shared base. The `test` script must run unit and integration coverage as those suites land. The workflow currently selects Node 22 by major and invokes Prettier and ESLint directly. [D15](../decisions/project-decisions.md#d15-node-and-npm-workspace-runtime) rollout under endy-rkt-18 makes CI read the exact `.nvmrc` patch and use the pinned npm version for `npm ci`. After endy-rkt-13 adds the root scripts, CI uses `npm run format:check` and `npm run lint` with the same enforcement. Root JS checks are blocking from the first root manifest, including before the scripts land.
+
+A green `ci-ok` before workspace initialization can reflect intentional skips. [endy-rkt-21](../product/task.md#endy-rkt-ci-follow-up) verifies the first hosted `ci-ok` and records evidence from root checks and each initialized workspace. Hosted execution and repository settings are unverified.
 
 [CREATED, NOT EXECUTED] Dependabot groups weekly GitHub Actions and npm version updates into at most two open version PRs per ecosystem, targeting `develop`. npm version updates become useful after the root manifest exists. Security updates still target GitHub's default branch. If a security PR targets `main`, send the fix through a PR into `develop` and promote it normally. [Dependabot targeting and grouping](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#target-branch)
+
+## CI rollout regression checks
+
+Use these cases during endy-rkt-21 and verify the required check on both protected branches during endy-rkt-22.
+
+| Case                                                                                  | Expected result                                                                                                             |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Checkout has no root manifest                                                         | Detection warns and both JavaScript jobs skip. Branch guard and secret scan remain blocking.                                |
+| Root manifest exists with no initialized workspaces                                   | Root install, format and lint run and block on failure. The matrix skips with a warning.                                    |
+| Root manifest and initialized workspaces exist                                        | Root checks run and each workspace runs `typecheck`, `test` and `build`. A missing, invalid or failed script fails `ci-ok`. |
+| Runtime audit flags a high-severity finding                                           | Triage the finding. The audit is advisory and a finding alone does not fail `ci-ok`.                                        |
+| PR into `main` comes from another branch or repository, or Gitleaks reports a finding | The corresponding gate fails `ci-ok`. Verify secret scan output is redacted.                                                |
 
 ## Review and failure handling
 
@@ -31,26 +45,26 @@ Open the failed Actions job and use its annotation or first failing command to f
 
 Keep secrets and real `.env` files out of Git and keep real credentials out of docs, tests and logs. Commit only safe placeholders in examples. Use seed data without personal information. Rotate or revoke an exposed credential immediately and notify endy-rkt. Deleting a commit cannot recall copies of a public secret. [GitHub guidance on sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)
 
-[DECISION REQUIRED: endy-rkt] D18 cultural-media licensing and consent. Keep cultural media out of Git until endy-rkt approves the rights, consent and attribution requirements for public redistribution, including any community restrictions. Use synthetic data or approved fixtures in the meantime.
+[CONFIRMED] D18 requires rights clearance and separate human review before publication. Keep cultural media out of Git until endy-rkt approves the rights, consent and attribution requirements for public redistribution, including any community restrictions. Use synthetic data or approved fixtures in the meantime.
 
 ## Repository settings checklist
 
-[NOT IMPLEMENTED] endy-rkt applies these settings manually on GitHub. Select the actual `ci-ok` check from GitHub Actions after it first reports.
+[NOT IMPLEMENTED] endy-rkt applies and verifies branch protection for `develop` and `main` in endy-rkt-12 and endy-rkt-22 after endy-rkt-21 produces the hosted `ci-ok` check. Select the actual check from GitHub Actions. Apply the approved [rollout settings](../decisions/project-decisions.md#github-rollout-settings) during that rollout.
 
 - [ ] Protect `develop` and `main` with a ruleset or branch protection. Require a PR, **`ci-ok` only**, one approval, dismissal of stale approvals and resolution of review conversations. Block direct pushes, force pushes and deletion. Confirm `main` receives only same-repo `develop` PRs through the branch guard.
-- [ ] [DECISION REQUIRED: endy-rkt] Include admins and use no routine bypass. Decide whether emergencies need an explicit exception with an audit trail.
-- [ ] [DECISION REQUIRED: endy-rkt] Require branches to be up to date on `main`. Start with the looser setting on `develop` if repeated updates and reruns slow the team. Strict `main` can require syncing the promotion merge back through a PR to `develop`.
-- [ ] Enable secret scanning, push protection, Dependabot alerts and security updates. [DECISION REQUIRED: endy-rkt] Defer CodeQL until there is application code and capacity to review findings. Public repositories support these controls.
+- [ ] Include admins. Use no routine bypass.
+- [ ] Require strict branch updates on `main` and looser updates on `develop`.
+- [ ] Enable secret scanning, push protection, Dependabot alerts and security updates. Defer CodeQL until there is application code and capacity to review findings. Public repositories support these controls.
 - [ ] Use read-only default Actions workflow permissions and require approval for first-time fork contributors. Consider an allowlist for actions.
-- [ ] [DECISION REQUIRED: endy-rkt] Prefer squash merges for short-lived PRs into `develop` and merge commits for `develop` promotions to preserve ancestry. Enable automatic deletion of merged topic branches and keep `develop` protected.
-- [ ] [DECISION REQUIRED: endy-rkt] Decide on CODEOWNERS. Prefer a small file for CI and shared contracts once owner handles and coverage are confirmed. Public repositories can require code-owner review.
+- [ ] Squash topic PRs into `develop`, use merge commits for promotion, delete merged topic branches and keep `develop` protected.
+- [ ] Defer CODEOWNERS to endy-rkt-24 once owner handles and reviewer coverage are confirmed. Prefer a small file for CI and shared contracts. Public repositories can require code-owner review.
 - [ ] Consider a README CI badge after the first successful run.
 
 [Branch protection](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) · [Security features](https://docs.github.com/en/code-security/getting-started/github-security-features) · [Actions settings](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository) · [Merge methods](https://docs.github.com/en/pull-requests/reference/pull-request-merges) · [Code owners](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners)
 
 ## Deferred checks and open rollout choices
 
-- [NOT IMPLEMENTED] When the first database-backed integration test lands, provision one disposable PostgreSQL instance for the CI integration environment. Prisma-backed suites share that instance with isolated test data and apply only their own service's migrations. See the [test plan](quality-gates.md#testing-and-service-definition-of-done) and [data ownership](../architecture/data-storage.md#postgresql-isolation).
-- [NOT IMPLEMENTED] Add changed-service Docker builds on PRs into `main` after the service Dockerfiles exist. E2E smoke tests and CD are future work.
-- [DECISION REQUIRED: endy-rkt] D15: approve Node 22 or another supported LTS and align CI, `.nvmrc` and package `engines`.
-- [DECISION REQUIRED: endy-rkt] Keep the full-history push scan initially or switch to incremental `before..after` once there is a trusted baseline. Keep full history for now to detect pre-existing leaks.
+- [NOT IMPLEMENTED] In endy-rkt-23, provision one disposable PostgreSQL instance when the first database-backed integration test lands. Prisma-backed suites share that instance with isolated test data and apply only their own service's migrations. [Test plan](quality-gates.md#testing-and-service-definition-of-done) · [Data ownership](../architecture/data-storage.md#postgresql-isolation)
+- [NOT IMPLEMENTED] Add changed-service Docker builds on PRs into `main` after the service Dockerfiles exist. Changes to shared build inputs must trigger rebuild coverage for every dependent image. E2E smoke tests and CD are future work. [Build context policy](../architecture/services.md#dockerfile-placement)
+- [CONFIRMED] Keep full-history Gitleaks scans on pushes and manual dispatches initially, and retain base-to-head scans on PRs. Revisit incremental push scans after a trusted baseline exists.
+- [CONFIRMED] Keep the runtime audit advisory with `npm audit --audit-level=high --omit=dev -w <workspace>` and triage findings. Revisit blocking severity after findings and triage capacity are known.

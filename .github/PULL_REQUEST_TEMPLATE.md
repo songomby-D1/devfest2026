@@ -18,7 +18,8 @@ List the commands and results. Mark unavailable checks “not runnable yet”.
 
 - [ ] Covers one logical task and stays within the owner's service or the agreed cross-service scope.
 - [ ] App or service changes include owner-written or updated tests where applicable. A new app or service includes its Dockerfile and root Compose entry.
-- [ ] New dependencies and lint, formatting or TypeScript config changes have approval from endy-rkt.
+- [ ] New workspace dependencies are justified and approved by the app or service owner. Shared tooling or quality config changes have approval from endy-rkt.
+- [ ] Database changes stay within the owning service's PostgreSQL boundary and include its Prisma migrations where needed.
 - [ ] Any lint suppression includes a reason.
 
 ## Contract changes

@@ -14,7 +14,7 @@ This guide defines the Git workflow and review requirements.
 
 [CONFIRMED] Owners may revise their [own tasks](docs/team/responsibilities.md#task-ownership). Link the task in the PR and coordinate changes to contracts, shared security policy or Compose resources with the affected owners. Bring MVP or system-wide architecture changes to endy-rkt.
 
-[CONFIRMED] App and service owners include and verify their own tests. When introducing a service, include its Dockerfile and its entry in the root Compose file. See the [service definition of done](docs/development/quality-gates.md#testing-and-service-definition-of-done).
+[CONFIRMED] App and service owners include and verify their own tests. When introducing a service, include its Dockerfile and its entry in the root Compose file. Stateful changes include the service's Prisma migrations when its schema changes. See the [service definition of done](docs/development/quality-gates.md#testing-and-service-definition-of-done) and [decision register](docs/decisions/project-decisions.md).
 
 [RECOMMENDED] Record why the change is needed, along with assumptions and unresolved risks.
 
