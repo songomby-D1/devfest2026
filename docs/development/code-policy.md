@@ -17,7 +17,7 @@ This policy applies to every contributor and to the React frontend, gateway, Aut
 - [CREATED, NOT EXECUTED] Use errors for explicit `any`, floating and misused promises, inconsistent type imports, and unused names. The unused-name rules permit intentional `^_` names.
 - [CREATED, NOT EXECUTED] Use strict equality and restrict console calls to `warn` and `error` via `eqeqeq` and `no-console`. Use the Nest logger for backend operational logs, enforced in review.
 - [CREATED, NOT EXECUTED] Use `ban-ts-comment` to reject `@ts-ignore` and `@ts-nocheck`. A line using `@ts-expect-error` requires a description.
-- [CREATED, NOT EXECUTED] Each app has a boundary override. `no-restricted-imports` checks static specifiers and allows only type imports from the literal `packages/shared` path. `import/no-restricted-paths` uses TypeScript resolution to reject peer source paths, including relative paths and configured aliases. Review checks computed specifiers.
+- [CREATED, NOT EXECUTED] Each app has a boundary override. `no-restricted-imports` checks static specifiers and allows only type imports from the literal `packages/shared` path and the `@devfest2026/shared` package name. `import/no-restricted-paths` uses TypeScript resolution to reject peer source paths, including relative paths and configured aliases. Review checks computed specifiers.
 - [CONFIRMED] The frontend uses the gateway and backend services use HTTP contracts. Keep `packages/shared` limited to types and contracts. Review ownership and integration at the API boundary.
 - [CONFIRMED] D14 allows type-only imports of shared transport declarations, including any common error type. Review actual import spellings and aliases for type-only use until lint coverage is verified. [Shared contract policy](../architecture/services.md#contracts-and-shared-package)
 - [CREATED, NOT EXECUTED] `apps/frontend/**` gets browser globals, Hooks rules for call order and dependencies, and `jsx-a11y` recommended checks on JSX/TSX files.
@@ -35,7 +35,7 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 - [CREATED, NOT EXECUTED] Prettier is the single formatter. `.prettierrc.json` uses two spaces, LF, single quotes for JS/TS strings, and semicolons. `.editorconfig` aligns whitespace, UTF-8 and final newlines, and preserves intentional Markdown hard breaks. Prettier owns quote style.
 - [CREATED, NOT EXECUTED] `.prettierignore` excludes generated output, dependencies, local env files and the npm lockfile.
-- [NOT IMPLEMENTED] The root `format:check` script runs `prettier --config .prettierrc.json --check .` from the root. The current CI command explicitly selects the same config. Use it in editor integrations because the preserved legacy `.prettierrc` has higher discovery precedence. [Prettier CLI](https://prettier.io/docs/cli#--find-config-path-and---config) · [Discovery order](https://github.com/prettier/prettier/blob/main/src/config/prettier-config/config-searcher.js)
+- [IMPLEMENTED] The root `format:check` script runs `prettier --config .prettierrc.json --check .` from the root. The current CI command explicitly selects the same config. Use it in editor integrations because the preserved legacy `.prettierrc` has higher discovery precedence. [Prettier CLI](https://prettier.io/docs/cli#--find-config-path-and---config) · [Discovery order](https://github.com/prettier/prettier/blob/main/src/config/prettier-config/config-searcher.js)
 
 ## TypeScript
 
@@ -43,7 +43,7 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 - [RECOMMENDED] Enable `noUncheckedIndexedAccess` to require callers to handle absent indexed entries. Enforced by the shared compiler base.
 - [RECOMMENDED] Enable `noImplicitOverride` to catch accidental divergence from base classes. Enforced by the shared compiler base.
 - [RECOMMENDED] Enable `exactOptionalPropertyTypes` to preserve the distinction between a missing field and explicit `undefined` in contracts. Enforced by the shared compiler base.
-- [NOT IMPLEMENTED] Run a TypeScript check for every affected app project in CI. TypeScript comment exceptions follow the ESLint policy above. [TypeScript compiler options](https://www.typescriptlang.org/tsconfig/)
+- [IMPLEMENTED] Run a TypeScript check for every affected app project in CI. TypeScript comment exceptions follow the ESLint policy above. [TypeScript compiler options](https://www.typescriptlang.org/tsconfig/)
 
 ## Code conventions
 
@@ -58,7 +58,7 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 ## Environment and secrets
 
-- [NOT IMPLEMENTED] Add a per-service `.env.example` with uppercase snake case names and safe placeholders. Validate env settings with a schema at startup and test rejection of invalid or missing values.
+- [IMPLEMENTED for Auth and the gateway] Add a per-service `.env.example` with uppercase snake case names and safe placeholders. Validate env settings with a schema at startup and test rejection of invalid or missing values.
 - [CONFIRMED] Keep real secrets and local env files out of commits. Use least-privilege service credentials. Review configuration and run Gitleaks as a CI backstop.
 
 ## Testing
@@ -82,17 +82,17 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 ## Enforcement map
 
-| Rule group | Mechanism | Status | Backlog |
-|---|---|---|---|
-| Lint, app boundaries and comments | Root ESLint config and first lint verification | [CREATED, NOT EXECUTED] | [endy-rkt-13, endy-rkt-17](../product/task.md#endy-rkt-code-quality-follow-up) |
-| Formatting and editor defaults | Prettier and EditorConfig | [CREATED, NOT EXECUTED] | [endy-rkt-13](../product/task.md#endy-rkt-code-quality-follow-up) |
-| Strict compiler defaults | Root TypeScript base | [CREATED, NOT EXECUTED] | [endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up) |
-| Local lint, formatting and type-check commands | Root package scripts and app project configs | [NOT IMPLEMENTED] | [endy-rkt-13, endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up) |
-| PR quality, tests and security | CI jobs and required status | [NOT IMPLEMENTED] | [endy-rkt-11](../product/task.md#endy-rkt-foundation), [endy-rkt-15](../product/task.md#endy-rkt-code-quality-follow-up) |
-| Hooks | Optional Husky and lint-staged | [NOT IMPLEMENTED] | [endy-rkt-16](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Rule group                                     | Mechanism                                      | Status                  | Backlog                                                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Lint, app boundaries and comments              | Root ESLint config and first lint verification | [IMPLEMENTED]           | [endy-rkt-13, endy-rkt-17](../product/task.md#endy-rkt-code-quality-follow-up)                                           |
+| Formatting and editor defaults                 | Prettier and EditorConfig                      | [IMPLEMENTED]           | [endy-rkt-13](../product/task.md#endy-rkt-code-quality-follow-up)                                                        |
+| Strict compiler defaults                       | Root TypeScript base                           | [CREATED, NOT EXECUTED] | [endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up)                                                        |
+| Local lint, formatting and type-check commands | Root package scripts and app project configs   | [IMPLEMENTED]           | [endy-rkt-13, endy-rkt-14](../product/task.md#endy-rkt-code-quality-follow-up)                                           |
+| PR quality, tests and security                 | CI jobs and required status                    | [CREATED, NOT EXECUTED] | [endy-rkt-11](../product/task.md#endy-rkt-foundation), [endy-rkt-15](../product/task.md#endy-rkt-code-quality-follow-up) |
+| Hooks                                          | Optional Husky and lint-staged                 | [NOT IMPLEMENTED]       | [endy-rkt-16](../product/task.md#endy-rkt-code-quality-follow-up)                                                        |
 
 ## CI script contract
 
 [CONFIRMED] Use the existing `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.editorconfig` and `tsconfig.base.json` as the quality baseline. The private root npm manifest declares workspaces for `apps/frontend`, `apps/backend/*` and `packages/*`. Run `npm run lint` and `npm run format:check` from the root once the scripts land. Every initialized workspace, including a future shared package, defines nonempty `typecheck`, `test` and `build` scripts. Its TypeScript project extends `tsconfig.base.json` and includes all linted TypeScript files. The matrix checks that each script exists before invoking it and fails if any script is missing, invalid or fails. [CI guide](ci.md#partial-workspaces-and-prerequisites)
 
-[CREATED, NOT EXECUTED] The workflow definition is present. The enforcement map's rollout items still need workspace scripts, a hosted run and manual activation of the required check.
+[IMPLEMENTED] The root scripts and workspace scripts exist and pass locally. App directories without `package.json` are placeholders and are not linted until initialized. `scripts/3d` is a standalone tool with its own lockfile and TypeScript 7, outside the root lint and format scope. [NOT IMPLEMENTED] A hosted run and manual activation of the required check remain.

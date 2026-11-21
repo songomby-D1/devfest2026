@@ -19,8 +19,7 @@ defaults:
     shell: bash
 
 env:
-  NODE_VERSION: "22" # Align with the approved .nvmrc and engines under D15.
-  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_VERSION: '8.30.1'
   GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
 
 jobs:
@@ -118,11 +117,11 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: ./node_modules/.bin/prettier --config .prettierrc.json --check .
-      - run: ./node_modules/.bin/eslint . --max-warnings 0
+      - run: npm run format:check
+      - run: npm run lint
 
   service:
     name: ${{ matrix.path }}
@@ -136,13 +135,28 @@ jobs:
         path: ${{ fromJSON(needs.detect.outputs.services) }}
     env:
       WORKSPACE: ${{ matrix.path }}
+      # Disposable PostgreSQL for Prisma-backed integration suites (endy-rkt-23). Each suite
+      # creates and drops its own database. Auth must not skip its database tests.
+      AUTH_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      REQUIRE_DB_TESTS: ${{ matrix.path == 'apps/backend/auth' }}
+    services:
+      postgres:
+        image: postgres:18.6
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
         id: install
@@ -167,9 +181,25 @@ jobs:
         continue-on-error: true
         run: npm audit --audit-level=high --omit=dev -w "$WORKSPACE"
 
+  compose:
+    needs: detect
+    if: needs.detect.outputs.has_root == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Throwaway secrets generated on the runner, never uploaded.
+      - run: npm run setup:env
+      - run: docker compose config --quiet
+
   ci-ok:
     if: always()
-    needs: [branch-guard, secrets, detect, lint, service]
+    needs: [branch-guard, secrets, detect, lint, service, compose]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
