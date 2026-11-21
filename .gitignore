@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build, cache and test output
+dist/
+build/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Local environment files (commit only the examples)
+.env
+.env.*
+!.env.example
+
+# Local-only assets. The repository is public, so licensed fonts and
+# cultural media stay out of Git until their rights are cleared (D18).
+apps/frontend/fonts/
+apps/frontend/public/media/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Local agent settings
+.claude/settings.local.json
