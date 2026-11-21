@@ -1,0 +1,710 @@
+/*
+ * Gallery room, Figma node 114:3877 (1440x900). Coordinates are Figma pixels
+ * multiplied by --u. The wall photo is placed by useScenePlacement so the
+ * artwork keeps its spot in the spotlight at any viewport size.
+ */
+.gallery {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-text);
+  color: var(--color-paper);
+  background: var(--color-gallery-black);
+}
+
+/* Scene */
+.scene {
+  position: absolute;
+  top: var(--scene-top, 0);
+  left: var(--scene-left, 0);
+  width: var(--scene-width, 100%);
+  height: var(--scene-height, 100%);
+  will-change: opacity;
+}
+
+.sceneImage,
+.sceneWall {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+
+.sceneWall {
+  background: var(--wall-red);
+}
+
+.gallery[data-wall='stone'] .sceneWall {
+  background: var(--wall-stone);
+}
+
+.gallery[data-wall='ochre'] .sceneWall {
+  background: var(--wall-ochre);
+}
+
+.gallery[data-wall='indigo'] .sceneWall {
+  background: var(--wall-indigo);
+}
+
+/* Stage helpers: the 1440x900 box centred in the viewport */
+.spot,
+.room,
+.topBar,
+.bottomBar {
+  position: absolute;
+}
+
+.spot {
+  top: calc(50% - 450 * var(--u));
+  left: calc(50% - 720 * var(--u));
+  width: calc(1440 * var(--u));
+  height: calc(900 * var(--u));
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.spotBeam,
+.spotCore {
+  position: absolute;
+}
+
+.spotBeam {
+  top: calc(100 * var(--u));
+  left: calc(243 * var(--u));
+  width: calc(492 * var(--u));
+  height: calc(817 * var(--u));
+}
+
+.spotCore {
+  top: calc(132 * var(--u));
+  left: calc(283 * var(--u));
+  width: calc(420 * var(--u));
+  height: calc(591 * var(--u));
+}
+
+.topScrim {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: calc(189 * var(--u));
+  pointer-events: none;
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.9) 0%, rgb(0 0 0 / 0) 100%);
+}
+
+/* Top bar, Figma "Barre haute" */
+.topBar {
+  top: calc(30 * var(--u));
+  right: calc(40 * var(--u));
+  left: calc(40 * var(--u));
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 44px;
+}
+
+.logo {
+  display: inline-block;
+  border-radius: var(--radius-button);
+}
+
+.currentRoom {
+  display: flex;
+  gap: var(--space-14);
+  align-items: center;
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.progress {
+  display: flex;
+  gap: var(--space-6);
+  align-items: center;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-paper-16);
+  border-radius: var(--radius-dot);
+  transition:
+    width 400ms var(--ease-out),
+    background-color 400ms var(--ease-out);
+}
+
+.dotActive {
+  width: 18px;
+  background: var(--color-paper);
+}
+
+.topRight {
+  display: flex;
+  gap: var(--space-10);
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.topRight .menuButton {
+  display: none;
+}
+
+/* Glass pills shared by the bars */
+.glassButton,
+.artworkNav {
+  display: inline-flex;
+  gap: var(--space-10);
+  align-items: center;
+  height: 44px;
+  padding: 0 var(--space-20) 0 var(--space-14);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.02em;
+  color: var(--color-paper);
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--color-glass-wine);
+  border: 1px solid var(--color-paper-16);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(var(--blur-glass));
+  transition: border-color var(--duration-base) var(--ease-out);
+}
+
+.glassButton:hover:not(:disabled) {
+  border-color: var(--color-paper-40);
+}
+
+.glassButton:disabled {
+  color: var(--color-paper-40);
+  cursor: default;
+}
+
+/* Room content */
+.room {
+  inset: 0;
+}
+
+.wallText {
+  position: absolute;
+  top: calc(50% + (251 - 450) * var(--u));
+  left: calc(50% + (918 - 720) * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(20 * var(--u));
+  width: calc(420 * var(--u));
+}
+
+.wallLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-paper-70);
+}
+
+.wallTitle {
+  margin: 0;
+  font-family: var(--font-condensed);
+  font-size: calc(60 * var(--u));
+  font-weight: 400;
+  line-height: 0.89;
+  text-transform: uppercase;
+  color: var(--color-paper);
+}
+
+/* SplitText line masks get headroom for ascenders and italic overhangs. */
+.wallTitle > div {
+  padding: 0.15em 0.06em 0.1em;
+  margin: -0.15em -0.06em -0.1em;
+}
+
+.wallSubtitle > div,
+.wallBody p > div {
+  padding: 0 0.12em;
+  margin: 0 -0.12em;
+}
+
+.wallSubtitle {
+  margin: 0;
+  font-family: var(--font-serif-italic);
+  font-size: calc(24 * var(--u));
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.wallBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-paper-70);
+}
+
+.wallBody p {
+  margin: 0;
+}
+
+.readButton {
+  display: none;
+  align-self: flex-start;
+}
+
+/* Featured artwork: 538x538 frame at (238,159), opening 249x321 at (375,264) */
+.hung {
+  position: absolute;
+  top: calc(50% + (159 - 450) * var(--u));
+  left: calc(50% + (238 - 720) * var(--u));
+  width: calc(538 * var(--u));
+  height: calc(538 * var(--u));
+  margin: 0;
+}
+
+.artwork {
+  position: absolute;
+  top: calc(105 / 538 * 100%);
+  left: calc(137 / 538 * 100%);
+  width: calc(249 / 538 * 100%);
+  height: calc(321 / 538 * 100%);
+  overflow: hidden;
+  background: var(--color-media-missing);
+}
+
+.artworkImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gildedFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Rooms in preparation */
+.placeholder {
+  position: absolute;
+  top: calc(50% + (159 - 450) * var(--u));
+  left: calc(50% + (238 - 720) * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  align-items: center;
+  justify-content: center;
+  width: calc(538 * var(--u));
+  height: calc(538 * var(--u));
+  padding: var(--space-24);
+  text-align: center;
+  background: rgb(0 0 0 / 0.22);
+  border: 1px solid var(--color-paper-16);
+}
+
+/* Rooms without a wall photograph get a softer spot. */
+.gallery[data-scene='tone'] .spotBeam,
+.gallery[data-scene='tone'] .spotCore {
+  opacity: 0.5;
+}
+
+.placeholderTitle {
+  margin: 0;
+  font-family: var(--font-serif-italic);
+  font-size: calc(28 * var(--u));
+  font-style: italic;
+}
+
+.placeholderHint {
+  max-width: 32ch;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-paper-70);
+}
+
+.mediumSlot {
+  display: none;
+}
+
+/* Wall label, Figma "Cartel mural" */
+.cartel {
+  position: absolute;
+  top: calc(50% + (479 - 450) * var(--u));
+  left: calc(50% + (139 - 720) * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  align-items: flex-start;
+  width: max(120px, calc(132 * var(--u)));
+  padding: var(--space-14);
+  text-align: left;
+  cursor: pointer;
+  background: var(--color-paper-95);
+  border: 0;
+  box-shadow: var(--shadow-label);
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.cartel:hover,
+.cartel:focus-visible {
+  box-shadow: var(--shadow-label-raised);
+  transform: translateY(-4px);
+}
+
+.cartelNumber,
+.cartelLink,
+.cartelTechnique {
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.cartelNumber,
+.cartelLink {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--color-accent);
+}
+
+.cartelTitle {
+  font-family: var(--font-serif-italic);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+
+.cartelTechnique {
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: var(--color-ink-60);
+}
+
+.cartelLink {
+  margin-top: var(--space-4);
+  text-decoration: underline transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duration-base) var(--ease-out);
+}
+
+.cartel:hover .cartelLink,
+.cartel:focus-visible .cartelLink {
+  text-decoration-color: currentcolor;
+}
+
+/* Bottom bar, Figma "Barre basse" */
+.bottomBar {
+  right: calc(40 * var(--u));
+  bottom: calc(32 * var(--u));
+  left: calc(40 * var(--u));
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 48px;
+}
+
+.roomTabs {
+  display: flex;
+  gap: var(--space-24);
+  align-items: center;
+}
+
+.artworkNav {
+  gap: var(--space-4);
+  padding: 0 var(--space-6);
+  cursor: default;
+}
+
+.navArrow {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-pill);
+  transition: background-color var(--duration-base) var(--ease-out);
+  place-items: center;
+}
+
+.navArrow:hover:not(:disabled) {
+  background: var(--color-paper-16);
+}
+
+.navArrow:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.counter {
+  min-width: 110px;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Curtain continuation from the home transition */
+.curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  visibility: hidden;
+  background: var(--color-gallery-black);
+  opacity: 0;
+}
+
+/* Bottom sheets (mobile wall text and room menu) */
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  padding: var(--space-24) var(--space-24) var(--space-32);
+  color: var(--color-ink);
+}
+
+.sheet .wallLabel {
+  color: var(--color-accent);
+}
+
+.sheetTitle {
+  margin: 0;
+  font-family: var(--font-condensed);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.sheetSubtitle {
+  margin: 0;
+  font-family: var(--font-serif-italic);
+  font-size: 20px;
+  font-style: italic;
+}
+
+.sheetBody {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.sheetClose {
+  align-self: flex-start;
+  height: 44px;
+  padding: 0 var(--space-20);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-pill);
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.roomListLink {
+  display: flex;
+  gap: var(--space-16);
+  align-items: baseline;
+  padding: var(--space-14) 0;
+  font-family: var(--font-serif-italic);
+  font-size: 22px;
+  font-style: italic;
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-ink-08);
+}
+
+.roomListLink[aria-current='page'] {
+  color: var(--color-accent);
+}
+
+.roomListNumber {
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.16em;
+  color: var(--color-ink-60);
+}
+
+/* Mobile, no mockup yet: artwork on top, room title below, wall text behind "Lire". */
+@media (max-width: 767px), (max-aspect-ratio: 3/4) {
+  .gallery {
+    --u: min(100vw / 390, 100dvh / 844);
+  }
+
+  .scene {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sceneImage {
+    object-fit: cover;
+    object-position: 36% 50%;
+  }
+
+  .spot {
+    top: 0;
+    left: 50%;
+    width: 100vw;
+    height: 60dvh;
+    transform: translateX(-50%);
+  }
+
+  .spotBeam {
+    top: -8%;
+    left: 50%;
+    width: 110vw;
+    height: 100%;
+    transform: translateX(-50%);
+  }
+
+  .spotCore {
+    top: 2%;
+    left: 50%;
+    width: 90vw;
+    height: 80%;
+    transform: translateX(-50%);
+  }
+
+  .topBar {
+    top: var(--space-16);
+    right: var(--space-16);
+    left: var(--space-16);
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .currentRoom {
+    justify-self: center;
+    font-size: 12px;
+  }
+
+  .progress {
+    display: none;
+  }
+
+  .topRight .menuButton {
+    display: inline-flex;
+    height: 36px;
+    padding: 0 var(--space-14);
+  }
+
+  .sound {
+    min-width: 0;
+    width: 44px;
+    padding: 0;
+  }
+
+  .sound span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .hung,
+  .placeholder {
+    top: calc(72 * var(--u));
+    left: 50%;
+    width: min(84vw, calc(330 * var(--u)));
+    height: min(84vw, calc(330 * var(--u)));
+    transform: translateX(-50%);
+  }
+
+  /* The wall label sits right under the frame, above the room text. */
+  .cartel {
+    top: calc(72 * var(--u) + min(84vw, 330 * var(--u)) + var(--space-10));
+    left: var(--space-16);
+    gap: var(--space-4);
+    width: 132px;
+    padding: var(--space-8) var(--space-10);
+  }
+
+  .cartelTechnique {
+    display: none;
+  }
+
+  .wallText {
+    top: auto;
+    bottom: calc(96px + 24 * var(--u));
+    left: var(--space-16);
+    gap: var(--space-8);
+    width: calc(100vw - 2 * var(--space-16));
+  }
+
+  .wallTitle {
+    font-size: calc(40 * var(--u));
+  }
+
+  .wallSubtitle {
+    font-size: 16px;
+  }
+
+  .wallBody {
+    display: none;
+  }
+
+  .readButton {
+    display: inline-flex;
+    height: 36px;
+    padding: 0 var(--space-14);
+  }
+
+  .bottomBar {
+    right: var(--space-16);
+    bottom: var(--space-16);
+    left: var(--space-16);
+    grid-template-columns: auto 1fr;
+    gap: var(--space-10);
+  }
+
+  .roomTabs {
+    display: none;
+  }
+
+  /* Keep the label for assistive technologies; only the icon shows. */
+  .closeUpButton span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .closeUpButton {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .counter {
+    min-width: 96px;
+    font-size: 12px;
+  }
+}

@@ -148,7 +148,7 @@ endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibiliti
 |---|---|---|---|---|
 | FE-01 | Scaffold the React app shell using the approved D15 runtime.                        | P0       | endy-rkt-01, endy-rkt-02, endy-rkt-07                       | Review |
 | FE-05 | Write the frontend's initial tests and Dockerfile, and register it in root Compose. | P0 | FE-01 | Backlog |
-| FE-02 | Implement the main screens from Sesedra's mockups. | P0 | FE-01, UX-02 | In progress |
+| FE-02 | Implement the main screens from Sesedra's mockups. | P0 | FE-01, UX-02 | Review |
 | FE-03 | Connect discovery, account, upload and verification flows through the gateway. | P0 | FE-02, GATEWAY-01, AUTH-03, AUTH-04, CONTENT-03, CONTENT-04 | Backlog |
 | FE-04 | Integrate NFT and 3D experiences through the gateway. | P0 | FE-02, GATEWAY-01, NFT-05, 3D-05 | Backlog |
 

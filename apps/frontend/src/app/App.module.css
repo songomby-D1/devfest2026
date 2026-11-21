@@ -1,27 +1,18 @@
-.shell {
+.notFound {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  gap: var(--space-14);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-24);
+  text-align: center;
 }
 
-.header {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.brand {
+.notFound h1 {
   margin: 0;
-  font-weight: var(--font-weight-strong);
-}
-
-.main {
-  flex: 1;
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin: 0 auto;
-  padding: var(--space-5) var(--space-4);
-}
-
-.lead {
-  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 400;
+  text-transform: uppercase;
 }

@@ -97,6 +97,7 @@ Each owner takes their app or service from initialization through integration. T
 | [Tests and delivery criteria](docs/development/quality-gates.md) | Checks required for each service |
 | [CI](docs/development/ci.md) | Workflow, troubleshooting, and GitHub settings |
 | [Agent instructions](AGENTS.md) | Shared rules for Claude and Codex |
+| [Frontend](apps/frontend/README.md) | How the React frontend is built, run, tested and verified |
 | [Frontend rules](apps/frontend/rules.md) | Frontend stack, Figma-to-code rules, required states and checks |
 
 ## Design and UX
