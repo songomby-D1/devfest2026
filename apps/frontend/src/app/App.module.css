@@ -1,0 +1,27 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand {
+  margin: 0;
+  font-weight: var(--font-weight-strong);
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+}
+
+.lead {
+  color: var(--color-text-muted);
+}
