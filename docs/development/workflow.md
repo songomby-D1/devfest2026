@@ -1,8 +1,24 @@
 # Development workflow
 
-This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules, the [code quality policy](code-policy.md) for shared checks, and the [CI guide](ci.md) for hosted runs and troubleshooting.
+This page records the approved runtime and local check conventions. See [Contributing](../../CONTRIBUTING.md) for Git and review rules, the [code quality policy](code-policy.md) for shared checks, and the [CI guide](ci.md) for hosted runs and troubleshooting.
 
-[NOT IMPLEMENTED] No commands below exist yet. [DECISION REQUIRED: endy-rkt] **D17 Tooling rollout.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
+## Runtime and workspaces
+
+[CONFIRMED] [D15](../decisions/project-decisions.md#d15-node-and-npm-workspace-runtime) keeps Node 22. Select the exact patch in `.nvmrc` locally and in CI, and use that patch for Node-based Docker stages. Declare `engines.node` as `>=22 <23`. Use the bundled npm version by default and pin the exact version as `npm@<version>` in the root `packageManager` field. Use that npm version for local, CI and container installs. Runtime selection uses `.nvmrc`. Mise is deferred.
+
+Use a private root npm workspace for `apps/frontend`, `apps/backend/*` and `packages/*` with one committed root `package-lock.json`. Run `npm ci` at the repository root for reproducible installs.
+
+[NOT IMPLEMENTED] [endy-rkt-18](../product/task.md#endy-rkt-ci-follow-up) validates the exact Node/npm pair with the scaffold toolchain and aligns `.nvmrc` and CI. It supplies the values for `engines.node` and `packageManager` to endy-rkt-19 for a single coordinated root manifest change. endy-rkt-19 alone installs and pins the initial dependencies and owns the initial manifest and lockfile. [endy-rkt-07](../product/task.md#endy-rkt-foundation) uses that foundation to coordinate scaffolding with workspace owners.
+
+## Quality checks
+
+[CONFIRMED] [D17](../decisions/project-decisions.md#d17-quality-tooling-and-ci-rollout) uses npm scripts for local and CI checks. [endy-rkt-13](../product/task.md#endy-rkt-code-quality-follow-up) consumes the pins from endy-rkt-19 and adds only root scripts. It does not repeat dependency installation. The older install-and-pin wording in the endy-rkt-13 backlog row is pending separate reconciliation. Affected-owner feedback is pending under [endy-rkt-08](../product/task.md#endy-rkt-foundation) for shared contracts and [endy-rkt-20](../product/task.md#endy-rkt-ci-follow-up) for workspace adoption.
+
+[NOT IMPLEMENTED] After the root scripts land, run `npm run lint` and `npm run format:check` from the root. Run `npm run typecheck -w <workspace>`, `npm run test -w <workspace>` and `npm run build -w <workspace>` for each initialized workspace, including a future shared package. Use the same root scripts in CI after they are available. The current workflow runs the lint and formatting tools directly when a root manifest exists. [CI script contract](code-policy.md#ci-script-contract)
+
+## Deferred Taskfile wrappers
+
+[NOT IMPLEMENTED] Taskfile wrappers require separate approval from endy-rkt. If approved, keep them thin and delegate to npm workspace scripts and Docker Compose. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. [Task templating reference](https://taskfile.dev/docs/reference/templating)
 
 | Proposed command | Intended behavior and scope |
 |---|---|
@@ -18,5 +34,3 @@ This page proposes local commands and runtime onboarding. See [Contributing](../
 | `task format` | Run the shared formatter across the workspace or a selected service. |
 | `task build` | Build all workspaces or a selected service with its workspace dependencies. |
 | `task clean` | Remove only generated local outputs at workspace or selected service scope. Retain data volumes and local environment files. |
-
-[DECISION REQUIRED: endy-rkt] **D15 Runtime version management.** [RECOMMENDED] **Use a simpler alternative to mise.** Record one approved Node.js LTS version in `.nvmrc`, declare compatibility in package `engines`, and have CI read the same version file. Taskfile orchestrates commands and can check prerequisites. A version-manager layer would add another installation for contributors on a single-runtime project.
