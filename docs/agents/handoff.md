@@ -2,12 +2,24 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: 3D asset procedure (shidoAdr)
+## NestJS lint compatibility
+
+- On `fix/nestjs-eslint-rules`, [the ESLint override](../../eslint.config.mjs) allows decorated empty classes and disables class-instance assignment linting for backend TypeScript. Undecorated empty classes still fail. Frontend TypeScript and backend JavaScript retain their existing rules.
+- Temporary NestJS fixtures passed in all five backend paths using ESLint 9.39.5 and TypeScript 6.0.3. The root workspace checks still depend on the root tooling rollout.
+
+## Latest session: CONTENT-05 status (papangoo)
+
+- [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) and CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)) move to In progress. CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) stays Groomed and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)) stays Backlog.
+- [CONFIRMED] D18 is confirmed in the [decision register](../decisions/project-decisions.md#d18-editorial-policy-and-demo-content), so these rows no longer wait on it. [DECISION REQUIRED: endy-rkt] Explicit clearance is still required before cultural media is sent to an external AI API. papangoo's position is recorded on [#57](https://github.com/songomby-D1/devfest2026/issues/57): the sample media may be sent, papangoo holds the API keys, and one vision API is enough.
+- [CONFIRMED] papangoo chose the Anthropic API with `claude-sonnet-5-5` for the description-to-media check (05b). Descriptions can be in English, French or Malagasy, with no special handling for Malagasy. The result is an advisory signal only.
+- [NOT IMPLEMENTED] The 05a prototype is a NestJS service outside this repository. It checks images, and videos through 3 extracted frames, with Sightengine, and it is in final review. It has not been called against the real Sightengine API yet. The 05b code is not written. These tickets add nothing to this repository yet.
+
+## Earlier session: 3D asset procedure (shidoAdr)
 
 - [CONFIRMED] 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)): drafted the [3D asset procedure](../architecture/3d-asset-procedure.md) for D12 option A, with `prepare.sh` and `poster.mjs`. The USDZ is withheld until 3D-04a strips its device metadata and checks its references. Two successive runs of the documented commands from clean directories gave identical outputs.
 - [NOT IMPLEMENTED] Another team member must follow the procedure alone, and shidoAdr must confirm the Reality Composer menu steps.
 
-## Session: CONTENT-05 grooming (papangoo)
+## Earlier session: CONTENT-05 grooming (papangoo)
 
 - [CONFIRMED] CONTENT-05 ([#57](https://github.com/songomby-D1/devfest2026/issues/57)) is groomed as an exploration only, split into CONTENT-05a ([#84](https://github.com/songomby-D1/devfest2026/issues/84)), CONTENT-05b ([#85](https://github.com/songomby-D1/devfest2026/issues/85)) and CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)). The sub-issues are linked to the Content & Verification umbrella ([#18](https://github.com/songomby-D1/devfest2026/issues/18)). CONTENT-08 ([#87](https://github.com/songomby-D1/devfest2026/issues/87)) records content moderation as a post-MVP idea.
 - [CONFIRMED] The signals are advisory. They never grant or remove a verified status ([MVP section B](../product/MVP.md#b-content-and-verification)). The two signals explored are AI-generated detection (05a) and the coherence of a description with its media, with angle pictures for 3D models (05b). Findings go in `docs/architecture/ai-assisted-analysis-spike.md`, which does not exist yet.
