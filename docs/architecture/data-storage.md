@@ -2,11 +2,13 @@
 
 This page compares PostgreSQL ownership and S3-compatible options, and defines proposed media handling and backup expectations.
 
-[CONFIRMED] Use PostgreSQL and S3-compatible object storage. [NOT IMPLEMENTED] No databases, buckets, migration flow or storage policies exist yet.
+[CONFIRMED] Use one shared PostgreSQL instance per environment, Prisma as the ORM for services that persist data, and S3-compatible object storage. [NOT IMPLEMENTED] No databases, Prisma setup, buckets, migration flow or storage policies exist yet.
 
 ## PostgreSQL isolation
 
-[DECISION REQUIRED: endy-rkt] **D04 Database ownership.** [RECOMMENDED] Use a single PostgreSQL instance with a database and credentials per stateful service. PostgreSQL supports multiple databases within one instance. This simplifies the boundary without running a server per service. Separate schemas with distinct roles in a single database are also viable and simplify some provisioning, but require careful schema permissions, default privileges and search paths. Give runtime roles only the privileges they need. The proposed gateway needs no database. [PostgreSQL database organization](https://www.postgresql.org/docs/current/manage-ag-overview.html)
+[CONFIRMED] All stateful services connect to the same PostgreSQL instance. Each service owns its Prisma schema and migrations and uses credentials scoped to its data. Services without persistence, including the proposed gateway and the frontend, need no database or Prisma client.
+
+[DECISION REQUIRED: endy-rkt] **D04 Isolation within the shared instance.** [RECOMMENDED] Use a separate database and credentials per stateful service. Separate schemas with distinct roles in one database are also viable and simplify some provisioning, but require careful schema permissions, default privileges and search paths. Give runtime roles only the privileges they need. [PostgreSQL database organization](https://www.postgresql.org/docs/current/manage-ag-overview.html)
 
 [RECOMMENDED] Enforce ownership with database grants. Services access other services' data through contracted APIs and hold cross-service references as opaque IDs. Use no cross-service foreign keys or direct table access. Transactions end at a service boundary. For an external call that can outlive a local write, persist enough state to retry safely and reconcile later. Define behavior for a missing or unpublished referenced item.
 

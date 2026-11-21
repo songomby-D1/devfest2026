@@ -47,6 +47,8 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 ## Code conventions
 
+- [CONFIRMED] Write repository documentation in English and use English names for code and environment variables. Keep the README subtitle in French as the sole documentation exception. Enforced in PR review.
+
 - [RECOMMENDED] Use PascalCase for types, classes and React components, camelCase for variables and functions, and kebab-case for folders and non-component source files. Use PascalCase filenames for component files. Enforced in review.
 - [RECOMMENDED] Organize each Nest service by feature module and keep controllers, providers and DTOs with their owning module. Enforced in architecture review.
 - [CONFIRMED] Validate input DTOs at the HTTP edge. Map failures to the [gateway error contract](../architecture/services.md#contracts-and-shared-package). Verify both in integration tests and review.

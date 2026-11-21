@@ -2,6 +2,8 @@
 
 Use this specification to size a functional demo of Malagasy cultural heritage discovery and its supporting workflows.
 
+[CONFIRMED] endy-rkt defines the MVP goals and scope. Each [owner](../team/responsibilities.md#task-ownership) refines their own tasks and decides how to deliver their part within those constraints.
+
 [NOT IMPLEMENTED] All capabilities below describe planned behavior. [DECISION REQUIRED: endy-rkt] **D01 Hackathon deadline and demo scope.** [RECOMMENDED] Confirm the deadline and reserve an integration and rehearsal window. Use one end-to-end content journey to size the demo while preserving the confirmed capabilities.
 
 ## A. Authentication
@@ -34,7 +36,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 - **Purpose and owner.** [CONFIRMED] salandri-42 owns NFT functionality. A working NFT integration is required for the MVP.
 - **MVP journey.** [RECOMMENDED] From a published item, an eligible user starts minting, confirms the wallet action if required, and sees pending, confirmed or failed status. On confirmation, show the linked item, chain, token and transaction reference with the scope of any provenance claim.
 - **Association and trust.** [RECOMMENDED] Validate the published item's stable reference with Content before minting. Link token metadata to that item and an approved public snapshot or versioned reference. NFT owns mapping and transaction state. Keep private media, credentials and personal data out of on-chain data and public token metadata. [CONFIRMED] Token records can document a digital event. An NFT by itself establishes neither physical authenticity nor ownership of intellectual property.
-- **Integration choices.** [DECISION REQUIRED: endy-rkt] salandri-42 investigates the following as a compatible set. For each, compare cost, usable testnet and test funds, tooling, demo reliability and integration time. Demonstrate signing, confirmation and metadata resolution with the candidate stack before selecting it. Use the gateway for NFT application requests and define the wallet signing boundary separately.
+- **Integration choices.** [DECISION REQUIRED: salandri-42] Evaluate and select the following as a compatible set. Compare cost, testnet and test funds, tooling, demo reliability and integration time. Demonstrate signing, confirmation and metadata resolution with the candidate stack before selecting it. Route application requests through the gateway, define wallet signing separately and agree on changes to the Content and gateway contracts with their owners.
   - **D08 Blockchain.** Compare an EVM testnet such as Sepolia and Solana devnet. Favor the path the team can rehearse end to end with predictable test funding. [Ethereum networks](https://ethereum.org/developers/docs/networks/) · [Solana clusters](https://solana.com/docs/references/clusters)
   - **D09 NFT standard.** Compare ERC-721 for unique EVM items, ERC-1155 if editions are needed, and a chain-native token metadata standard for a non-EVM option. Favor a single-item standard matching the chosen ecosystem. [ERC-721](https://eips.ethereum.org/EIPS/eip-721) · [ERC-1155](https://eips.ethereum.org/EIPS/eip-1155)
   - **D10 Wallet.** Compare an ecosystem-native browser wallet, a connector or a hosted wallet. Favor a browser wallet with a rehearsed demo device if it avoids further account setup. Check mobile support and recovery from user rejection.
@@ -59,7 +61,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 ## E. LiDAR and 3D
 
 - **Purpose and owner.** [CONFIRMED] shidoAdr owns LiDAR scanning feasibility and 3D.
-- **MVP decision.** [DECISION REQUIRED: endy-rkt] **D12 3D demo experience.** [RECOMMENDED] Display one rights-cleared, pre-produced, optimized binary glTF (GLB) model inside an item detail with basic interaction and a still-image fallback. This makes the viewing experience independent of live capture. [Khronos glTF specification](https://registry.khronos.org/glTF/)
+- **MVP delivery decision.** [DECISION REQUIRED: shidoAdr] **D12 3D demo experience.** [RECOMMENDED] Display one rights-cleared, pre-produced, optimized binary glTF (GLB) model inside an item detail with basic interaction and a still-image fallback. This makes the viewing experience independent of live capture. Coordinate the viewer with the frontend owner. [Khronos glTF specification](https://registry.khronos.org/glTF/)
 - **Scanning investigation.** [RECOMMENDED] Check device and OS availability, capture permissions, lighting, export and cleanup tools, asset weight, network and mobile rendering. Document capture → export → offline cleanup and optimization → validate → store → associate with content → display. The LiDAR service owns 3D asset state. [Data and storage](../architecture/data-storage.md).
 - **Future.** [RECOMMENDED] Defer in-app capture, automated reconstruction and processing jobs until the feasibility work supports them.
 - **Dependencies.** Content association, LiDAR metadata, storage and gateway delivery, and a viewer validated on demo devices.

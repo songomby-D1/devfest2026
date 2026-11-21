@@ -24,12 +24,15 @@ See the [code policy](code-policy.md#environment-and-secrets) for environment an
 
 ## Testing and service definition of done
 
+[CONFIRMED] Each frontend or backend owner writes and maintains the unit and integration tests for their app or service. A new app or service also needs an owner-written Dockerfile and an entry in the root Compose file. Test the app's actual boundaries, including Prisma-backed behavior for services that persist data. [Task ownership](../team/responsibilities.md#task-ownership)
+
 - [RECOMMENDED] Unit-test business rules and edge cases with deterministic inputs.
 - [RECOMMENDED] Integration-test real HTTP and local PostgreSQL behavior for each stateful service. Exercise storage operations against the chosen S3-compatible service. Use deterministic fixtures or a controlled upstream for blockchain behavior and rehearse the live test environment separately.
 - [RECOMMENDED] Keep end-to-end coverage to critical smoke flows through the gateway. Check guest discovery and a protected action, plus the integrated media, provenance and 3D demo where practical. Prioritize behaviors from the [MVP acceptance criteria](../product/MVP.md) over coverage targets.
 
 | Service | Proposed completion check |
 |---|---|
+| Frontend | Cover the main user flows and failed gateway responses with component and integration tests. |
 | Auth | Account lifecycle and access denial pass HTTP/database integration, including ended-session rejection. |
 | Content & Verification | Upload, permission and review semantics match the approved contract and survive storage and validation failures. |
 | NFT | Test pending, confirmed, duplicate and failed outcomes. Rehearse one real mint on the approved demo network. |

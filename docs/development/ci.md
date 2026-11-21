@@ -50,7 +50,7 @@ Keep secrets and real `.env` files out of Git and keep real credentials out of d
 
 ## Deferred checks and open rollout choices
 
-- [NOT IMPLEMENTED] Enable a PostgreSQL service container for each service when its first database-backed integration test lands. See the [test plan](quality-gates.md#testing-and-service-definition-of-done).
+- [NOT IMPLEMENTED] When the first database-backed integration test lands, provision one disposable PostgreSQL instance for the CI integration environment. Prisma-backed suites share that instance with isolated test data and apply only their own service's migrations. See the [test plan](quality-gates.md#testing-and-service-definition-of-done) and [data ownership](../architecture/data-storage.md#postgresql-isolation).
 - [NOT IMPLEMENTED] Add changed-service Docker builds on PRs into `main` after the service Dockerfiles exist. E2E smoke tests and CD are future work.
 - [DECISION REQUIRED: endy-rkt] D15: approve Node 22 or another supported LTS and align CI, `.nvmrc` and package `engines`.
 - [DECISION REQUIRED: endy-rkt] Keep the full-history push scan initially or switch to incremental `before..after` once there is a trusted baseline. Keep full history for now to detect pre-existing leaks.
