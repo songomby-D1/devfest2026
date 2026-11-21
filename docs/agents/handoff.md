@@ -4,12 +4,18 @@
 
 ## Latest session: NFT lot L0 (salandri-42)
 
-- [IMPLEMENTED, IN REVIEW] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), on `feature/dev-nft`. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
+- [IMPLEMENTED] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), merged into `develop` through [#100](https://github.com/songomby-D1/devfest2026/pull/100) with endy-rkt's approval. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
 - Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
 - [NOT IMPLEMENTED] When endy-rkt-19 lands the root workspace and lockfile, delete `apps/backend/nft/package-lock.json` and `.npmrc`, run `npm install` at the root and switch the Dockerfile to the root `npm ci`. Align the Docker image and engines to the exact Node patch from endy-rkt-18.
 - [DECISION REQUIRED: salandri-42] The [decision register](../decisions/project-decisions.md) resolves gaps E3 to E6 of spec §4.0.4 against the spec's assumptions: synchronous HTTP with gateway polling instead of a shared Redis queue (D16), an NFT database with Prisma (D04), SeaweedFS media instead of a shared volume (D05) and a mint started by an eligible user (D01, D13). Reconcile spec §3 and lots L2, L3, L6 and L7 under NFT-01 and endy-rkt-06 before L2. Runtime validators stay in the NFT service rather than a shared package (D14). Prisma is not set up yet. Lot L1, the smart contract, is unaffected.
 - [HUMAN] salandri-42 creates a dedicated testnet wallet, gets Fuji test AVAX, creates a Pinata account and JWT, and fills `apps/backend/nft/.env` from `.env.example`.
-- Next: lot L1 once salandri-42 validates L0.
+- Next: lot L1, the smart contract.
+
+## Earlier session: Auth contract (shidoAdr)
+
+- [PROPOSED] AUTH-01 to AUTH-07 ([#46](https://github.com/songomby-D1/devfest2026/issues/46)–[#51](https://github.com/songomby-D1/devfest2026/issues/51), [#97](https://github.com/songomby-D1/devfest2026/issues/97)): drafted the [Auth contract specification](../specs/auth-contract.md) for endy-rkt-05 and endy-rkt-08. It covers the internal Auth API, opaque sessions with a 2 h idle and 7-day absolute limit, the caller-context headers, per-pair service secrets, the D13 permission matrix and the error shape, with 16 acceptance criteria.
+- [DECISION REQUIRED: endy-rkt] Confirm the header names, service secrets, public routes, CSRF safeguard and rate limits. Open questions for papangoo and salandri-42 are listed in the spec.
+- [NOT IMPLEMENTED] No Auth code exists. AUTH-07 waits on endy-rkt-07 and INFRA-01.
 
 ## NestJS lint compatibility
 
