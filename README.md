@@ -22,4 +22,4 @@
 
 ## Design and UX
 
-[NOT IMPLEMENTED] Sedra will contribute the design summary and approved mockup links here.
+[NOT IMPLEMENTED] Sesedra will contribute the design summary and approved mockup links here.

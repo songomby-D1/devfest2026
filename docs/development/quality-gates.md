@@ -36,4 +36,4 @@ See the [code policy](code-policy.md#environment-and-secrets) for environment an
 | LiDAR | A valid asset and association resolve through the gateway. Unavailable assets have an observable fallback. |
 | Gateway | Verify public contract and error shape, auth propagation and an end-to-end smoke path across service boundaries. |
 
-[RECOMMENDED] For each service, require its build and checks to pass, the agreed contract and environment variables to be documented, and an independent startup check with declared dependencies before CTO review.
+[RECOMMENDED] For each service, require its build and checks to pass, the agreed contract and environment variables to be documented, and an independent startup check with declared dependencies before review by endy-rkt.

@@ -6,13 +6,13 @@ This page compares PostgreSQL ownership and S3-compatible options, and defines p
 
 ## PostgreSQL isolation
 
-[CTO DECISION REQUIRED] **D04 Database ownership.** [RECOMMENDED] Use a single PostgreSQL instance with a database and credentials per stateful service. PostgreSQL supports multiple databases within one instance. This simplifies the boundary without running a server per service. Separate schemas with distinct roles in a single database are also viable and simplify some provisioning, but require careful schema permissions, default privileges and search paths. Give runtime roles only the privileges they need. The proposed gateway needs no database. [PostgreSQL database organization](https://www.postgresql.org/docs/current/manage-ag-overview.html)
+[DECISION REQUIRED: endy-rkt] **D04 Database ownership.** [RECOMMENDED] Use a single PostgreSQL instance with a database and credentials per stateful service. PostgreSQL supports multiple databases within one instance. This simplifies the boundary without running a server per service. Separate schemas with distinct roles in a single database are also viable and simplify some provisioning, but require careful schema permissions, default privileges and search paths. Give runtime roles only the privileges they need. The proposed gateway needs no database. [PostgreSQL database organization](https://www.postgresql.org/docs/current/manage-ag-overview.html)
 
 [RECOMMENDED] Enforce ownership with database grants. Services access other services' data through contracted APIs and hold cross-service references as opaque IDs. Use no cross-service foreign keys or direct table access. Transactions end at a service boundary. For an external call that can outlive a local write, persist enough state to retry safely and reconcile later. Define behavior for a missing or unpublished referenced item.
 
 ## S3-compatible option
 
-[CTO DECISION REQUIRED] **D05 Storage provider and delivery.** [RECOMMENDED] Prototype SeaweedFS in local single-node mode. It supports the intended local Compose setup and avoids relying on venue connectivity. Rehearse SDK put/get, private access, ranged reads, restart persistence and deletion with representative video and 3D assets before committing.
+[DECISION REQUIRED: endy-rkt] **D05 Storage provider and delivery.** [RECOMMENDED] Prototype SeaweedFS in local single-node mode. It supports the intended local Compose setup and avoids relying on venue connectivity. Rehearse SDK put/get, private access, ranged reads, restart persistence and deletion with representative video and 3D assets before committing.
 
 | Option | MVP assessment |
 |---|---|
@@ -27,7 +27,7 @@ This page compares PostgreSQL ownership and S3-compatible options, and defines p
 
 [RECOMMENDED] Apply upload size limits and format allowlists, inspect file signatures, generate storage names and treat user filenames as display metadata. Enforce authorization before streaming or publishing content. Keep uploads private until they pass the approved review and validation policies. Evaluate malware scanning before permitting broadly untrusted uploads and assess malicious 3D payloads and external asset references. Use small, rights-cleared demo videos and optimized, self-contained 3D files. Validate video range requests and failure behavior without buffering entire objects.
 
-[RECOMMENDED] Consider direct, short-lived signed uploads or reads and multipart transfers only if measured asset sizes justify it and the CTO confirms how that delivery fits the gateway-only rule. A separately published NFT metadata snapshot must resolve from the relevant demo clients and exclude private content. [Amazon S3 presigned uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)
+[RECOMMENDED] Consider direct, short-lived signed uploads or reads and multipart transfers only if measured asset sizes justify it and endy-rkt confirms how that delivery fits the gateway-only rule. A separately published NFT metadata snapshot must resolve from the relevant demo clients and exclude private content. [Amazon S3 presigned uploads](https://docs.aws.amazon.com/AmazonS3/latest/userguide/PresignedUrlUploadObject.html)
 
 ## Backup and migration
 

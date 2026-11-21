@@ -2,7 +2,7 @@
 
 This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules, the [code quality policy](code-policy.md) for shared checks, and the [CI guide](ci.md) for hosted runs and troubleshooting.
 
-[NOT IMPLEMENTED] No commands below exist yet. [CTO DECISION REQUIRED] **D17 Tooling rollout.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
+[NOT IMPLEMENTED] No commands below exist yet. [DECISION REQUIRED: endy-rkt] **D17 Tooling rollout.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
 
 | Proposed command | Intended behavior and scope |
 |---|---|
@@ -19,4 +19,4 @@ This page proposes local commands and runtime onboarding. See [Contributing](../
 | `task build` | Build all workspaces or a selected service with its workspace dependencies. |
 | `task clean` | Remove only generated local outputs at workspace or selected service scope. Retain data volumes and local environment files. |
 
-[CTO DECISION REQUIRED] **D15 Runtime version management.** [RECOMMENDED] **Use a simpler alternative to mise.** Record one approved Node.js LTS version in `.nvmrc`, declare compatibility in package `engines`, and have CI read the same version file. Taskfile orchestrates commands and can check prerequisites. A version-manager layer would add another installation for contributors on a single-runtime project.
+[DECISION REQUIRED: endy-rkt] **D15 Runtime version management.** [RECOMMENDED] **Use a simpler alternative to mise.** Record one approved Node.js LTS version in `.nvmrc`, declare compatibility in package `engines`, and have CI read the same version file. Taskfile orchestrates commands and can check prerequisites. A version-manager layer would add another installation for contributors on a single-runtime project.
