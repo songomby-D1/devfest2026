@@ -1,6 +1,6 @@
 # Claude and Codex workflow
 
-Use this workflow to turn approved specifications into small, reviewable tasks while conserving the team's limited AI subscriptions.
+Use this workflow for small, reviewable tasks. Each owner uses the tool listed in [team responsibilities](../team/responsibilities.md). Both tools follow [AGENTS.md](../../AGENTS.md).
 
 [CONFIRMED] endy-rkt defines the MVP and system overview. The task owner defines or revises the task specification, then directs the agent to inspect, plan, implement, verify and report. The task owner reviews the result and coordinates integration with affected owners.
 

@@ -2,13 +2,13 @@
 
 Use this page to identify owners and coordinate handoffs before implementation.
 
-| Owner | Assignment |
-|---|---|
-| endy-rkt | [CONFIRMED] Define the MVP and system-wide architecture overview. Align cross-team work with those goals. |
-| papangoo | [CONFIRMED] Content management, uploads, content and description verification |
-| salandri-42 | [CONFIRMED] NFT |
-| Sesedra | [CONFIRMED] UI/UX mockups and design, README contribution |
-| shidoAdr | [CONFIRMED] LiDAR scanning and 3D |
+| Owner | Assignment | AI tool |
+|---|---|---|
+| endy-rkt | [CONFIRMED] Define the MVP and system-wide architecture overview. Align cross-team work with those goals. | Codex only |
+| papangoo | [CONFIRMED] Content management, uploads, content and description verification | Claude |
+| salandri-42 | [CONFIRMED] NFT | Claude |
+| Sesedra | [CONFIRMED] UI/UX mockups and design, README contribution | Claude |
+| shidoAdr | [CONFIRMED] LiDAR scanning and 3D | Claude |
 
 ## Task ownership
 

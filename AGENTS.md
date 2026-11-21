@@ -2,6 +2,8 @@
 
 Use this file as the shared entry point for Claude and Codex working on the Malagasy cultural heritage platform.
 
+[CONFIRMED] endy-rkt uses Codex only. The other [team members](docs/team/responsibilities.md) use Claude and start with [CLAUDE.md](CLAUDE.md). These instructions apply to both tools.
+
 - [CONFIRMED] Use the [MVP specification](docs/product/MVP.md) and [architecture](docs/architecture/overview.md). Microservices are mandatory. The React/TypeScript frontend uses the dedicated gateway. Independently deployable NestJS services own Auth, Content & Verification, NFT and LiDAR. Respect each [service boundary](docs/architecture/services.md) and its data ownership.
 - [CONFIRMED] endy-rkt defines the MVP and system overview. Follow the [team ownership rules](docs/team/responsibilities.md#task-ownership), [agent workflow](docs/agents/workflow.md) and [Git rules](CONTRIBUTING.md). The task owner sets the task scope and acceptance criteria, directs the agent and reviews the result.
 - [CONFIRMED] Coordinate overlapping changes and shared service contracts with the affected owners. Escalate changes to the MVP or system-wide architecture to endy-rkt. Preserve existing work and keep secrets out of code, commits and reports.
