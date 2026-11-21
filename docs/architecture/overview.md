@@ -30,6 +30,8 @@ flowchart LR
 
 [RECOMMENDED] Use Compose service names and explicit connection timeouts. Keep service listeners on the internal network. The gateway normalizes public errors and rejects malformed requests, while services validate their inputs and domain rules. Prefer a same-origin frontend setup. For separate development origins, allow only configured frontend origins at the gateway. Apply targeted limits to auth attempts and expensive writes if exposure warrants them. Use the error and contract conventions in [services](services.md).
 
+[CONFIRMED] Under D14, API producers own their OpenAPI contracts in `docs/api/` and agree changes with affected consumers. endy-rkt owns the public gateway contract and shared conventions. The frontend uses that public contract. Start with service-owned contracts and share transport declarations only when multiple consumers need them, using type-only imports. [Contract and error policy](services.md#contracts-and-shared-package)
+
 ## Communication and long-running work
 
 [CONFIRMED] Start with synchronous HTTP. Kubernetes, Kafka, RabbitMQ, a service mesh and distributed orchestration require demonstrated need.
@@ -53,4 +55,6 @@ The root Compose file would reference each application's build context and Docke
 
 ## Future deployment
 
-[NOT IMPLEMENTED] Use a multi-stage Dockerfile in each application or service directory, with a slim runtime, a non-root user and a dedicated ignore file. Use `.dockerignore` when that directory is the build context and an adjacent `Dockerfile.dockerignore` for repository-root builds. The Dockerfile-specific file takes precedence over the root ignore file, so keep required exclusions in it. The root Compose file would define published ports and runtime environment variables and compose the frontend, gateway, four services, PostgreSQL, object storage and Nginx if needed. Future cloud deployment can run the same images with managed PostgreSQL and S3-compatible storage. [Docker build contexts and ignore files](https://docs.docker.com/build/concepts/context/) · [Backup plan](data-storage.md#backup-and-migration)
+[CONFIRMED] Under D14, builds that need `packages/shared`, the root npm lockfile or another repository-root input use `context: .` in root Compose and an adjacent `Dockerfile.dockerignore`. Use an app-local context and `.dockerignore` only when all required build inputs are app-local. Keep each Dockerfile in the owning app or service directory. Exclude local env files, credentials, VCS data and local artifacts while retaining declared inputs. Test shared-input changes in every dependent workspace and include each dependent image in the rebuild scope when Docker CI lands. [Dockerfile placement and build contexts](services.md#dockerfile-placement)
+
+[NOT IMPLEMENTED] Build each image independently with a multi-stage Dockerfile, a slim non-root runtime, and only the target application's runtime artifacts and dependencies. The root Compose file would define published ports and runtime environment variables and compose the frontend, gateway, four services, PostgreSQL, object storage and Nginx if needed. Future cloud deployment can run the same images with managed PostgreSQL and S3-compatible storage. [Backup plan](data-storage.md#backup-and-migration)
