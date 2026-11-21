@@ -113,17 +113,17 @@ These figures are estimates and were not measured on a device. The three texture
 
 ## Real scan (3D-01b)
 
-[CONFIRMED] shidoAdr scanned a phone charger owned by the team with Reality Composer and exported `chargeur.usdz`. The iPhone model was not recorded. The ticket planned an iPhone Pro with LiDAR. The file is a test object, not demo content, and is not committed. It ran through the appendix scripts unchanged.
+[CONFIRMED] shidoAdr scanned a phone charger owned by the team with Reality Composer and exported `chargeur.usdz`. shidoAdr reported the device as an iPhone 13 Pro. The file is a test object, not demo content, and is not committed. It ran through the appendix scripts unchanged.
 
-| Item                                  | Value                                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Capture to export on the iPhone       | About 1 min 30 s, reported by shidoAdr. The iPhone model and iOS version were not recorded. |
-| USDZ                                  | 4,923,295 bytes: one USDC mesh of 167,046 bytes and three 2048 × 2048 PNG textures          |
-| Textures                              | Base color, normal and ambient occlusion                                                    |
-| Raw GLB                               | 6,815,224 bytes, 1 mesh, 6,328 triangles, converted in 0.96 s                               |
-| Optimized, Draco and WebP, 2K         | **147,960 bytes**, 6,294 triangles, optimized in 2.1 s                                      |
-| Optimized, Draco and WebP, 1K         | **73,760 bytes**                                                                            |
-| `USDCParser` warning on array type 10 | Not emitted                                                                                 |
+| Item                                  | Value                                                                                         |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Capture to export on the iPhone       | About 1 min 30 s on an iPhone 13 Pro, reported by shidoAdr. The iOS version was not recorded. |
+| USDZ                                  | 4,923,295 bytes: one USDC mesh of 167,046 bytes and three 2048 × 2048 PNG textures            |
+| Textures                              | Base color, normal and ambient occlusion                                                      |
+| Raw GLB                               | 6,815,224 bytes, 1 mesh, 6,328 triangles, converted in 0.96 s                                 |
+| Optimized, Draco and WebP, 2K         | **147,960 bytes**, 6,294 triangles, optimized in 2.1 s                                        |
+| Optimized, Draco and WebP, 1K         | **73,760 bytes**                                                                              |
+| `USDCParser` warning on array type 10 | Not emitted                                                                                   |
 
 Observations:
 
@@ -135,7 +135,7 @@ Observations:
 
 Constraints and fallback:
 
-- The scanning iPhone was not recorded. Support on other devices remains unverified ([device and platform constraints](#capture-options)).
+- The scan ran on an iPhone 13 Pro. Support on other devices remains unverified ([device and platform constraints](#capture-options)).
 - [RECOMMENDED] Keep the prepared GLB and a poster image as the demo fallback if the live scan fails.
 - [RECOMMENDED] If Reality Composer becomes unavailable, use a custom iOS app with Object Capture, or photos processed with `PhotogrammetrySession` on a Mac ([capture options](#capture-options)).
 
@@ -170,7 +170,7 @@ General limits:
 For 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)):
 
 - [CONFIRMED] Done in the [real scan](#real-scan-3d-01b) section: export, timing, pipeline run and the warning check.
-- [NOT IMPLEMENTED] Record the iPhone model and iOS version used for the scan.
+- [NOT IMPLEMENTED] Record the iOS version used for the scan.
 - Moved to 3D-05b ([#15](https://github.com/songomby-D1/devfest2026/issues/15)): loading the result on at least one iPhone and one Android phone.
 
 For 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)):
