@@ -58,6 +58,18 @@ The backend service directories are reserved with `.gitkeep` only. Service initi
 | CTO-16 | Add pre-commit hooks if approved. [CTO DECISION REQUIRED] D17 | P2 | CTO-13, CTO-15 | Backlog |
 | CTO-17 | Run the first lint across all apps, verify import boundaries and fix violations. | P0 | CTO-13, CTO-14 | Backlog |
 
+## CTO: CI follow-up
+
+| ID | Task (one line) | Priority | Depends on | Status |
+|---|---|---|---|---|
+| CTO-18 | Decide the Node version and align CI, `.nvmrc` and package engines. [CTO DECISION REQUIRED] D15 | P0 | CTO-01 | Backlog |
+| CTO-19 | Install pinned dev tooling and commit the root npm workspaces manifest and lockfile. | P0 | CTO-02, CTO-18 | Backlog |
+| CTO-20 | Add the required workspace scripts and extend the shared TypeScript base as each app lands. | P0 | CTO-19 | Backlog |
+| CTO-21 | Run the first hosted CI and fix failures, including the first initialized-workspace checks. | P0 | CTO-20 | Backlog |
+| CTO-22 | Apply the manual repository settings and verify the required check on both branches. | P0 | CTO-21 | Backlog |
+| CTO-23 | Add PostgreSQL to CI when the first database-backed integration test lands. | P1 | CTO-04, CTO-20 | Backlog |
+| CTO-24 | Decide CODEOWNERS scope and confirm available reviewers. [CTO DECISION REQUIRED] CODEOWNERS | P2 | CTO-01 | Backlog |
+
 ## Auth, OWNER TBD [CTO DECISION REQUIRED]
 
 All Auth items await D02.

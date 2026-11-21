@@ -87,3 +87,9 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 | Local lint, formatting and type-check commands | Root package scripts and app project configs | [NOT IMPLEMENTED] | [CTO-13, CTO-14](../product/task.md#cto-code-quality-follow-up) |
 | PR quality, tests and security | CI jobs and required status | [NOT IMPLEMENTED] | [CTO-11](../product/task.md#cto-foundation), [CTO-15](../product/task.md#cto-code-quality-follow-up) |
 | Hooks | Optional Husky and lint-staged | [NOT IMPLEMENTED] | [CTO-16](../product/task.md#cto-code-quality-follow-up) |
+
+## CI script contract
+
+[CONFIRMED] The root npm manifest declares workspaces for `apps/frontend`, `apps/backend/*`, and `packages/*`. Every workspace with a `package.json` defines `typecheck`, `test`, and `build`. Lint and formatting run from the root. npm's `--if-present` can silently skip a missing script, so reviewers must reject workspaces missing any of the three. A workspace is complete for CI when all three scripts exist and pass. See the [CI guide](ci.md#partial-workspaces-and-prerequisites).
+
+[CREATED, NOT EXECUTED] The workflow definition is present. The enforcement map's rollout items still need workspace scripts, a hosted run and manual activation of the required check.

@@ -16,6 +16,11 @@ Use this file as the shared entry point for Claude and Codex working on the Mala
 - [CONFIRMED] Obtain CTO approval before changing those configs or adding dependencies. Keep rules enabled and avoid suppressions as a way to make checks pass. Coordinate before editing another service's directory.
 - [CONFIRMED] Run the checks when available. Use the [agent report template](docs/agents/workflow.md#agent-report-template) for changed files, exact commands and results, tests and assumptions. Report unavailable checks as “not runnable yet”.
 
+## CI
+
+- [CONFIRMED] Follow the [CI guide](docs/development/ci.md). Obtain CTO approval before editing `.github/workflows/**` or `.github/dependabot.yml`. Never weaken or skip a required check.
+- [CONFIRMED] Before opening a PR, run the local checks that exist and report exact commands and results. Use “not runnable yet” for unavailable checks. `ci-ok` is the required status, and red CI blocks the merge.
+
 ## Session protocol
 
 - [CONFIRMED] Start by reading this file, then the [current handoff](docs/agents/handoff.md), then the relevant [backlog items](docs/product/task.md).

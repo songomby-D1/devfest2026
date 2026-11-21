@@ -9,6 +9,7 @@ Summarize the change and link the task. Follow the [shared code policy](../docs/
 - [ ] Formatting check passes.
 - [ ] TypeScript check passes.
 - [ ] Build passes.
+- [ ] The required `ci-ok` check is green.
 - [ ] The change contains no secrets.
 
 List the commands and results. Mark unavailable checks “not runnable yet”.

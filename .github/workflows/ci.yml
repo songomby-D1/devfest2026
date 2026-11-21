@@ -1,0 +1,185 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: "22" # Align with the approved .nvmrc and engines under D15.
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+
+jobs:
+  branch-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Enforce the promotion branch for main
+        if: github.event_name == 'pull_request' && github.base_ref == 'main'
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [[ "$PR_HEAD_REF" != develop || "$PR_HEAD_REPOSITORY" != "$GITHUB_REPOSITORY" ]]; then
+            echo "::error::PRs into main must come from this repository's develop branch"
+            exit 1
+          fi
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan Git history with Gitleaks
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tool_dir="$(mktemp -d "$RUNNER_TEMP/gitleaks.XXXXXXXX")"
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive" \
+            --output "$tool_dir/$archive"
+          printf '%s  %s\n' "$GITLEAKS_SHA256" "$tool_dir/$archive" | sha256sum --check --status
+          tar -xzf "$tool_dir/$archive" -C "$tool_dir" gitleaks
+
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            git cat-file -e "${PR_BASE_SHA}^{commit}"
+            git cat-file -e "${PR_HEAD_SHA}^{commit}"
+            log_opts="${PR_BASE_SHA}..${PR_HEAD_SHA}"
+          else
+            log_opts=--all
+          fi
+          "$tool_dir/gitleaks" git --no-banner --redact=100 --verbose --log-opts="$log_opts" .
+
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      services: ${{ steps.find.outputs.services }}
+      has_root: ${{ steps.find.outputs.has_root }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Detect initialized workspaces
+        id: find
+        run: |
+          has_root=false
+          if [[ -f package.json ]]; then
+            has_root=true
+          else
+            echo "::warning::Root package.json is absent. Skipping lint and workspace jobs."
+          fi
+
+          shopt -s nullglob
+          workspaces=()
+          for directory in apps/frontend apps/backend/* packages/*; do
+            [[ -d "$directory" ]] || continue
+            if [[ -f "$directory/package.json" ]]; then
+              workspaces+=("$directory")
+            else
+              printf '::warning::Skipping placeholder %q because package.json is absent.\n' "$directory"
+            fi
+          done
+          if (( ${#workspaces[@]} == 0 )); then
+            echo "::warning::No initialized workspaces detected. Skipping the workspace matrix."
+          fi
+
+          services=$(jq -cn --args '$ARGS.positional' "${workspaces[@]}")
+          printf 'services=%s\nhas_root=%s\n' "$services" "$has_root" >> "$GITHUB_OUTPUT"
+          printf 'Detected workspaces: %s\n' "$services"
+
+  lint:
+    needs: detect
+    if: needs.detect.outputs.has_root == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: ./node_modules/.bin/prettier --config .prettierrc.json --check .
+      - run: ./node_modules/.bin/eslint . --max-warnings 0
+
+  service:
+    name: ${{ matrix.path }}
+    needs: detect
+    if: needs.detect.outputs.has_root == 'true' && needs.detect.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        path: ${{ fromJSON(needs.detect.outputs.services) }}
+    env:
+      WORKSPACE: ${{ matrix.path }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+        id: install
+      - name: Typecheck, test and build
+        run: |
+          failed=0
+          for script in typecheck test build; do
+            if jq -e --arg script "$script" \
+              '.scripts[$script] | type == "string" and length > 0' \
+              "$WORKSPACE/package.json" > /dev/null; then
+              if ! npm run "$script" -w "$WORKSPACE" --if-present; then
+                failed=1
+              fi
+            else
+              printf '::warning::Required script %s is missing or invalid in %q.\n' "$script" "$WORKSPACE"
+              failed=1
+            fi
+          done
+          exit "$failed"
+      - name: Dependency audit (advisory)
+        if: "!cancelled() && steps.install.outcome == 'success'"
+        continue-on-error: true
+        run: npm audit --audit-level=high --omit=dev -w "$WORKSPACE"
+
+  ci-ok:
+    if: always()
+    needs: [branch-guard, secrets, detect, lint, service]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Evaluate required jobs
+        env:
+          HAS_FAILURE: ${{ contains(needs.*.result, 'failure') }}
+          HAS_CANCELLED: ${{ contains(needs.*.result, 'cancelled') }}
+        run: |
+          if [[ "$HAS_FAILURE" == true || "$HAS_CANCELLED" == true ]]; then
+            echo "::error::A required CI job failed or was cancelled."
+            exit 1
+          fi
+          echo "Required jobs succeeded or were intentionally skipped."

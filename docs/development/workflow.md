@@ -1,6 +1,6 @@
 # Development workflow
 
-This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules and the [code quality policy](code-policy.md) for shared rules and commands.
+This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules, the [code quality policy](code-policy.md) for shared checks, and the [CI guide](ci.md) for hosted runs and troubleshooting.
 
 [NOT IMPLEMENTED] No commands below exist yet. [CTO DECISION REQUIRED] **D17 Tooling rollout.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
 

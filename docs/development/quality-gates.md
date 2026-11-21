@@ -1,8 +1,8 @@
 # Quality gates
 
-This page describes the CI and test plan. The [shared code policy](code-policy.md) defines code conventions and root settings.
+This page describes quality and test expectations. The [shared code policy](code-policy.md) defines code conventions, and the [CI guide](ci.md) describes execution and GitHub settings.
 
-[NOT IMPLEMENTED] CI and scripts are planned. The tooling rollout approval point is [D17](workflow.md).
+[CREATED, NOT EXECUTED] The workflow is present. [NOT IMPLEMENTED] Local scripts and app test suites still need to land. The tooling rollout approval point is [D17](workflow.md).
 
 | Stack item | Recommendation and rationale |
 |---|---|
@@ -12,17 +12,15 @@ This page describes the CI and test plan. The [shared code policy](code-policy.m
 | Dedicated gateway and Nginx | [CONFIRMED] Keep the gateway. [RECOMMENDED] Defer Nginx under D06 until edge deployment requirements justify a second layer. |
 | Docker and Docker Compose | [CONFIRMED] Keep. [RECOMMENDED] Start with local Compose integration and build each application independently. |
 | Taskfile | [RECOMMENDED] Keep it thin and delegate to workspace scripts. [Planned commands](workflow.md) |
-| GitHub Actions | [RECOMMENDED] Use one PR workflow with a stable required result. |
+| GitHub Actions | [CREATED, NOT EXECUTED] See the [CI guide](ci.md). |
 | ESLint, formatting and TypeScript checks | [CONFIRMED] Required. See the [shared code policy](code-policy.md). |
 | Gitleaks and dependency checks | [CONFIRMED] Required, with dependency checks where practical. [Gitleaks upstream](https://github.com/gitleaks/gitleaks) |
 
 See the [code policy](code-policy.md#environment-and-secrets) for environment and secrets handling and the [media security policy](../architecture/data-storage.md#media-flow-and-security) for uploads and access.
 
-## Planned CI
+## CI enforcement
 
-[CONFIRMED] Every PR to `develop` or `main` requires ESLint, formatting, TypeScript, unit tests, integration tests, builds, Gitleaks and a dependency vulnerability check where practical. The required result fails when any required check fails.
-
-[NOT IMPLEMENTED] [RECOMMENDED] Install from the lockfile and cache npm downloads by lockfile. Select affected app checks inside the workflow and always report one required status. A change confined to one service should rebuild that service. A change to `packages/shared` must check every direct and transitive consumer. Check affected consumers for root inputs and contract changes. Run the full suite when the affected set is unclear. Run Gitleaks on the PR range with sufficient history. Use the package manager audit with an approved threshold, documented time-limited exceptions and visible outage handling under D17. Enable required status checks manually using the [contribution checklist](../../CONTRIBUTING.md#branch-protection-checklist).
+[CONFIRMED] The [CI guide](ci.md#jobs) defines the PR and push gates, workspace coverage and audit behavior. The [script contract](code-policy.md#ci-script-contract) defines what every workspace provides.
 
 ## Testing and service definition of done
 

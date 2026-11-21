@@ -25,5 +25,6 @@ The reference informs these principles: write the specification first, give clea
 - Acceptance criteria verified and supporting evidence
 - Commands and tests actually executed, results and checks still pending
 - Lint, format, type-check and test results or “not runnable yet”, per the [shared code policy](../development/code-policy.md).
+- CI status and exact local checks run, or “not runnable yet”. See the [CI guide](../development/ci.md).
 - Assumptions, unresolved issues and integration notes
 - Appended to [log.md](log.md) / updated [handoff.md](handoff.md), per the [session protocol](../../AGENTS.md#session-protocol).
