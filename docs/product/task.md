@@ -103,8 +103,12 @@ All Auth items await D02.
 | CONTENT-02 | Publish content and expose published items for browsing. [DECISION REQUIRED: endy-rkt] D18 | P0 | CONTENT-01, endy-rkt-05 | Backlog |
 | CONTENT-03 | Support authenticated image and video uploads. [DECISION REQUIRED: endy-rkt] D05, D18 | P1 | CONTENT-01, endy-rkt-04, endy-rkt-05, AUTH-06 | Backlog |
 | CONTENT-04 | Support human verification of items and descriptions separately from automated analysis. [DECISION REQUIRED: endy-rkt] D13, D18 | P1 | CONTENT-01, endy-rkt-05, AUTH-05, AUTH-06 | Backlog |
-| CONTENT-05 | Explore AI-assisted analysis. [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Backlog |
-| CONTENT-06 | Defer production integration of AI-assisted analysis. | P2 | CONTENT-05 | Backlog |
+| CONTENT-05 | Explore AI-assisted analysis as advisory signals only, groomed as CONTENT-05a to CONTENT-05c ([#57](https://github.com/songomby-D1/devfest2026/issues/57)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05a | Explore AI-generated media detection with Sightengine for images and videos, with costs, limits and an accuracy test ([#84](https://github.com/songomby-D1/devfest2026/issues/84)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05b | Explore a description-to-media coherence check with an AI vision API, using pictures from several angles for 3D models ([#85](https://github.com/songomby-D1/devfest2026/issues/85)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05c | Propose the advisory-signal contract that leaves the CONTENT-04 verification status unchanged ([#86](https://github.com/songomby-D1/devfest2026/issues/86)). | P1 | CONTENT-05a, CONTENT-05b, CONTENT-04 | Backlog |
+| CONTENT-06 | Defer production integration of AI-assisted analysis into Content & Verification ([#58](https://github.com/songomby-D1/devfest2026/issues/58)). | P2 | CONTENT-05 | Backlog |
+| CONTENT-08 | Defer content moderation until after the MVP ([#87](https://github.com/songomby-D1/devfest2026/issues/87)). | P2 | CONTENT-06 | Backlog |
 
 ## salandri-42: NFT
 
