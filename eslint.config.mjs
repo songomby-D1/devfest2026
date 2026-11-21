@@ -134,6 +134,20 @@ export default defineConfig([
     name: `nestjs/${directory}`,
     files: [appFiles(directory)],
     languageOptions: { globals: globals.node },
+    extends: [
+      {
+        files: ['**/*.{ts,mts,cts,tsx}'],
+        rules: {
+          // Nest modules are classes that can be empty apart from the @Module() decorator.
+          '@typescript-eslint/no-extraneous-class': [
+            'error',
+            { allowWithDecorator: true },
+          ],
+          // Nest factory options are declared as classes and accept object literals.
+          '@typescript-eslint/no-unsafe-class-instance-assignment': 'off',
+        },
+      },
+    ],
   })),
   ...applicationBoundaries,
   {
