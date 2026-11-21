@@ -24,9 +24,9 @@ flowchart LR
 
 ## Gateway and networking
 
-[DECISION REQUIRED: endy-rkt] **D06 Gateway and Nginx.** [RECOMMENDED] Use a thin NestJS gateway and omit Nginx for the MVP. NestJS gives one place for request routing, edge validation, identity checks and error translation, with the same development model as the services. A lighter dedicated proxy can work if its configuration covers these requirements cleanly. If deployment later needs static serving, TLS termination or buffering, Nginx can own those edge concerns while the gateway retains API policy.
+[CONFIRMED] **D06 Gateway and Nginx.** Use the dedicated NestJS gateway and defer Nginx. The gateway owns API routing, edge validation and public error mapping. Owning services retain resource authorization. [D06 decision](../decisions/project-decisions.md#d06-gateway-deployment-boundary)
 
-[DECISION REQUIRED: endy-rkt] **D07 Identity propagation and logout.** [RECOMMENDED] Start with Auth-owned revocable opaque sessions and synchronous verification of protected requests. Use a secure HTTP-only cookie in deployed environments with CSRF safeguards for cookie-authenticated writes. Compare this option with locally validated short-lived signed tokens and explicit revocation semantics. The gateway strips client-supplied identity headers, authenticates through Auth and sends a minimal caller identity and permissions over authenticated service calls. Services trust context only from authenticated peers and authorize access to their own resources. Service-to-service calls use a service identity with least privilege and carry user context only when it is needed and its origin can be validated.
+[CONFIRMED] **D07 Identity propagation and logout.** Auth owns revocable opaque sessions and verifies each protected gateway request. For cookie-authenticated writes, use CSRF safeguards and a secure HTTP-only cookie in deployed environments. Strip client-supplied identity headers and accept caller context only from authenticated peers. Auth and Gateway agree the exact caller context, service authentication, expiry and error behavior under endy-rkt-08. [D07 decision](../decisions/project-decisions.md#d07-identity-propagation-and-logout)
 
 [RECOMMENDED] Use Compose service names and explicit connection timeouts. Keep service listeners on the internal network. The gateway normalizes public errors and rejects malformed requests, while services validate their inputs and domain rules. Prefer a same-origin frontend setup. For separate development origins, allow only configured frontend origins at the gateway. Apply targeted limits to auth attempts and expensive writes if exposure warrants them. Use the error and contract conventions in [services](services.md).
 
@@ -36,7 +36,7 @@ flowchart LR
 
 [CONFIRMED] Start with synchronous HTTP. Kubernetes, Kafka, RabbitMQ, a service mesh and distributed orchestration require demonstrated need.
 
-[DECISION REQUIRED: endy-rkt] **D16 Async processing.** [RECOMMENDED] Expose a status the frontend can poll through the gateway for NFT confirmation. Prefer offline 3D preparation and sized media accepted as-is for the demo. Add an owning-service PostgreSQL job table with bounded retries and idempotent processing only if media processing, LiDAR work or NFT confirmation must continue across requests and restarts. Revisit a broker only when measured backlog, throughput, retry isolation or cross-service delivery requirements exceed that design.
+[CONFIRMED] **D16 Async processing.** Start with synchronous HTTP and gateway status polling. Prefer offline 3D preparation. Validate the baseline against the NFT and LiDAR proposals and reopen the decision if a concrete cross-service need emerges. [D16 decision](../decisions/project-decisions.md#d16-system-wide-async-infrastructure)
 
 ## Proposed repository layout
 

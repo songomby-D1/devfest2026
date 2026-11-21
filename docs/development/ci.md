@@ -45,18 +45,18 @@ Open the failed Actions job and use its annotation or first failing command to f
 
 Keep secrets and real `.env` files out of Git and keep real credentials out of docs, tests and logs. Commit only safe placeholders in examples. Use seed data without personal information. Rotate or revoke an exposed credential immediately and notify endy-rkt. Deleting a commit cannot recall copies of a public secret. [GitHub guidance on sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository)
 
-[DECISION REQUIRED: endy-rkt] D18 cultural-media licensing and consent. Keep cultural media out of Git until endy-rkt approves the rights, consent and attribution requirements for public redistribution, including any community restrictions. Use synthetic data or approved fixtures in the meantime.
+[CONFIRMED] D18 requires rights clearance and separate human review before publication. Keep cultural media out of Git until endy-rkt approves the rights, consent and attribution requirements for public redistribution, including any community restrictions. Use synthetic data or approved fixtures in the meantime.
 
 ## Repository settings checklist
 
-[NOT IMPLEMENTED] endy-rkt applies and verifies branch protection for `develop` and `main` in endy-rkt-12 and endy-rkt-22 after endy-rkt-21 produces the hosted `ci-ok` check. Select the actual check from GitHub Actions. Decide emergency administrator bypass, up-to-date requirements and merge methods during that settings rollout.
+[NOT IMPLEMENTED] endy-rkt applies and verifies branch protection for `develop` and `main` in endy-rkt-12 and endy-rkt-22 after endy-rkt-21 produces the hosted `ci-ok` check. Select the actual check from GitHub Actions. Apply the approved [rollout settings](../decisions/project-decisions.md#github-rollout-settings) during that rollout.
 
 - [ ] Protect `develop` and `main` with a ruleset or branch protection. Require a PR, **`ci-ok` only**, one approval, dismissal of stale approvals and resolution of review conversations. Block direct pushes, force pushes and deletion. Confirm `main` receives only same-repo `develop` PRs through the branch guard.
-- [ ] [DECISION REQUIRED: endy-rkt] Include admins and use no routine bypass. Decide whether emergencies need an explicit exception with an audit trail.
-- [ ] [DECISION REQUIRED: endy-rkt] Require branches to be up to date on `main`. Start with the looser setting on `develop` if repeated updates and reruns slow the team. Strict `main` can require syncing the promotion merge back through a PR to `develop`.
+- [ ] Include admins. Use no routine bypass.
+- [ ] Require strict branch updates on `main` and looser updates on `develop`.
 - [ ] Enable secret scanning, push protection, Dependabot alerts and security updates. Defer CodeQL until there is application code and capacity to review findings. Public repositories support these controls.
 - [ ] Use read-only default Actions workflow permissions and require approval for first-time fork contributors. Consider an allowlist for actions.
-- [ ] [DECISION REQUIRED: endy-rkt] Prefer squash merges for short-lived PRs into `develop` and merge commits for `develop` promotions to preserve ancestry. Enable automatic deletion of merged topic branches and keep `develop` protected.
+- [ ] Squash topic PRs into `develop`, use merge commits for promotion, delete merged topic branches and keep `develop` protected.
 - [ ] Defer CODEOWNERS to endy-rkt-24 once owner handles and reviewer coverage are confirmed. Prefer a small file for CI and shared contracts. Public repositories can require code-owner review.
 - [ ] Consider a README CI badge after the first successful run.
 

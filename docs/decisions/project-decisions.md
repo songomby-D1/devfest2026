@@ -1,6 +1,6 @@
 # Project decisions
 
-Use this register to see which decisions need endy-rkt, which belong to app or service owners, and when each decision matters. The current documentation work is on the `docs/decision` branch.
+Use this register to see which decisions need endy-rkt, which belong to app or service owners, and when each decision matters. Implementation and evidence gates are tracked in the linked backlog.
 
 ## Confirmed
 
@@ -19,7 +19,7 @@ Use this register to see which decisions need endy-rkt, which belong to app or s
 Record the evidence against the same item ID under DEMO-03. [Demo backlog](../product/task.md#integration--demo-endy-rkt)
 
 1. [ ] A signed-in contributor submits one item with rights-cleared media, author information and a description. Record the item ID and fixture rights clearance.
-2. [ ] As a guest, check that the draft is absent from public browsing and direct access to its detail is denied. An authorized human then records separate outcomes for item claims and description claims before the item is published under the agreed policy. Record both outcomes and the publication status. [D18](#decisions-for-endy-rkt)
+2. [ ] As a guest, check that the draft is absent from public browsing and direct access to its detail is denied. An authorized human then records separate outcomes for item claims and description claims before the item is published under the agreed policy. Record both outcomes and the publication status. [D18](#d18-editorial-policy-and-demo-content)
 3. [ ] As a guest, find and open the same published item and verify that the applicable item and description review labels match the recorded outcomes.
 4. [ ] On each agreed demo device, open the published item detail as a visitor and verify that the associated 3D model loads and rotates in response to input. Record the device and result. A rights-cleared pre-produced model can satisfy this gate. Live phone capture is optional.
 5. [ ] An eligible user starts a mint from the same published item and reaches confirmed status on the chosen demo network. Verify that the user can inspect the chain, token and transaction references, and record those references with the item ID. Check that the displayed provenance explains the digital mint event and the scope of its claims. Verify that public token metadata is approved and that it and the on-chain data contain no private media, credentials or personal data.
@@ -46,30 +46,52 @@ Keep Node 22, matching the current CI major. Pin one exact patch in `.nvmrc`, ha
 
 ## D17 Quality tooling and CI rollout
 
-[CONFIRMED] Decision owner endy-rkt approved D17 for endy-rkt-02. Affected owners are endy-rkt for root tooling, CI and the gateway, and Sesedra, shidoAdr, papangoo and salandri-42 for workspace checks. Their adoption feedback is pending under [endy-rkt-20](../product/task.md#endy-rkt-ci-follow-up). endy-rkt approved recording D15 and D17 while that feedback is pending. Final commit approval remains separate.
+[CONFIRMED] Decision owner endy-rkt approved D17 for endy-rkt-02. Affected owners are endy-rkt for root tooling, CI and the gateway, and Sesedra, shidoAdr, papangoo and salandri-42 for workspace checks. Their adoption feedback is pending under [endy-rkt-20](../product/task.md#endy-rkt-ci-follow-up). endy-rkt approved recording D15 and D17 while that feedback is pending.
 
 Keep the existing root configs and pin the documented quality dependencies. Share `npm run lint` and `npm run format:check` between local use and CI after the scripts land. Require zero ESLint warnings and explicitly select `.prettierrc.json`. Every initialized workspace, including a future shared package, provides `typecheck`, `test` and `build` and extends the shared TypeScript base in a project that covers linted files. Missing or failing scripts block CI. Using the same scripts keeps local and hosted checks consistent. [Tooling workflow](../development/workflow.md#quality-checks) · [CI script contract](../development/code-policy.md#ci-script-contract)
 
 endy-rkt-19 alone installs and pins the initial root dependencies and owns the initial manifest and lockfile. [endy-rkt-13](../product/task.md#endy-rkt-code-quality-follow-up) consumes those pins and adds only root scripts. It does not repeat dependency installation. Reconcile the older endy-rkt-13 backlog wording in separate backlog work. Use npm scripts first, defer Husky and lint-staged to endy-rkt-16 if approved, and require separate endy-rkt approval for thin Taskfile wrappers.
 
-Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep full-history push and manual scans until there is a trusted baseline. Use a high-threshold advisory runtime audit and triage its findings before revisiting severity. Placeholder skips give no workspace evidence. endy-rkt-21 verifies the hosted checks with initialized workspaces. Then endy-rkt-12 and endy-rkt-22 apply and verify protections with `ci-ok` as the sole required check and one approval. Decide emergency bypass, up-to-date requirements and merge methods at that stage. Defer CODEOWNERS to endy-rkt-24, CodeQL until app code and triage capacity exist, PostgreSQL CI to endy-rkt-23 and Docker CI until Dockerfiles exist. [CI baseline and rollout](../development/ci.md)
+Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep full-history push and manual scans until there is a trusted baseline. Use a high-threshold advisory runtime audit and triage its findings before revisiting severity. Placeholder skips give no workspace evidence. endy-rkt-21 verifies the hosted checks with initialized workspaces. Then endy-rkt-12 and endy-rkt-22 apply and verify protections with `ci-ok` as the sole required check and one approval. Use the approved [GitHub rollout settings](#github-rollout-settings). Defer CODEOWNERS to endy-rkt-24, CodeQL until app code and triage capacity exist, PostgreSQL CI to endy-rkt-23 and Docker CI until Dockerfiles exist. [CI baseline and rollout](../development/ci.md)
 
-## Decisions for endy-rkt
+## D04 PostgreSQL isolation
 
-The options below are recommendations for review. Each remains open until endy-rkt records a decision.
+[CONFIRMED] Use one shared PostgreSQL instance with a separate database and service-scoped migration and runtime roles for Auth, Content, NFT and LiDAR. Runtime roles receive only their service's required grants. Each owner maintains its Prisma schema and migrations. Agree provisioning and verify isolation in INFRA-01. [Data ownership](../architecture/data-storage.md#postgresql-isolation)
 
-| Decision | Recommended choice | Decide before |
-|---|---|---|
-| D04 PostgreSQL isolation | Use a separate database and service role per stateful service within the single PostgreSQL instance. The shared infrastructure owner coordinates provisioning. Service owners control their own schemas and migrations. [Data isolation](../architecture/data-storage.md#postgresql-isolation) | Shared PostgreSQL provisioning |
-| D05 Media delivery | Validate SeaweedFS with Content and LiDAR. Start with gateway-mediated access and review a change to that boundary if measurements justify it. [Storage and delivery](../architecture/data-storage.md#s3-compatible-option) | Connecting upload and 3D storage |
-| D06 Gateway deployment boundary | Use the dedicated NestJS gateway. Defer Nginx until a concrete edge requirement appears. [Gateway design](../architecture/overview.md#gateway-and-networking) | Initializing the gateway |
-| D07 and D13 Identity and permissions | Ask the Auth and gateway owners to agree an Auth-owned revocable session and caller contract. Use one account model with a scoped reviewer permission and resource ownership checks. Review the trust boundary and who can perform protected actions. [Auth scope](../product/MVP.md#a-authentication) | Wiring protected flows |
-| D16 System-wide async infrastructure | Start with synchronous HTTP and status polling where needed. Owners can handle service-local retries or jobs within their data boundaries. Review a broker only if a cross-service requirement warrants one. [Communication](../architecture/overview.md#communication-and-long-running-work) | Introducing shared async infrastructure |
-| D18 Editorial policy and demo content | Require human review and rights-cleared fixtures. Have the Content owner propose reviewer coverage, publication criteria and permitted media with input from affected owners. [Verification](../product/MVP.md#b-content-and-verification) | Accepting demo submissions or committing real cultural media |
-| DEMO-01 Demo host | Use the local Compose stack for rehearsal. Confirm the venue's device and network conditions and a host that can reach the chosen testnet. [Demo backlog](../product/task.md#integration--demo-endy-rkt) | Booking the final rehearsal |
+## D05 Media delivery
+
+[CONDITIONAL] Use gateway-mediated media delivery for the MVP once endy-rkt-03 validates SeaweedFS with representative video and 3D assets. Verify scoped access, range reads and restart persistence before closing the delivery decision. Keep object storage private and authorize against current item or asset visibility. [Storage and delivery](../architecture/data-storage.md#s3-compatible-option)
+
+## D06 Gateway deployment boundary
+
+[CONFIRMED] Use the dedicated NestJS gateway as the public application API and defer Nginx. The gateway owns routing, edge validation and public error mapping. Service owners retain resource authorization. Coordinate the contracts in endy-rkt-08 before gateway integration. [Gateway design](../architecture/overview.md#gateway-and-networking)
+
+## D07 Identity propagation and logout
+
+[CONFIRMED] Auth owns revocable opaque sessions. The gateway verifies the session on protected requests. Auth and Gateway still need to agree on caller context, service authentication, expiry, logout and error semantics under endy-rkt-08. Owning services enforce resource authorization. [Gateway design](../architecture/overview.md#gateway-and-networking)
+
+## D13 Permissions
+
+[CONFIRMED] Guests can read published items. Use one signed-in account model, a scoped reviewer permission and resource ownership checks. Confirm the action-level permission matrix with Auth, Content, NFT and Gateway under endy-rkt-05 and verify it in service tests. [MVP authentication](../product/MVP.md#a-authentication)
+
+## D16 System-wide async infrastructure
+
+[CONFIRMED] Start with synchronous HTTP and gateway status polling. Validate the baseline under endy-rkt-06 against salandri-42's NFT and shidoAdr's 3D proposals. Revisit shared async infrastructure only if there is a concrete cross-service need. [Communication](../architecture/overview.md#communication-and-long-running-work)
+
+## D18 Editorial policy and demo content
+
+[CONFIRMED] Before publication, require rights clearance and separate human review of item and description claims. The Content owner proposes permitted formats, size limits and reviewer coverage and confirms demo fixtures. See endy-rkt-05 and DEMO-02. [MVP verification](../product/MVP.md#b-content-and-verification)
+
+## DEMO-01 Demo host
+
+[CONFIRMED] Plan for the presenter laptop running local Compose, with a second device for mobile QA. Confirm device reachability, testnet access, wallet and test funds, and public metadata resolution before integrated sign-off. Follow the D01 rehearsal policy if either demo gate is unavailable. [Demo evidence](#demo-script-and-evidence-checklist)
+
+## GitHub rollout settings
+
+[CONFIRMED] Apply protection after hosted `ci-ok` exercises initialized workspaces. Use one review, no routine admin bypass, strict branch updates on `main` and looser updates on `develop`. Squash topic PRs into `develop` and use merge commits for promotions to `main`. Reviewer coverage and CODEOWNERS remain open under endy-rkt-24. [CI rollout](../development/ci.md#repository-settings-checklist)
 
 ## Decisions already delegated
 
-- **D08–D11:** salandri-42 chooses the NFT ecosystem, wallet, standard and minting approach within the MVP, with affected owners agreeing on API and metadata contracts.
-- **D12:** shidoAdr chooses the 3D delivery approach within the MVP and coordinates viewer and asset contracts with the frontend and Content owners.
+- **D08–D11:** salandri-42 owns the NFT choices. The [service proposal](../../apps/backend/nft/nft_context.md) documents candidate chain, standard, wallet and metadata choices. Reconcile its queue, mint trigger, data ownership and storage assumptions with D01, D05, D13 and D16 through NFT-01 and endy-rkt-06.
+- **D12:** [ADR 0001](0001-d12-3d-demo-experience.md) is accepted. Use an offline-prepared GLB at 1K by default and 2K on demand with a poster and still-image fallback. Viewer and asset contracts and real-device verification remain with the affected owners.
 - **Service-local work:** Owners can proceed with approved work on their own API, schema, tests and packaging while the team resolves unrelated shared decisions. A shared dependency only blocks work that needs it.
