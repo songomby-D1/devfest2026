@@ -28,6 +28,7 @@ Run every command from the repository root.
 | `npm run lint`                       | Run the shared ESLint config with zero warnings allowed. |
 | `npm run format:check`               | Check formatting against `.prettierrc.json`.             |
 
+- [RECOMMENDED] In development, `http://localhost:5173/?motion=lab` shows the motion lab to compare intro and transition variants. Remove the lab and the unused variants once Sesedra picks one.
 - [CONFIRMED] `typecheck`, `test` and `build` form the [CI script contract](../../docs/development/code-policy.md#ci-script-contract). All three stay defined and green.
 - [CONFIRMED] Point editor integrations at `.prettierrc.json` explicitly. Otherwise the empty legacy `.prettierrc` takes precedence and formats differently from CI.
 
@@ -39,12 +40,18 @@ apps/frontend/
   vite.config.ts          Vite, dev proxy and Vitest settings
   src/
     main.tsx              Entry point
-    app/                  App shell, routing and providers
-    features/<feature>/   One capability each: discovery, item, account, upload, provenance, viewer-3d
+    app/                  App, route matching and the development motion lab
+    features/home/        Home page: hanging, intro, parallax and exit
+    features/gallery/     Rooms, artworks, notice, close-up viewer and data/rooms.ts
+    features/contribute/  Placeholder until the contribution flow (FE-03)
     components/<name>/    Reusable UI components that mirror the Figma components
-    lib/api/              The only module that calls the gateway
-    styles/               tokens.css and global.css
-    test/                 Test setup
+    lib/router/           History-based router and Link
+    lib/motion/           GSAP setup, reduced motion, font waiting, motion variants
+    lib/audio/            Room ambience, off by default
+    lib/media/            The single manifest of media paths
+    lib/api/              The only module that calls the gateway (FE-03)
+    styles/               tokens.css, fonts.css and global.css
+    test/                 Test setup and the motion helper
 ```
 
 - [CONFIRMED] Folders and non-component files use kebab-case. Components and their files use PascalCase, for example `components/item-card/ItemCard.tsx` with `ItemCard.module.css` and `ItemCard.test.tsx`. Variables and functions use camelCase.
@@ -60,7 +67,8 @@ apps/frontend/
 - [RECOMMENDED] Style with CSS Modules (`*.module.css`), which Vite supports without a dependency. Use inline styles only for values computed at runtime.
 - [RECOMMENDED] Build mobile first and cover both the desktop and mobile frames of each mockup. Take breakpoints from the Figma frame widths and reuse the same values everywhere.
 - [CONFIRMED] Cultural media stays out of Git until D18 approves its rights, consent and attribution. This covers photos of artworks, videos, music and 3D models. The app loads such media from the gateway at runtime, and tests use synthetic fixtures. Commit exported icons and illustrations only when the team holds their rights, as optimized SVG.
-- [RECOMMENDED] Until the gateway serves media, keep local demo media in the ignored `apps/frontend/public/media/` folder and reference every path from one manifest module. Each frame shows a clean missing-media state when a file is absent, as it is in CI.
+- [RECOMMENDED] Until the gateway serves media, keep local demo media in the ignored `apps/frontend/public/media/` folder and reference every path from [src/lib/media/media.ts](src/lib/media/media.ts). Record each file's source and license in [media-sources.md](media-sources.md). Each frame shows a clean missing-media state when a file is absent, as it is in CI.
+- [CONFIRMED] Artworks shown in the museum are real works. AI-generated artworks are excluded from the collection, per the [README](../../README.md#contribution-review). Generated decor (walls, frames, light) is acceptable when the team holds its rights.
 - [RECOMMENDED] The repository is public. Font files whose license does not allow public redistribution stay in the ignored `apps/frontend/fonts/` folder. Every font stack ends with free fallbacks so CI and other contributors still render a usable page.
 - [CONFIRMED] A UI PR attaches a screenshot or mockup, as the [PR template](../../.github/PULL_REQUEST_TEMPLATE.md) requires. [RECOMMENDED] Place it next to the matching Figma frame for desktop and mobile.
 
@@ -73,6 +81,16 @@ A mockup often shows only the happy path. Each screen still implements the state
 - [CONFIRMED] Guests see published content only. A protected action shows a sign-in path instead of failing silently.
 - [CONFIRMED] When a 3D model fails to load or is unsupported, show its still image and keep the page usable.
 - [CONFIRMED] NFT actions show recoverable pending, confirmed and failed states and block repeated submission while confirmation is pending. The interface explains what the token record establishes.
+
+## Motion
+
+- [RECOMMENDED] GSAP is the only animation library, imported from [src/lib/motion/gsap.ts](src/lib/motion/gsap.ts), which registers `useGSAP` and `SplitText`. Choreography lives in hooks next to the page (`useHomeIntro`, `useGalleryArrival`), not in components.
+- [RECOMMENDED] Animate `transform`, `opacity`, `clip-path` and light filters only. Select targets with `data-anim` (home) and `data-g` (gallery) attributes, never with CSS Module class names.
+- [CONFIRMED] Nothing appears before its animation: pages start with `data-motion="pending"`, the intro sets each element's first frame, and `data-motion="done"` marks the end. Split text only after its fonts load, with a timeout so a missing font never blocks the page.
+- [CONFIRMED] `prefers-reduced-motion` replaces every choreography with short fades and disables the parallax. Use `useReducedMotion()` and keep CSS hover transitions under the same media query.
+- [RECOMMENDED] Independent layers keep motions from fighting: the intro and exit move the figure, the parallax moves `[data-parallax]`, and the hover lift is CSS on an inner element.
+- [CONFIRMED] Clean up every animation, audio voice and listener on unmount. `useGSAP` reverts its context; event listeners return their removal in the effect.
+- [CONFIRMED] Sound is off by default and only a click or the `M` key starts it. Fades use a Web Audio gain node. Never autoplay.
 
 ## Data and the gateway
 

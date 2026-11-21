@@ -1,0 +1,32 @@
+# Media sources
+
+Local demo media for the LOVA frontend. The files live in `apps/frontend/public/media/`, which Git ignores until endy-rkt clears their publication under D18. This page records where each file comes from and under which license, so the review can happen from repository evidence. Paths are referenced from [`src/lib/media/media.ts`](src/lib/media/media.ts).
+
+The works are real, pre-existing artworks. None is AI-generated. The pottery photographs (vilany tany, sinibe) are still missing: no rights-cleared photograph on a plain background was found, so the home hides those two figures.
+
+## Paintings and works on paper
+
+| File (`public/media/paintings/`)                | Work                                                                                                                                               | License                                                                                                                                           | Source                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shindler-malagasy-woman-{480,960,1600}.webp`   | Antonio Zeno Shindler (1813–1899), _Malagasy Woman_, ca. 1893, oil on canvas, 106.8 × 71.1 cm. Smithsonian American Art Museum, 1985.66.165,709.   | Public domain (author died in 1899). Smithsonian Open Access record: CC0.                                                                         | [SAAM record](https://americanart.si.edu/artwork/malagasy-woman-85100) · [Commons file](https://commons.wikimedia.org/wiki/File:Antonion_Zeno_Shindler_-_Malagasy_Woman_-_1985.66.165,709_-_Smithsonian_American_Art_Museum.jpg) · image from `ids.si.edu`, 1990 × 3000 px |
+| `anonymous-antongona-{480,960,1600}.webp`       | Anonymous, monogram "W.J.", _Antongona_, 1875, ink, watercolour and gouache, 9.25 × 13.5 in. Sold by Abbott and Holder, London, 2020.              | Public domain (work of 1875; author unidentified). PD-Art reproduction.                                                                           | [Commons file](https://commons.wikimedia.org/wiki/File:Anon-Madagascar_-_Antongona.jpg), 2250 × 1547 px                                                                                                                                                                    |
+| `ellis-bridge-at-ambaniala-{480,960,1600}.webp` | William Ellis (1794–1872), _Bridge at Ambaniala_, lithograph in _History of Madagascar_, vol. 2, 1838.                                             | Public domain (author died in 1872).                                                                                                              | [Commons file](<https://commons.wikimedia.org/wiki/File:Bridge_at_Ambaniala_(1838).jpg>), 3100 × 1946 px                                                                                                                                                                   |
+| `ratovo-sikidy-tananarive-{480,960,1600}.webp`  | Henri Ratovo, _Scene of divination by the Sikidy, Tananarive_, 1912. Medium and current holder unverified; image from a MutualArt auction listing. | Public domain in Madagascar (Law 94-036 of 1995). The author's death year (1929) is unverified, so the work is shown with the `uncertain` status. | [Commons file](https://commons.wikimedia.org/wiki/File:Sikidy,_Tananarive,_Painting.webp), 1668 × 1080 px                                                                                                                                                                  |
+
+## Audio
+
+| File (`public/media/audio/`)       | Work                                                                                                                              | License                                                                                                                                          | Source                                                                                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `valiha-iny-hono-izy-ravorona.ogg` | _Old Lullaby – Iny Hono Izy Ravorona_, traditional lullaby on bamboo valiha, performed by Commons user Kaluvau, 2011, 1 min 32 s. | CC BY-SA 3.0. Attribution: "Kaluvau, CC BY-SA 3.0, via Wikimedia Commons". A visible credit is still needed in the interface before publication. | [Commons file](<https://commons.wikimedia.org/wiki/File:Old_Lullaby_-_Iny_Hono_Izy_Ravorona_-_Take_Him-Her_With_You_O_Bird_(Bamboo_Valiha).ogg>) |
+
+Ogg Vorbis plays in Chrome and Firefox. Safari does not decode it, and the sound control then reports the track as unavailable. An AAC or MP3 transcode fixes this once a converter is available.
+
+## Decor committed in `src/assets/`
+
+The red room photograph, the gilded frame, the spot beams, the paper grain, the logo and the icons were exported from Sesedra's Figma file. Sesedra holds their rights (confirmed on 2026-11-21).
+
+## Pending
+
+- Photographs of a vilany tany and a sinibe on a plain background, with the owner's permission. A phone photo of a real object on white paper is enough for the demo.
+- An AAC or MP3 version of the valiha track for Safari.
+- A visible credits line for CC BY-SA media, to design with the notice panel.
