@@ -48,6 +48,28 @@ The backend service directories are reserved with `.gitkeep` only. Service initi
 | CTO-11 | Set up CI and local quality gates. [CTO DECISION REQUIRED] D17 | P0 | CTO-07 | Backlog |
 | CTO-12 | Configure branch protection for `develop` and `main`. | P1 | CTO-11 | Backlog |
 
+## CTO: Code quality follow-up
+
+| ID | Task (one line) | Priority | Depends on | Status |
+|---|---|---|---|---|
+| CTO-13 | Install and pin root quality tooling and add package scripts. | P0 | CTO-07 | Backlog |
+| CTO-14 | Extend the shared TypeScript base in each app. | P0 | CTO-07, FE-01 | Backlog |
+| CTO-15 | Wire the lint, format and type-check jobs into required CI. | P0 | CTO-11, CTO-17 | Backlog |
+| CTO-16 | Add pre-commit hooks if approved. [CTO DECISION REQUIRED] D17 | P2 | CTO-13, CTO-15 | Backlog |
+| CTO-17 | Run the first lint across all apps, verify import boundaries and fix violations. | P0 | CTO-13, CTO-14 | Backlog |
+
+## CTO: CI follow-up
+
+| ID | Task (one line) | Priority | Depends on | Status |
+|---|---|---|---|---|
+| CTO-18 | Decide the Node version and align CI, `.nvmrc` and package engines. [CTO DECISION REQUIRED] D15 | P0 | CTO-01 | Backlog |
+| CTO-19 | Install pinned dev tooling and commit the root npm workspaces manifest and lockfile. | P0 | CTO-02, CTO-18 | Backlog |
+| CTO-20 | Add the required workspace scripts and extend the shared TypeScript base as each app lands. | P0 | CTO-19 | Backlog |
+| CTO-21 | Run the first hosted CI and fix failures, including the first initialized-workspace checks. | P0 | CTO-20 | Backlog |
+| CTO-22 | Apply the manual repository settings and verify the required check on both branches. | P0 | CTO-21 | Backlog |
+| CTO-23 | Add PostgreSQL to CI when the first database-backed integration test lands. | P1 | CTO-04, CTO-20 | Backlog |
+| CTO-24 | Decide CODEOWNERS scope and confirm available reviewers. [CTO DECISION REQUIRED] CODEOWNERS | P2 | CTO-01 | Backlog |
+
 ## Auth, OWNER TBD [CTO DECISION REQUIRED]
 
 All Auth items await D02.
@@ -126,6 +148,6 @@ The CTO is the provisional owner pending D02.
 ## Phases
 
 - Phase 0 Decisions/Spikes — CTO-01, CTO-02, CTO-03, CTO-04, CTO-05, CTO-06, NFT-01, 3D-01, 3D-02, DEMO-01
-- Phase 1 Foundation and contracts — CTO-07, CTO-08, CTO-09, CTO-10, CTO-11, CTO-12, FE-01
+- Phase 1 Foundation and contracts — CTO-07, CTO-08, CTO-09, CTO-10, CTO-11, CTO-12, FE-01, CTO-13, CTO-14, CTO-17, CTO-15
 - Phase 2 Feature work in parallel — AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06, CONTENT-01, CONTENT-02, CONTENT-03, CONTENT-04, CONTENT-05, NFT-02, NFT-03, NFT-04, NFT-05, UX-01, UX-02, UX-03, 3D-03, 3D-04, 3D-05, FE-02, FE-03, FE-04
 - Phase 3 Integration and demo — DEMO-02, DEMO-03, DEMO-04, DEMO-05
