@@ -1,6 +1,6 @@
 # 0001 D12 3D demo experience
 
-- **Status:** Proposed. Pending approval from endy-rkt.
+- **Status:** Proposed. shidoAdr chose option A on 2026-11-21. Pending approval from endy-rkt.
 - **Decision owner:** shidoAdr ([MVP section E](../product/MVP.md#e-lidar-and-3d))
 - **Date:** 2026-11-21
 - **Backlog:** 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)), feeding endy-rkt-06 ([#27](https://github.com/songomby-D1/devfest2026/issues/27))
@@ -59,7 +59,7 @@ Display on real phones is not measured yet. It is planned in 3D-05b ([#15](https
 
 ## Proposed decision
 
-[RECOMMENDED] Option A, prepared offline, with these terms:
+[CONFIRMED] shidoAdr, the D12 decision owner, chose option A, prepared offline, with these terms. [DECISION REQUIRED: endy-rkt] Approve this ADR under endy-rkt-06.
 
 1. **Assets.** For each demo item, store a GLB at 1K, a GLB at 2K and a poster image. The poster is required and also serves as the still-image fallback. Serve 1K first on every device and offer 2K only on request.
 2. **Fallback.** Show the poster while loading and keep the page usable on every failure listed in [failure handling](#failure-handling).
