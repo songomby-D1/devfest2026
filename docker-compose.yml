@@ -1,7 +1,146 @@
-# Local stack. Each app or service owner maintains its own entry.
+# Local stack (INFRA-01). Agent 1 owns this file; other owners propose a fragment such as
+# apps/backend/content/compose.fragment.yml, merged here at integration time.
+# First run: npm run setup:env && docker compose up --build
+name: lova
+
+x-required:
+  &required-env # Interpolation fails early with a hint when the root .env is missing.
+  POSTGRES_USER: ${POSTGRES_USER:?Run npm run setup:env to create the root .env}
 
 services:
-  # NFT service (owner: salandri-42). See apps/backend/nft/nft_context.md.
+  # Shared PostgreSQL (D04): one database and two scoped roles per stateful service.
+  postgres:
+    image: postgres:18.6
+    restart: unless-stopped
+    environment:
+      <<: *required-env
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      AUTH_DB_NAME: ${AUTH_DB_NAME:-auth}
+      AUTH_MIGRATION_DB_USER: ${AUTH_MIGRATION_DB_USER:-auth_migrator}
+      AUTH_MIGRATION_DB_PASSWORD: ${AUTH_MIGRATION_DB_PASSWORD:?Set AUTH_MIGRATION_DB_PASSWORD}
+      AUTH_RUNTIME_DB_USER: ${AUTH_RUNTIME_DB_USER:-auth_runtime}
+      AUTH_RUNTIME_DB_PASSWORD: ${AUTH_RUNTIME_DB_PASSWORD:?Set AUTH_RUNTIME_DB_PASSWORD}
+      CONTENT_DB_NAME: ${CONTENT_DB_NAME:-}
+      CONTENT_MIGRATION_DB_USER: ${CONTENT_MIGRATION_DB_USER:-content_migrator}
+      CONTENT_MIGRATION_DB_PASSWORD: ${CONTENT_MIGRATION_DB_PASSWORD:-}
+      CONTENT_RUNTIME_DB_USER: ${CONTENT_RUNTIME_DB_USER:-content_runtime}
+      CONTENT_RUNTIME_DB_PASSWORD: ${CONTENT_RUNTIME_DB_PASSWORD:-}
+      NFT_DB_NAME: ${NFT_DB_NAME:-}
+      NFT_MIGRATION_DB_USER: ${NFT_MIGRATION_DB_USER:-nft_migrator}
+      NFT_MIGRATION_DB_PASSWORD: ${NFT_MIGRATION_DB_PASSWORD:-}
+      NFT_RUNTIME_DB_USER: ${NFT_RUNTIME_DB_USER:-nft_runtime}
+      NFT_RUNTIME_DB_PASSWORD: ${NFT_RUNTIME_DB_PASSWORD:-}
+      LIDAR_DB_NAME: ${LIDAR_DB_NAME:-}
+      LIDAR_MIGRATION_DB_USER: ${LIDAR_MIGRATION_DB_USER:-lidar_migrator}
+      LIDAR_MIGRATION_DB_PASSWORD: ${LIDAR_MIGRATION_DB_PASSWORD:-}
+      LIDAR_RUNTIME_DB_USER: ${LIDAR_RUNTIME_DB_USER:-lidar_runtime}
+      LIDAR_RUNTIME_DB_PASSWORD: ${LIDAR_RUNTIME_DB_PASSWORD:-}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./infrastructure/docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # TCP check: the init-time server listens on the Unix socket only.
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d postgres',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [internal_net]
+
+  # Private S3-compatible object storage (D05) with one identity per writing service.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.54
+    restart: unless-stopped
+    entrypoint: ['/bin/sh', '/etc/lova/start.sh']
+    environment:
+      S3_MEDIA_BUCKET: ${S3_MEDIA_BUCKET:-lova-media}
+      S3_MODELS_BUCKET: ${S3_MODELS_BUCKET:-lova-models}
+      SEAWEEDFS_ADMIN_ACCESS_KEY: ${SEAWEEDFS_ADMIN_ACCESS_KEY:?Set SEAWEEDFS_ADMIN_ACCESS_KEY}
+      SEAWEEDFS_ADMIN_SECRET_KEY: ${SEAWEEDFS_ADMIN_SECRET_KEY:?Set SEAWEEDFS_ADMIN_SECRET_KEY}
+      SEAWEEDFS_CONTENT_ACCESS_KEY: ${SEAWEEDFS_CONTENT_ACCESS_KEY:?Set SEAWEEDFS_CONTENT_ACCESS_KEY}
+      SEAWEEDFS_CONTENT_SECRET_KEY: ${SEAWEEDFS_CONTENT_SECRET_KEY:?Set SEAWEEDFS_CONTENT_SECRET_KEY}
+      SEAWEEDFS_LIDAR_ACCESS_KEY: ${SEAWEEDFS_LIDAR_ACCESS_KEY:?Set SEAWEEDFS_LIDAR_ACCESS_KEY}
+      SEAWEEDFS_LIDAR_SECRET_KEY: ${SEAWEEDFS_LIDAR_SECRET_KEY:?Set SEAWEEDFS_LIDAR_SECRET_KEY}
+    volumes:
+      - seaweedfs-data:/data
+      - ./infrastructure/docker/seaweedfs:/etc/lova:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q -O /dev/null http://127.0.0.1:9333/cluster/status || exit 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [internal_net]
+
+  # One-shot job: creates the private buckets, then exits.
+  seaweedfs-buckets:
+    image: chrislusf/seaweedfs:4.54
+    restart: 'no'
+    entrypoint: ['/bin/sh', '/etc/lova/create-buckets.sh']
+    environment:
+      S3_MEDIA_BUCKET: ${S3_MEDIA_BUCKET:-lova-media}
+      S3_MODELS_BUCKET: ${S3_MODELS_BUCKET:-lova-models}
+      SEAWEEDFS_MASTER: seaweedfs:9333
+    volumes:
+      - ./infrastructure/docker/seaweedfs:/etc/lova:ro
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    networks: [internal_net]
+
+  # Auth (Agent 1): accounts, revocable opaque sessions and permissions (D07, D13).
+  auth:
+    build:
+      context: .
+      dockerfile: apps/backend/auth/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: '3000'
+      DATABASE_URL: postgresql://${AUTH_RUNTIME_DB_USER:-auth_runtime}:${AUTH_RUNTIME_DB_PASSWORD:?Set AUTH_RUNTIME_DB_PASSWORD}@postgres:5432/${AUTH_DB_NAME:-auth}
+      MIGRATION_DATABASE_URL: postgresql://${AUTH_MIGRATION_DB_USER:-auth_migrator}:${AUTH_MIGRATION_DB_PASSWORD:?Set AUTH_MIGRATION_DB_PASSWORD}@postgres:5432/${AUTH_DB_NAME:-auth}
+      AUTH_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_AUTH:?Set SERVICE_TOKEN_GATEWAY_TO_AUTH}
+    expose: ['3000']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal_net]
+
+  # Gateway (Agent 1): the frontend's only entry point (D06). Only published service.
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/backend/gateway/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: '3000'
+      AUTH_SERVICE_URL: http://auth:3000
+      CONTENT_SERVICE_URL: ${GATEWAY_CONTENT_SERVICE_URL:-http://content:3000}
+      NFT_SERVICE_URL: ${GATEWAY_NFT_SERVICE_URL:-http://nft-service:3005}
+      LIDAR_SERVICE_URL: ${GATEWAY_LIDAR_SERVICE_URL:-http://lidar:3000}
+      AUTH_SERVICE_TOKEN: ${SERVICE_TOKEN_GATEWAY_TO_AUTH:?Set SERVICE_TOKEN_GATEWAY_TO_AUTH}
+      CONTENT_SERVICE_TOKEN: ${SERVICE_TOKEN_GATEWAY_TO_CONTENT:?Set SERVICE_TOKEN_GATEWAY_TO_CONTENT}
+      NFT_SERVICE_TOKEN: ${SERVICE_TOKEN_GATEWAY_TO_NFT:?Set SERVICE_TOKEN_GATEWAY_TO_NFT}
+      LIDAR_SERVICE_TOKEN: ${SERVICE_TOKEN_GATEWAY_TO_LIDAR:?Set SERVICE_TOKEN_GATEWAY_TO_LIDAR}
+      GATEWAY_ADMIN_TOKEN: ${GATEWAY_ADMIN_TOKEN:?Set GATEWAY_ADMIN_TOKEN}
+      GATEWAY_ALLOWED_ORIGINS: ${GATEWAY_ALLOWED_ORIGINS:-http://localhost:5173}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-10}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-104857600}
+    ports:
+      - '${GATEWAY_BIND_ADDRESS:-127.0.0.1}:${GATEWAY_HOST_PORT:-3000}:3000'
+    depends_on:
+      auth:
+        condition: service_healthy
+    networks: [internal_net, edge_net]
+
+  # NFT service (owner: salandri-42, Agent 2). See apps/backend/nft/nft_context.md.
   # No published port: the gateway relays its read-only routes (§10.4).
   nft-service:
     build:
@@ -20,10 +159,15 @@ services:
     networks: [internal_net, egress_net]
 
 networks:
+  # Service listeners stay unreachable from outside Compose.
   internal_net:
     internal: true
   # Outbound access to the blockchain RPC and Pinata.
   egress_net: {}
+  # Published gateway port only.
+  edge_net: {}
 
 volumes:
+  postgres-data:
+  seaweedfs-data:
   media:
