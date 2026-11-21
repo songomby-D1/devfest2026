@@ -1,0 +1,23 @@
+# Build context is the repository root (D14). Keep only the root manifests, every workspace
+# manifest that the root lockfile references, the shared types and this service.
+*
+!package.json
+!package-lock.json
+!.npmrc
+!tsconfig.base.json
+!apps/frontend/package.json
+!apps/backend/*/package.json
+!packages/*/package.json
+!packages/shared/
+!apps/backend/gateway/
+
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+apps/backend/gateway/test
+apps/backend/gateway/**/*.spec.ts
+apps/backend/gateway/vitest.config.ts
+apps/backend/gateway/Dockerfile*
+packages/shared/test
