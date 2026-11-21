@@ -1,6 +1,6 @@
 # Task allocation for the open issues
 
-This note distributes the open GitHub issues into three parallel workstreams. It is a planning aid only: the [backlog](../product/task.md) and the [MVP scope](../product/MVP.md) remain the source of truth.
+This note distributes the open GitHub issues into three parallel workstreams. It is a planning aid only: the [backlog](../product/task.md) and the [MVP scope](../product/MVP.md) remain the source of truth. See [Parallel workflow](parallel-workflow.md) for the operating agreement and the instructions given to each agent.
 
 **Order:** Agent 1 unblocks the contracts and shared infrastructure first. Agents 2 and 3 then work in parallel. Agent 3 orchestrates the final validation with the deliverables of the other two agents.
 
