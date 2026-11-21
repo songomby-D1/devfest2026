@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import type { AppConfig } from '../config/app-config.js';
+import { type AppConfig, StorageCredentials } from '../config/app-config.js';
 import {
   AssetAlreadyRegisteredError,
   type AssetRecord,
@@ -20,6 +20,14 @@ const config: AppConfig = {
   contentServiceUrl: 'http://unused',
   publicAssetBasePath: '/api/lidar/files',
   adminToken: 'x'.repeat(32),
+  storage: {
+    endpoint: 'http://unused',
+    region: 'us-east-1',
+    bucket: 'unused',
+    prefix: '',
+    forcePathStyle: true,
+    credentials: new StorageCredentials('unused', 'unused'),
+  },
 };
 
 class InMemoryAssetRepository implements AssetRepository {
@@ -27,6 +35,14 @@ class InMemoryAssetRepository implements AssetRepository {
 
   findByContentId(contentId: string): Promise<AssetRecord | null> {
     return Promise.resolve(this.records.get(contentId) ?? null);
+  }
+
+  findById(): Promise<AssetRecord | null> {
+    return Promise.reject(new Error('not used'));
+  }
+
+  markReady(): Promise<AssetRecord> {
+    return Promise.reject(new Error('not used'));
   }
 
   create(asset: NewAsset): Promise<AssetRecord> {

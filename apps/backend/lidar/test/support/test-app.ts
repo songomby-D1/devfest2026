@@ -11,7 +11,13 @@ import type { App } from 'supertest/types.js';
 import { AppModule } from '../../src/app.module.js';
 import type { ContentDirectory } from '../../src/assets/content-directory.js';
 import { CONTENT_DIRECTORY } from '../../src/assets/content-directory.js';
-import type { AppConfig } from '../../src/config/app-config.js';
+import {
+  type AppConfig,
+  StorageCredentials,
+} from '../../src/config/app-config.js';
+import type { ObjectStorage } from '../../src/storage/object-storage.js';
+import { OBJECT_STORAGE } from '../../src/storage/object-storage.js';
+import { InMemoryObjectStorage } from './in-memory-object-storage.js';
 
 const POSTGRES_IMAGE = 'postgres:18.6';
 const SERVICE_ROOT = fileURLToPath(new URL('../..', import.meta.url));
@@ -42,6 +48,7 @@ export async function startPostgres(): Promise<StartedPostgreSqlContainer> {
 export async function createTestApp(
   databaseUrl: string,
   contentDirectory: ContentDirectory,
+  storage: ObjectStorage = new InMemoryObjectStorage(),
 ): Promise<INestApplication<App>> {
   const config: AppConfig = {
     port: 0,
@@ -49,12 +56,22 @@ export async function createTestApp(
     contentServiceUrl: 'http://content.invalid',
     publicAssetBasePath: TEST_ASSET_BASE_PATH,
     adminToken: TEST_ADMIN_TOKEN,
+    storage: {
+      endpoint: 'http://storage.invalid',
+      region: 'us-east-1',
+      bucket: 'lidar-test',
+      prefix: 'lidar/',
+      forcePathStyle: true,
+      credentials: new StorageCredentials('test-access-key', 'test-secret-key'),
+    },
   };
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register(config)],
   })
     .overrideProvider(CONTENT_DIRECTORY)
     .useValue(contentDirectory)
+    .overrideProvider(OBJECT_STORAGE)
+    .useValue(storage)
     .compile();
   const app = moduleRef.createNestApplication<INestApplication<App>>();
   app.useLogger(false);

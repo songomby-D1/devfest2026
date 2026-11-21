@@ -18,6 +18,17 @@ export class PrismaAssetRepository implements AssetRepository {
     return this.prisma.asset3d.findUnique({ where: { contentId } });
   }
 
+  findById(id: string): Promise<AssetRecord | null> {
+    return this.prisma.asset3d.findUnique({ where: { id } });
+  }
+
+  markReady(id: string): Promise<AssetRecord> {
+    return this.prisma.asset3d.update({
+      where: { id },
+      data: { status: 'ready' },
+    });
+  }
+
   async create(asset: NewAsset): Promise<AssetRecord> {
     try {
       return await this.prisma.asset3d.create({ data: asset });
