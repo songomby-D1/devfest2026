@@ -1,0 +1,19 @@
+# Compose fragment for 3D-04c (#13), to be merged into the root docker-compose.yml by Agent 1.
+# It only adds the object storage settings to the existing `lidar` service from #101.
+#
+# Assumptions for Agent 1 (shared infrastructure, D05):
+# - A SeaweedFS S3 gateway is reachable from `lidar` at LIDAR_STORAGE_ENDPOINT (default
+#   http://seaweedfs:8333). Its setup belongs to the shared infrastructure, not to this fragment.
+# - The bucket LIDAR_STORAGE_BUCKET exists and the access key below is scoped to it (or to
+#   the LIDAR_STORAGE_PREFIX within it). No other service receives these credentials.
+# - The secrets come from the environment (.env), never from this file.
+services:
+  lidar:
+    environment:
+      STORAGE_ENDPOINT: ${LIDAR_STORAGE_ENDPOINT:-http://seaweedfs:8333}
+      STORAGE_REGION: ${LIDAR_STORAGE_REGION:-us-east-1}
+      STORAGE_BUCKET: ${LIDAR_STORAGE_BUCKET:-lidar-assets}
+      STORAGE_PREFIX: ${LIDAR_STORAGE_PREFIX:-}
+      STORAGE_FORCE_PATH_STYLE: ${LIDAR_STORAGE_FORCE_PATH_STYLE:-true}
+      STORAGE_ACCESS_KEY_ID: ${LIDAR_STORAGE_ACCESS_KEY_ID:?Set LIDAR_STORAGE_ACCESS_KEY_ID}
+      STORAGE_SECRET_ACCESS_KEY: ${LIDAR_STORAGE_SECRET_ACCESS_KEY:?Set LIDAR_STORAGE_SECRET_ACCESS_KEY}

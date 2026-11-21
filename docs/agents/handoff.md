@@ -2,7 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: Auth contract (shidoAdr)
+## Latest session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
+
+- [PROPOSED] 3D-04c ([#13](https://github.com/songomby-D1/devfest2026/issues/13)), stacked on PR #101: the LiDAR service stores the 3D-04a outputs in an S3-compatible bucket and streams them at `GET /files/{assetId}/{variant}` with Range (206/416), HEAD, immutable caching and the `{ code, message, requestId }` error shape. Uploads go through `PUT /assets/{assetId}/files/{variant}` behind the interim admin token. See [the OpenAPI contract](../api/lidar.yaml).
+- [NOT IMPLEMENTED] The gateway route `/api/lidar/files/*` (Agent 1), the SeaweedFS service and the LiDAR bucket and credentials (Agent 1, D05), and the merge of `apps/backend/lidar/compose.fragment.yml`.
+- [DECISION REQUIRED: Agent 1] The display response of #101 does not yet match the frozen 3D contract (`missing` and `glb1k`/`glb2k`). The gateway adapts it, or a follow-up aligns it.
+
+## Earlier session: Auth contract (shidoAdr)
 
 - [PROPOSED] AUTH-01 to AUTH-07 ([#46](https://github.com/songomby-D1/devfest2026/issues/46)–[#51](https://github.com/songomby-D1/devfest2026/issues/51), [#97](https://github.com/songomby-D1/devfest2026/issues/97)): drafted the [Auth contract specification](../specs/auth-contract.md) for endy-rkt-05 and endy-rkt-08. It covers the internal Auth API, opaque sessions with a 2 h idle and 7-day absolute limit, the caller-context headers, per-pair service secrets, the D13 permission matrix and the error shape, with 16 acceptance criteria.
 - [DECISION REQUIRED: endy-rkt] Confirm the header names, service secrets, public routes, CSRF safeguard and rate limits. Open questions for papangoo and salandri-42 are listed in the spec.

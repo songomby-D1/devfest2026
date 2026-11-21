@@ -102,7 +102,160 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ValidationError' }
+  /assets/{assetId}/files/{variant}:
+    put:
+      operationId: uploadAssetFile
+      summary: Store one prepared file of an asset (3D-04c)
+      description: >-
+        Streams one 3D-04a output to object storage at the key registered for the asset. The body is
+        the raw file. GLB and poster sizes must equal the registered sizes; the USDZ is capped at
+        64 MiB. The file signature must match the variant. A pending asset becomes ready once its
+        GLB 1K, GLB 2K and poster are stored. Files of a ready asset are never overwritten, so their
+        delivery URLs stay immutable. Interim protection by the service token until D07. Errors
+        use the PublicError shape.
+      security:
+        - adminToken: []
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - $ref: '#/components/parameters/FileVariant'
+        - name: Content-Length
+          in: header
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          model/gltf-binary:
+            schema: { type: string, contentMediaType: model/gltf-binary }
+          image/webp:
+            schema: { type: string, contentMediaType: image/webp }
+          model/vnd.usdz+zip:
+            schema: { type: string, contentMediaType: model/vnd.usdz+zip }
+          application/octet-stream:
+            schema: { type: string, contentMediaType: application/octet-stream }
+      responses:
+        '201':
+          description: File stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StoredFile' }
+        '401': { $ref: '#/components/responses/PublicError' }
+        '404': { $ref: '#/components/responses/PublicError' }
+        '409':
+          description: USDZ_NOT_REGISTERED, or FILE_ALREADY_STORED for a ready asset
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '411': { $ref: '#/components/responses/PublicError' }
+        '413': { $ref: '#/components/responses/PublicError' }
+        '415': { $ref: '#/components/responses/PublicError' }
+        '422':
+          description: SIZE_MISMATCH or INVALID_FILE (signature or body length)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '503': { $ref: '#/components/responses/PublicError' }
+  /files/{assetId}/{variant}:
+    get:
+      operationId: getAssetFile
+      summary: Stream a stored file of a ready asset of a published item (3D-04c)
+      description: >-
+        Gateway-mediated delivery (D05). The gateway exposes this route under PUBLIC_ASSET_BASE_PATH,
+        for example GET /api/lidar/files/{assetId}/1k, and forwards GET and HEAD requests, the Range header
+        and the x-request-id header unchanged. Publication is re-checked with Content on
+        every request. One byte range per request is honored; other Range headers return the whole
+        file. Unknown assets, assets that are not ready, unpublished items and missing objects all
+        return 404 MODEL3D_FILE_NOT_FOUND so the frontend shows its poster or still-image fallback.
+        HEAD is supported with the same headers and no body.
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - $ref: '#/components/parameters/FileVariant'
+        - name: Range
+          in: header
+          required: false
+          schema: { type: string, examples: ['bytes=0-1023'] }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: The whole file
+          headers:
+            Cache-Control:
+              { $ref: '#/components/headers/ImmutableCacheControl' }
+            Accept-Ranges: { schema: { const: bytes } }
+            Content-Length: { schema: { type: integer } }
+            ETag: { schema: { type: string } }
+          content:
+            model/gltf-binary:
+              schema: { type: string, contentMediaType: model/gltf-binary }
+            image/webp:
+              schema: { type: string, contentMediaType: image/webp }
+            model/vnd.usdz+zip:
+              schema: { type: string, contentMediaType: model/vnd.usdz+zip }
+        '206':
+          description: The requested byte range
+          headers:
+            Cache-Control:
+              { $ref: '#/components/headers/ImmutableCacheControl' }
+            Content-Range:
+              { schema: { type: string, examples: ['bytes 0-1023/73760'] } }
+            Content-Length: { schema: { type: integer } }
+          content:
+            model/gltf-binary:
+              schema: { type: string, contentMediaType: model/gltf-binary }
+            image/webp:
+              schema: { type: string, contentMediaType: image/webp }
+            model/vnd.usdz+zip:
+              schema: { type: string, contentMediaType: model/vnd.usdz+zip }
+        '404':
+          description: MODEL3D_FILE_NOT_FOUND. Not cached (Cache-Control no-store).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '416':
+          description: RANGE_NOT_SATISFIABLE, with Content-Range bytes */{size}
+          headers:
+            Content-Range:
+              { schema: { type: string, examples: ['bytes */73760'] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '503':
+          description: CONTENT_UNAVAILABLE or STORAGE_UNAVAILABLE
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
 components:
+  parameters:
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FileVariant:
+      name: variant
+      in: path
+      required: true
+      description: >-
+        1k and 2k are GLB (model/gltf-binary), poster is WebP (image/webp), usdz is
+        model/vnd.usdz+zip and exists only when a USDZ key was registered.
+      schema:
+        type: string
+        enum: ['1k', '2k', poster, usdz]
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: Propagated by the gateway and echoed in errors; generated when absent or unsafe.
+      schema: { type: string, pattern: '^[A-Za-z0-9._:-]{1,128}$' }
+  headers:
+    ImmutableCacheControl:
+      schema: { const: 'public, max-age=31536000, immutable' }
+  responses:
+    PublicError:
+      description: Error in the public shape
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
   securitySchemes:
     adminToken:
       type: apiKey
@@ -167,7 +320,9 @@ components:
       properties:
         url:
           type: string
-          description: Gateway delivery path, for example /api/lidar/files/{assetId}/1k
+          description: >-
+            Gateway delivery path, for example /api/lidar/files/{assetId}/1k, served by
+            GET /files/{assetId}/{variant} behind the gateway
         bytes: { $ref: '#/components/schemas/ByteSize' }
     ReadyAssetDisplay:
       type: object
@@ -195,6 +350,26 @@ components:
       properties:
         contentId: { $ref: '#/components/schemas/ContentId' }
         status: { const: none }
+    StoredFile:
+      type: object
+      required: [assetId, variant, bytes, assetStatus]
+      properties:
+        assetId: { type: string, format: uuid }
+        variant: { type: string, enum: ['1k', '2k', poster, usdz] }
+        bytes: { type: integer, minimum: 1 }
+        assetStatus: { $ref: '#/components/schemas/AssetStatus' }
+    PublicError:
+      type: object
+      description: Public error shape of the frozen contract, used by the 3D-04c file routes.
+      required: [code, message, requestId]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          examples:
+            [MODEL3D_FILE_NOT_FOUND, RANGE_NOT_SATISFIABLE, STORAGE_UNAVAILABLE]
+        message: { type: string }
+        requestId: { type: string }
     Error:
       type: object
       description: NestJS default error body until the gateway error contract is agreed.
