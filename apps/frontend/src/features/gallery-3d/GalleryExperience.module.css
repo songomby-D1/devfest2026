@@ -1,0 +1,310 @@
+/*
+ * Shell, entrance and no-WebGL fallback of the immersive visit.
+ * The custom properties mirror the Figma variables (color/ink, color/paper,
+ * color/gold, color/wine, color/accent). They are scoped here so this module
+ * works on the FE-01 base and can switch to the global tokens.css from FE-02
+ * by renaming var(--g-*) to var(--color-*).
+ */
+.experience {
+  --g-ink: #0e1116;
+  --g-ink-60: rgb(14 17 22 / 0.62);
+  --g-paper: #f0ece4;
+  --g-paper-95: rgb(240 236 228 / 0.95);
+  --g-paper-70: rgb(240 236 228 / 0.7);
+  --g-paper-16: rgb(240 236 228 / 0.16);
+  --g-white: #fffdf7;
+  --g-gold: #c8a174;
+  --g-wine: #67271f;
+  --g-accent: #7e2a20;
+  --g-glass: rgb(20 5 3 / 0.32);
+  --g-glass-dark: rgb(0 0 0 / 0.28);
+  --g-shadow-label: 0 6px 14px -4px rgb(0 0 0 / 0.25);
+  --g-font-display:
+    'New Icon Serif', 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --g-font-text:
+    'Helvetica Now Display', 'Instrument Sans', 'Helvetica Neue', Arial,
+    sans-serif;
+  --g-font-condensed:
+    'Bebas Neue', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --g-font-serif-italic:
+    'Averia Serif Libre', 'Instrument Serif', Georgia, serif;
+  --g-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --g-focus-ring: 0 0 0 3px var(--g-gold);
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--g-font-text);
+  font-weight: 500;
+  color: var(--g-paper);
+  background: #070403;
+}
+
+.experience :focus-visible {
+  outline: none;
+  box-shadow: var(--g-focus-ring);
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+}
+
+.stage canvas {
+  display: block;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Entrance */
+.entrance {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 40px 40px;
+  color: var(--g-ink);
+  background: var(--g-white);
+  opacity: 1;
+  transition:
+    opacity 0.9s var(--g-ease),
+    transform 1.4s var(--g-ease);
+}
+
+.entrance[data-leaving='true'] {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+.entranceBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entranceWordmark,
+.entranceNote {
+  margin: 0;
+}
+
+.entranceWordmark {
+  font-family: var(--g-font-display);
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}
+
+.entranceNote {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--g-ink-60);
+}
+
+.entranceBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  max-width: 820px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.entranceTitle {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--g-font-display);
+  font-size: clamp(44px, 7.6vw, 108px);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.entranceAccent {
+  color: var(--g-accent);
+}
+
+.entranceLead {
+  max-width: 440px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.enterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 24px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--g-paper);
+  cursor: pointer;
+  background: var(--g-ink);
+  border: 1px solid var(--g-ink);
+  border-radius: 2px;
+  transition:
+    transform 0.2s var(--g-ease),
+    background-color 0.2s var(--g-ease);
+}
+
+.enterButton:hover:not(:disabled) {
+  background: var(--g-accent);
+  border-color: var(--g-accent);
+  transform: translateY(-1px);
+}
+
+.enterButton:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.entranceHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--g-ink-60);
+}
+
+/* Fallback room without WebGL */
+.fallbackRoom {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse 60% 70% at 38% 42%,
+      rgb(255 204 150 / 0.22),
+      transparent 70%
+    ),
+    linear-gradient(180deg, #3a130e 0%, #5a1f17 45%, #4a1a13 100%);
+}
+
+.fallbackFloor {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 18%;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(0 0 0 / 0.12) 0 2px,
+      transparent 2px 64px
+    ),
+    linear-gradient(180deg, #2a1810, #1a0f0a);
+  box-shadow: 0 -2px 0 #1e120c;
+}
+
+.fallbackWork {
+  position: absolute;
+  top: 46%;
+  left: 38%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: min(42vw, 420px);
+  margin: 0;
+  transform: translate(-50%, -50%);
+  transition: transform 0.8s var(--g-ease);
+}
+
+.fallbackRoom[data-focused='true'] .fallbackWork {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.fallbackCanvas,
+.fallbackObject {
+  display: block;
+  max-height: 46vh;
+  box-shadow: 0 30px 40px -18px rgb(0 0 0 / 0.7);
+}
+
+.fallbackCanvas {
+  border: 14px solid #b8914f;
+  outline: 2px solid #6b4a1e;
+  outline-offset: -8px;
+}
+
+.fallbackPlaceholder {
+  display: grid;
+  place-items: center;
+  width: 240px;
+  height: 320px;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--g-paper-70);
+  background: #24140f;
+  border: 14px solid #b8914f;
+}
+
+.fallbackCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 14px;
+  color: var(--g-ink);
+  background: var(--g-paper-95);
+  box-shadow: var(--g-shadow-label);
+}
+
+.fallbackCaption > span:first-child {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+}
+
+.fallbackCaption > span:nth-child(2) {
+  font-family: var(--g-font-serif-italic);
+  font-size: 15px;
+  font-style: italic;
+}
+
+.fallbackButton {
+  padding: 0;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.fallbackNote {
+  position: absolute;
+  bottom: 96px;
+  left: 50%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--g-paper-70);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 720px) {
+  .entrance {
+    padding: 20px 20px 32px;
+  }
+
+  .entranceNote {
+    display: none;
+  }
+
+  .fallbackWork {
+    max-width: 70vw;
+  }
+}
