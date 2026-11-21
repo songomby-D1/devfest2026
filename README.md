@@ -6,7 +6,7 @@ LOVA is an immersive, participatory digital museum dedicated to Madagascar’s c
 
 > Our goal is to make Malagasy heritage more accessible, interactive, and easier to pass on by connecting works, their stories, and the people who preserve them.
 
-LOVA is a project for the **Preserving the Art** hackathon. This README describes the intended experience. The project is in pre-implementation, and its apps and services are still to be initialized.
+LOVA is a project for the **Preserving the Art** hackathon. This README describes the intended experience. The gateway and the Auth service run in the local stack; Content, NFT, LiDAR and the frontend are being built against the frozen [platform contract](docs/specs/platform-contract.md).
 
 ## Why LOVA?
 
@@ -66,10 +66,10 @@ The token documents a digital event. Physical authenticity, the accuracy of clai
 
 The [MVP](docs/product/MVP.md) aims to connect three experiences in an end-to-end demo.
 
-| Experience | Demo goal |
-|---|---|
-| Visit | Explore the gallery, zoom in on a painting, and rotate a sculpture in 3D. |
-| Contribute | Create an item record, import media or an authorized model, and submit it for review. The iPhone flow depends on the feasibility study. |
+| Experience       | Demo goal                                                                                                                                                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Visit            | Explore the gallery, zoom in on a painting, and rotate a sculpture in 3D.                                                                                                                                                              |
+| Contribute       | Create an item record, import media or an authorized model, and submit it for review. The iPhone flow depends on the feasibility study.                                                                                                |
 | Review and trace | Show a contribution’s status, the rejection of an AI-generated work after human review, and the provenance of an accepted item. The MVP calls for a working NFT integration. Any simulated data shown during the demo will be labeled. |
 
 Themed rooms, traditional music, educational experiences, and more ways to showcase artists and craftspeople can extend LOVA after the first prototype.
@@ -80,25 +80,40 @@ The React and TypeScript frontend reaches the NestJS services through a dedicate
 
 Each owner takes their app or service from initialization through integration. They own its API or client integration, unit and integration tests, Dockerfile, and root Compose entry. Stateful service owners also own their PostgreSQL data boundary, Prisma schema, and migrations. endy-rkt defines the MVP and maintains the system overview. [Team responsibilities](docs/team/responsibilities.md#task-ownership)
 
+## Run it locally
+
+You need Node from `.nvmrc` (22.23.5) and Docker with Compose.
+
+```bash
+npm ci                     # one root lockfile for every workspace
+npm run setup:env          # creates .env with random local secrets
+docker compose up --build  # PostgreSQL, SeaweedFS, Auth, the gateway and NFT
+npm run smoke:auth         # guest, register, login, protected call, logout
+```
+
+The gateway listens on `http://localhost:3000/api`. Quality checks: `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test` and `npm run build`.
+
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [MVP scope](docs/product/MVP.md) | Capabilities, owners, and acceptance criteria |
-| [Backlog](docs/product/task.md) | Tasks, dependencies, and open decisions |
-| [Project decisions](docs/decisions/project-decisions.md) | Team authority and decisions that need endy-rkt |
-| [Architecture overview](docs/architecture/overview.md) | System layout and gateway |
-| [Services](docs/architecture/services.md) | Responsibilities, contracts, and Dockerfiles |
-| [Data and storage](docs/architecture/data-storage.md) | PostgreSQL, Prisma, media, and backups |
-| [Team](docs/team/responsibilities.md) | Ownership and coordination |
-| [Contributing](CONTRIBUTING.md) | Git workflow and review |
-| [Development workflow](docs/development/workflow.md) | Local commands and tooling decisions |
-| [Code quality policy](docs/development/code-policy.md) | Shared rules for contributors and agents |
-| [Tests and delivery criteria](docs/development/quality-gates.md) | Checks required for each service |
-| [CI](docs/development/ci.md) | Workflow, troubleshooting, and GitHub settings |
-| [Agent instructions](AGENTS.md) | Shared rules for Claude and Codex |
-| [Frontend](apps/frontend/README.md) | How the React frontend is built, run, tested and verified |
-| [Frontend rules](apps/frontend/rules.md) | Frontend stack, Figma-to-code rules, required states and checks |
+| Document                                                         | Contents                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| [MVP scope](docs/product/MVP.md)                                 | Capabilities, owners, and acceptance criteria                   |
+| [Platform contract](docs/specs/platform-contract.md)             | Frozen vocabulary, gateway routes, sessions and errors          |
+| [API contracts](docs/api/README.md)                              | OpenAPI documents owned by each producer                        |
+| [Backlog](docs/product/task.md)                                  | Tasks, dependencies, and open decisions                         |
+| [Project decisions](docs/decisions/project-decisions.md)         | Team authority and decisions that need endy-rkt                 |
+| [Architecture overview](docs/architecture/overview.md)           | System layout and gateway                                       |
+| [Services](docs/architecture/services.md)                        | Responsibilities, contracts, and Dockerfiles                    |
+| [Data and storage](docs/architecture/data-storage.md)            | PostgreSQL, Prisma, media, and backups                          |
+| [Team](docs/team/responsibilities.md)                            | Ownership and coordination                                      |
+| [Contributing](CONTRIBUTING.md)                                  | Git workflow and review                                         |
+| [Development workflow](docs/development/workflow.md)             | Local commands and tooling decisions                            |
+| [Code quality policy](docs/development/code-policy.md)           | Shared rules for contributors and agents                        |
+| [Tests and delivery criteria](docs/development/quality-gates.md) | Checks required for each service                                |
+| [CI](docs/development/ci.md)                                     | Workflow, troubleshooting, and GitHub settings                  |
+| [Agent instructions](AGENTS.md)                                  | Shared rules for Claude and Codex                               |
+| [Frontend](apps/frontend/README.md)                              | How the React frontend is built, run, tested and verified       |
+| [Frontend rules](apps/frontend/rules.md)                         | Frontend stack, Figma-to-code rules, required states and checks |
 
 ## Design and UX
 
