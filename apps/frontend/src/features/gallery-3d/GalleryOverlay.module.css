@@ -1,0 +1,559 @@
+/*
+ * Museum chrome above the canvas: top bar, wall text, bottom bar, wall
+ * labels (cartels) and the notice. Layout follows the Figma gallery frame
+ * (nodes 114:3877 and 128:56). Colour variables come from the experience root.
+ */
+.chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s var(--g-ease) 0.3s;
+}
+
+.chrome[data-visible='true'] {
+  opacity: 1;
+}
+
+.chrome::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 189px;
+  content: '';
+  background: linear-gradient(180deg, rgb(0 0 0 / 0.55), transparent);
+}
+
+.chrome::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 160px;
+  content: '';
+  background: linear-gradient(0deg, rgb(0 0 0 / 0.5), transparent);
+}
+
+.topBar,
+.bottomBar {
+  position: absolute;
+  right: 40px;
+  left: 40px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.topBar {
+  top: 30px;
+  height: 44px;
+}
+
+.bottomBar {
+  bottom: 32px;
+  height: 48px;
+}
+
+.topBar > *,
+.bottomBar > * {
+  pointer-events: auto;
+}
+
+.wordmark {
+  margin: 0;
+  font-family: var(--g-font-display);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+  color: var(--g-paper);
+}
+
+.roomIndicator {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.progress {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.dot,
+.dotActive {
+  display: inline-block;
+  height: 6px;
+  border-radius: 3px;
+  transition: width 0.4s var(--g-ease);
+}
+
+.dot {
+  width: 6px;
+  background: var(--g-paper-16);
+}
+
+.dotActive {
+  width: 18px;
+  background: var(--g-paper);
+}
+
+.pill,
+.pillQuiet,
+.navCapsule {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  height: 44px;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--g-paper);
+  background: var(--g-glass);
+  border: 1px solid var(--g-paper-16);
+  border-radius: 22px;
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.pill,
+.pillQuiet {
+  padding: 0 18px 0 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--g-ease),
+    border-color 0.2s var(--g-ease);
+}
+
+.pill:hover,
+.pillQuiet:hover {
+  background: rgb(20 5 3 / 0.55);
+  border-color: rgb(240 236 228 / 0.3);
+}
+
+.pill[aria-pressed='true'] {
+  color: var(--g-ink);
+  background: var(--g-paper);
+}
+
+.pillQuiet {
+  color: var(--g-paper-70);
+}
+
+.navCapsule {
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--g-paper);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 18px;
+  transition: background-color 0.2s var(--g-ease);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--g-paper-16);
+}
+
+.iconButton:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.navLabel {
+  min-width: 110px;
+  text-align: center;
+}
+
+.rooms {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.roomLink,
+.roomLinkActive {
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--g-paper-70);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  transition: color 0.2s var(--g-ease);
+}
+
+.roomLink:hover {
+  color: var(--g-paper);
+}
+
+.roomLinkActive {
+  color: var(--g-paper);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Wall text */
+.wallText {
+  position: absolute;
+  top: 28vh;
+  right: clamp(24px, 7vw, 102px);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: min(420px, 38vw);
+  pointer-events: none;
+  transition: opacity 0.6s var(--g-ease);
+}
+
+.wallText[data-dimmed='true'] {
+  opacity: 0;
+}
+
+.eyebrow,
+.eyebrowInk {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  color: var(--g-paper-70);
+}
+
+.eyebrowInk {
+  color: var(--g-accent);
+}
+
+.roomTitle {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--g-font-condensed);
+  font-size: clamp(38px, 4.2vw, 60px);
+  font-weight: 700;
+  line-height: 0.92;
+  text-transform: uppercase;
+  color: var(--g-paper);
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.5);
+}
+
+.subtitle {
+  margin: 0;
+  font-family: var(--g-font-serif-italic);
+  font-size: 24px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--g-paper-70);
+}
+
+.paragraphs p {
+  margin: 0;
+}
+
+/* Wall label beside the active work (rendered by drei Html) */
+.cartel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s var(--g-ease);
+  will-change: transform;
+}
+
+.cartelButton {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  width: 148px;
+  padding: 14px;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--g-ink);
+  cursor: pointer;
+  background: var(--g-paper-95);
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--g-shadow-label);
+  transition:
+    transform 0.25s var(--g-ease),
+    box-shadow 0.25s var(--g-ease);
+}
+
+.cartelButton:hover {
+  box-shadow: 0 12px 20px -6px rgb(0 0 0 / 0.35);
+  transform: translateY(-2px);
+}
+
+.cartelIndex,
+.cartelAction {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+}
+
+.cartelTitle {
+  font-family: var(--g-font-serif-italic);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.3;
+}
+
+.cartelMeta {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--g-ink-60);
+}
+
+/* Notice */
+.notice {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(520px, 100%);
+  padding: 40px 48px 120px;
+  overflow-y: auto;
+  color: var(--g-ink);
+  background: var(--g-paper);
+  box-shadow: -30px 0 60px rgb(0 0 0 / 0.35);
+  animation: notice-in 0.7s var(--g-ease) both;
+}
+
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.noticeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.closeButton {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--g-ink);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid rgb(14 17 22 / 0.2);
+  border-radius: 18px;
+}
+
+.closeButton:hover {
+  background: rgb(14 17 22 / 0.06);
+}
+
+.badgeDemo,
+.badgeHeritage {
+  align-self: flex-start;
+  padding: 6px 10px;
+  margin: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid currentcolor;
+}
+
+.badgeDemo {
+  color: var(--g-accent);
+}
+
+.badgeHeritage {
+  color: #2d4a2e;
+}
+
+.noticeTitle {
+  margin: 0;
+  font-family: var(--g-font-serif-italic);
+  font-size: 40px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.noticeArtist {
+  margin: 0;
+  font-size: 14px;
+  color: var(--g-ink-60);
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 0;
+  border-top: 1px solid rgb(14 17 22 / 0.12);
+}
+
+.facts > div {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgb(14 17 22 / 0.12);
+}
+
+.facts dt {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g-ink-60);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.facts a {
+  color: var(--g-accent);
+}
+
+.mediaWarning {
+  padding: 10px 12px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--g-accent);
+  background: rgb(126 42 32 / 0.08);
+}
+
+.sectionLabel {
+  margin: 8px 0 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--g-accent);
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.hint {
+  margin: auto 0 0;
+  font-size: 12px;
+  color: var(--g-ink-60);
+}
+
+@media (max-width: 900px) {
+  .topBar,
+  .bottomBar {
+    right: 20px;
+    left: 20px;
+  }
+
+  .roomLabel,
+  .rooms {
+    display: none;
+  }
+
+  .wallText {
+    top: auto;
+    right: 20px;
+    bottom: 100px;
+    left: 20px;
+    width: auto;
+    gap: 10px;
+  }
+
+  .paragraphs {
+    display: none;
+  }
+
+  .subtitle {
+    font-size: 18px;
+  }
+
+  .notice {
+    padding: 24px 24px 120px;
+  }
+
+  .noticeTitle {
+    font-size: 30px;
+  }
+
+  .pillQuiet {
+    display: none;
+  }
+
+  /* The wall label has no room beside the work on a phone; the bottom bar carries the index. */
+  .cartel,
+  .cartelHidden {
+    display: none;
+  }
+
+  .pill {
+    padding: 0 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}

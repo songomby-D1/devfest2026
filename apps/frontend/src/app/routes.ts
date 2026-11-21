@@ -4,6 +4,7 @@ import { findRoom, roomPath, rooms } from '../features/gallery/data/rooms';
 export type Route =
   | { kind: 'home' }
   | { kind: 'contribute' }
+  | { kind: 'visit' }
   | { kind: 'gallery'; room: Room; artworkIndex: number | null }
   | { kind: 'redirect'; to: string }
   | { kind: 'not-found' };
@@ -18,6 +19,10 @@ export function matchRoute(pathname: string): Route {
   }
   if (first === 'contribuer' && segments.length === 1) {
     return { kind: 'contribute' };
+  }
+  // The WebGL room reads its own deep links from the query string.
+  if (first === 'visite' && segments.length === 1) {
+    return { kind: 'visit' };
   }
   if (first !== 'musee' || segments.length > 3) {
     return { kind: 'not-found' };

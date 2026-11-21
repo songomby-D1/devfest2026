@@ -2,6 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { matchRoute } from './routes';
 
 describe('matchRoute', () => {
+  it('maps /visite to the WebGL room', () => {
+    expect(matchRoute('/visite')).toEqual({ kind: 'visit' });
+    expect(matchRoute('/visite/extra')).toEqual({ kind: 'not-found' });
+  });
+
   it('maps the root to the home screen', () => {
     expect(matchRoute('/')).toEqual({ kind: 'home' });
   });

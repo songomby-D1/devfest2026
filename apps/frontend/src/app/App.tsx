@@ -7,6 +7,13 @@ import { navigate, useLocationPath } from '../lib/router/router';
 import { matchRoute } from './routes';
 import styles from './App.module.css';
 
+// Loaded on demand so three and React Three Fiber stay out of the main bundle.
+const GalleryExperience = lazy(() =>
+  import('../features/gallery-3d').then((module) => ({
+    default: module.GalleryExperience,
+  })),
+);
+
 const MotionLab = lazy(() =>
   import('./MotionLab').then((module) => ({ default: module.MotionLab })),
 );
@@ -43,6 +50,12 @@ function Screen({ pathname }: { pathname: string }) {
       return <HomePage />;
     case 'contribute':
       return <ContributePage />;
+    case 'visit':
+      return (
+        <Suspense fallback={null}>
+          <GalleryExperience />
+        </Suspense>
+      );
     case 'gallery':
       return (
         <GalleryPage room={route.room} artworkIndex={route.artworkIndex} />
