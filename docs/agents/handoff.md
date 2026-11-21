@@ -2,7 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: UX-01 primary user journey (rivon0507, Agent 3)
+## Latest session: open-question settlements (rivon0507)
+
+- [PROPOSED] [ADR 0002](../decisions/0002-open-question-settlements.md) gathers every open question from the Auth contract, the UX-01 journey, the 3D spike and the pending decisions into 22 proposed settlements (S1–S22) chosen by rivon0507, each with the owner who confirms it. Source documents are unchanged.
+- [DECISION REQUIRED: endy-rkt, papangoo, salandri-42, shidoAdr, Sesedra] Confirm or amend your rows. Key items: owner-only mint with a custodial wallet (S1, S2), automatic publication after review (S3), the `GET /api/items` filters that need a `[CONTRACT CHANGE]` (S4), and the decision register winning over the NFT spec (S20).
+
+## Earlier session: UX-01 primary user journey (rivon0507, Agent 3)
 
 - [PROPOSED] UX-01 ([#65](https://github.com/songomby-D1/devfest2026/issues/65)): drafted the [primary user journey](../../apps/frontend/docs/user-journey.md) with personas, the eight journey steps, screens, the gateway route behind each step, states (loading, empty, error, 3D processing and missing, mint pending, confirmed and failed), desktop and mobile notes and proposed acceptance criteria.
 - [DECISION REQUIRED: Sesedra] Confirm or amend the journey before UX-02. Open questions Q1 to Q6 in the document go to papangoo, endy-rkt and salandri-42, notably the missing publish route (Q1) and caller-scoped item lists (Q2). The frozen contract is unchanged.
