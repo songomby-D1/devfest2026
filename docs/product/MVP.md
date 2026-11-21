@@ -4,13 +4,13 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 
 [CONFIRMED] endy-rkt defines the MVP goals and scope. Each [owner](../team/responsibilities.md#task-ownership) refines their own tasks and decides how to deliver their part within those constraints.
 
-[NOT IMPLEMENTED] All capabilities below describe planned behavior. [DECISION REQUIRED: endy-rkt] **D01 Hackathon deadline and demo scope.** [RECOMMENDED] Confirm the deadline and reserve an integration and rehearsal window. Use one end-to-end content journey to size the demo while preserving the confirmed capabilities.
+[NOT IMPLEMENTED] All capabilities below describe planned behavior. [CONFIRMED] A deadline is unnecessary for MVP planning. [CONFIRMED] endy-rkt approved one item for the first integrated demo, from authenticated submission through human review, publication and guest browsing. Integrated sign-off requires a working interactive 3D model and a confirmed NFT mint for that same item in the same run. A rights-cleared pre-produced model can satisfy the 3D gate. Live phone capture is optional. If either gate is unavailable, label the run **Rehearsal** and record each missing gate. Follow the evidence checklist for DEMO-03. [D01 demo scope](../decisions/project-decisions.md#d01-first-integrated-mvp-demo)
 
 ## A. Authentication
 
-- **Purpose and owner.** Give people a way to browse openly and take account-bound actions. [DECISION REQUIRED: endy-rkt] Delivery owner under [D02](../team/responsibilities.md).
+- **Purpose and owner.** Give people a way to browse openly and take account-bound actions. [CONFIRMED] shidoAdr owns Auth.
 - **MVP.** [CONFIRMED] Registration, login, logout, guest browsing, authenticated uploaders and customers, and access controls where needed. The Auth service owns identity and authentication. [RECOMMENDED] Guests can browse published content, public media, and displayed 3D and provenance information. Require sign-in to upload, manage one's uploads, request a mint where authorized, or perform a review. Customer and uploader are activities available to one account.
-- **Access decision.** [DECISION REQUIRED: endy-rkt] **D13 Role model.** [RECOMMENDED] Use guest, signed-in account and a narrow reviewer permission with per-item ownership checks so routine users need no separate role assignment.
+- **Access decision.** [CONFIRMED] **D13 Role model.** Use guest browsing, one signed-in account model, a scoped reviewer permission and resource ownership checks. [D13 decision](../decisions/project-decisions.md#d13-permissions)
 - **Future.** [RECOMMENDED] Defer social login and account administration to keep the demo focused.
 - **Dependencies.** Auth and gateway identity handling under [D07](../architecture/overview.md#gateway-and-networking). Content and NFT enforce resource permissions.
 - **Acceptance criteria.**
@@ -22,7 +22,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 
 - **Purpose and owner.** [CONFIRMED] papangoo owns images and video, author details, metadata, descriptions, and verification of content and descriptions.
 - **MVP.** [RECOMMENDED] An uploader submits an image or video and provides author details, metadata and a description. Track verification independently for identity or source claims about the item and for claims in its description. An authorized human records the evidence, the claims reviewed and the outcome. Display claim status separately from publication status.
-- **Verification decision.** [DECISION REQUIRED: endy-rkt] **D18 Review, demo content and media policy.** [RECOMMENDED] Use `unreviewed`, `verified` and `uncertain` per claim or review scope. Internally record the reviewer and rationale. Mark a materially changed claim unreviewed until reviewed again. Agree who reviews demo content, publication requirements, permitted samples, file limits and whether an AI exploration fits the deadline.
+- **Verification decision.** [CONFIRMED] **D18 Review, demo content and media policy.** Require separate human review of item and description claims and rights clearance before publication. Retain `unreviewed`, `verified` and `uncertain` outcomes and record the reviewer and rationale. Re-review materially changed claims. The Content owner proposes permitted formats, limits, reviewer coverage and fixtures. [D18 decision](../decisions/project-decisions.md#d18-editorial-policy-and-demo-content)
 - **Analysis and evidence.** [CONFIRMED] Explore AI-assisted analysis. Automated analysis may flag issues or suggest metadata for review. Human validation records what evidence supports each claim. Verified information means the reviewer found sufficient evidence for that claim. Unreviewed or uncertain information stays visibly qualified. AI cannot establish the authenticity of a cultural artifact or grant verified status.
 - **Future.** [RECOMMENDED] Defer automated analysis integration, transcoding and advanced editorial tooling. Explore AI with permitted samples and document the findings within the agreed timebox.
 - **Dependencies.** Auth, Content & Verification, object storage and Sesedra's status and error presentation.
@@ -52,7 +52,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 
 - **Purpose and owner.** [CONFIRMED] Sesedra delivers UX/UI mockups and a README contribution. Content presentation comes first. Administrative interfaces are outside MVP scope.
 - **MVP deliverables.** [RECOMMENDED] Provide desktop and mobile mockups for discovery and item detail, account entry, upload and status, and provenance and 3D interactions. The primary journey is browse → open an item → understand the author, description and evidence → explore media, 3D or provenance where present. Show design treatments for loading, missing media, uncertainty and failed actions. Add approved mockup links and a design summary to the README.
-- **Frontend dependencies.** Gateway access to published content and media, authorship and review labels, account state, upload feedback, and 3D and NFT availability and status. Frontend delivery assignment is part of [D02](../team/responsibilities.md).
+- **Frontend dependencies.** Gateway access to published content and media, authorship and review labels, account state, upload feedback, and 3D and NFT availability and status. [CONFIRMED] Sesedra owns frontend delivery.
 - **Future.** [RECOMMENDED] Defer editorial dashboards and advanced discovery to protect time for the main journey.
 - **Acceptance criteria.**
   - Sesedra delivers desktop and mobile mockups that cover the primary journey and key failure states.

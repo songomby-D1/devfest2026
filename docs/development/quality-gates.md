@@ -8,7 +8,7 @@ This page describes quality and test expectations. The [shared code policy](code
 |---|---|
 | React + TypeScript and NestJS + TypeScript | [CONFIRMED] Keep. |
 | PostgreSQL and S3-compatible storage | [CONFIRMED] Keep. [RECOMMENDED] Use the smallest local topology that exercises ownership and media flows. [Data and storage](../architecture/data-storage.md) |
-| SeaweedFS | [RECOMMENDED] Evaluate as the leading local candidate under D05. Verify the operations the demo needs. |
+| SeaweedFS | [CONFIRMED] Local object storage. Verify the operations the demo needs. [Data and storage](../architecture/data-storage.md#s3-compatible-option) |
 | Dedicated gateway and Nginx | [CONFIRMED] Keep the gateway. [RECOMMENDED] Defer Nginx under D06 until edge deployment requirements justify a second layer. |
 | Docker and Docker Compose | [CONFIRMED] Keep. [RECOMMENDED] Start with local Compose integration and build each application independently. |
 | Taskfile | [RECOMMENDED] Keep it thin and delegate to workspace scripts. [Planned commands](workflow.md) |

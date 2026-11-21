@@ -19,15 +19,15 @@ This policy applies to every contributor and to the React frontend, gateway, Aut
 - [CREATED, NOT EXECUTED] Use `ban-ts-comment` to reject `@ts-ignore` and `@ts-nocheck`. A line using `@ts-expect-error` requires a description.
 - [CREATED, NOT EXECUTED] Each app has a boundary override. `no-restricted-imports` checks static specifiers and allows only type imports from the literal `packages/shared` path. `import/no-restricted-paths` uses TypeScript resolution to reject peer source paths, including relative paths and configured aliases. Review checks computed specifiers.
 - [CONFIRMED] The frontend uses the gateway and backend services use HTTP contracts. Keep `packages/shared` limited to types and contracts. Review ownership and integration at the API boundary.
-- [DECISION REQUIRED: endy-rkt] D14 still governs shared exports and aliases. Review enforces type-only use until the import spelling is approved and covered by lint.
+- [CONFIRMED] D14 allows type-only imports of shared transport declarations, including any common error type. Review actual import spellings and aliases for type-only use until lint coverage is verified. [Shared contract policy](../architecture/services.md#contracts-and-shared-package)
 - [CREATED, NOT EXECUTED] `apps/frontend/**` gets browser globals, Hooks rules for call order and dependencies, and `jsx-a11y` recommended checks on JSX/TSX files.
 - [CREATED, NOT EXECUTED] Each of `apps/backend/{gateway,auth,content,nft,lidar}/**` gets Node globals. For Nest legacy decorators with emitted metadata, the typed parser uses the service TS config and `consistent-type-imports` leaves decorated files alone. Review imports used as runtime DI tokens. The backend uses the same strict preset and rules.
 - [CREATED, NOT EXECUTED] Only `**/*.spec.ts` and `**/*.test.{ts,tsx}` relax `unbound-method` so assertions can take spy method references. Promise and boundary rules still apply.
 - [CONFIRMED] Use line-scoped ESLint suppressions with a one-line reason and a task ID for temporary exceptions. File-wide suppressions require approval from endy-rkt and PR review.
-- [CREATED, NOT EXECUTED] Load `eslint-config-prettier/flat` last to turn off competing style rules. [NOT IMPLEMENTED] CI will enforce zero warnings with `--max-warnings 0`.
+- [CREATED, NOT EXECUTED] Load `eslint-config-prettier/flat` last to turn off competing style rules. The CI command and planned root `lint` script use `eslint . --max-warnings 0`.
 - [RECOMMENDED] Skip a generic security lint plugin for the MVP. Prioritize Gitleaks, dependency checks and review of input validation, authorization and logging to keep triage focused. [Security plugin scope and triage](https://github.com/eslint-community/eslint-plugin-security)
 
-**Root devDependencies to pin at install:** `eslint`, `@eslint/js`, `typescript-eslint`, `typescript`, `globals`, `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y`, `eslint-plugin-import`, `eslint-import-resolver-typescript`, `eslint-config-prettier`, `prettier`.
+**Root devDependencies for endy-rkt-19 to pin at initial install.** `eslint`, `@eslint/js`, `typescript-eslint`, `typescript`, `globals`, `eslint-plugin-react-hooks`, `eslint-plugin-jsx-a11y`, `eslint-plugin-import`, `eslint-import-resolver-typescript`, `eslint-config-prettier`, `prettier`.
 
 Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/configure/configuration-files) · [restricted imports](https://eslint.org/docs/latest/rules/no-restricted-imports) · [typed linting](https://typescript-eslint.io/getting-started/typed-linting/) · [strict preset](https://typescript-eslint.io/users/configs/#stricttypechecked) · [decorator caveat](https://typescript-eslint.io/rules/consistent-type-imports/#caveat-decorators--experimentaldecorators-true--emitdecoratormetadata-true) · [React Hooks](https://react.dev/reference/eslint-plugin-react-hooks) · [JSX accessibility](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#shareable-configs) · [resolved import boundaries](https://github.com/import-js/eslint-plugin-import/blob/main/docs/rules/no-restricted-paths.md) · [TypeScript resolver](https://github.com/import-js/eslint-import-resolver-typescript#configuration) · [Prettier compatibility](https://github.com/prettier/eslint-config-prettier#installation).
 
@@ -35,7 +35,7 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 - [CREATED, NOT EXECUTED] Prettier is the single formatter. `.prettierrc.json` uses two spaces, LF, single quotes for JS/TS strings, and semicolons. `.editorconfig` aligns whitespace, UTF-8 and final newlines, and preserves intentional Markdown hard breaks. Prettier owns quote style.
 - [CREATED, NOT EXECUTED] `.prettierignore` excludes generated output, dependencies, local env files and the npm lockfile.
-- [NOT IMPLEMENTED] Run `prettier --config .prettierrc.json --check .` from the root once installed. Explicitly select this config in scripts and editor integrations because the preserved legacy `.prettierrc` has higher discovery precedence. [Prettier CLI](https://prettier.io/docs/cli#--find-config-path-and---config) · [Discovery order](https://github.com/prettier/prettier/blob/main/src/config/prettier-config/config-searcher.js)
+- [NOT IMPLEMENTED] The root `format:check` script runs `prettier --config .prettierrc.json --check .` from the root. The current CI command explicitly selects the same config. Use it in editor integrations because the preserved legacy `.prettierrc` has higher discovery precedence. [Prettier CLI](https://prettier.io/docs/cli#--find-config-path-and---config) · [Discovery order](https://github.com/prettier/prettier/blob/main/src/config/prettier-config/config-searcher.js)
 
 ## TypeScript
 
@@ -71,13 +71,14 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 ## Dependencies and hooks
 
 - [CONFIRMED] Justify new dependencies and verify maintenance before adoption. Prefer standard library or framework features. Commit the lockfile and run a dependency audit where practical. Enforced in review and CI.
-- [RECOMMENDED] Defer Husky and lint-staged and use CI plus local scripts for the hackathon. This keeps setup light and applies identical checks to all contributors. [DECISION REQUIRED: endy-rkt] Confirm the hooks choice under D17 before wiring optional hooks.
+- [CONFIRMED] App and service owners approve dependencies scoped to their workspace. Declare them in that workspace and coordinate shared lockfile changes. Dependencies added to shared workspaces or root tooling require agreement on the shared change under the [decision register](../decisions/project-decisions.md).
+- [CONFIRMED] D17 uses npm scripts and CI for the initial rollout. Husky and lint-staged are deferred to endy-rkt-16 if endy-rkt approves their addition. Thin Taskfile wrappers require separate approval. [Tooling decision](../decisions/project-decisions.md#d17-quality-tooling-and-ci-rollout)
 
 ## PRs and agents
 
 - [CONFIRMED] Use the [PR checklist](../../.github/PULL_REQUEST_TEMPLATE.md) for scope, checks, contracts and approvals. Review behavior, service boundaries and security. Formatting belongs to the formatter.
 - [CONFIRMED] Agent changes use the same checks and [report format](../agents/workflow.md#agent-report-template). Include changed files, exact commands and results, tests and assumptions. Use “not runnable yet” when checks are unavailable.
-- [CONFIRMED] Agents need approval from endy-rkt for config changes and new dependencies. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
+- [CONFIRMED] Agents follow the dependency policy above and need approval from endy-rkt for changes to shared quality configs. Do not disable checks or add suppressions to make checks pass. Coordinate before editing another service's directory. See [AGENTS.md](../../AGENTS.md).
 
 ## Enforcement map
 
@@ -92,6 +93,6 @@ Upstream references: [ESLint flat config](https://eslint.org/docs/latest/use/con
 
 ## CI script contract
 
-[CONFIRMED] The root npm manifest declares workspaces for `apps/frontend`, `apps/backend/*`, and `packages/*`. Every workspace with a `package.json` defines `typecheck`, `test`, and `build`. Lint and formatting run from the root. npm's `--if-present` can silently skip a missing script, so reviewers must reject workspaces missing any of the three. A workspace is complete for CI when all three scripts exist and pass. See the [CI guide](ci.md#partial-workspaces-and-prerequisites).
+[CONFIRMED] Use the existing `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`, `.editorconfig` and `tsconfig.base.json` as the quality baseline. The private root npm manifest declares workspaces for `apps/frontend`, `apps/backend/*` and `packages/*`. Run `npm run lint` and `npm run format:check` from the root once the scripts land. Every initialized workspace, including a future shared package, defines nonempty `typecheck`, `test` and `build` scripts. Its TypeScript project extends `tsconfig.base.json` and includes all linted TypeScript files. The matrix checks that each script exists before invoking it and fails if any script is missing, invalid or fails. [CI guide](ci.md#partial-workspaces-and-prerequisites)
 
 [CREATED, NOT EXECUTED] The workflow definition is present. The enforcement map's rollout items still need workspace scripts, a hosted run and manual activation of the required check.
