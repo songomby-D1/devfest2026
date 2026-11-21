@@ -5,10 +5,12 @@ import styles from './GalleryExperience.module.css';
 import { GalleryFallback } from './GalleryFallback';
 import { GalleryOverlay } from './GalleryOverlay';
 import { GalleryScene } from './GalleryScene';
+import { WallCartel } from './WallCartel';
 import { detectDevice } from './device';
 import type { RendererSupport } from './device';
 import { artworks } from './gallery-content';
 import { placeArtworks, railBounds } from './gallery-layout';
+import { applyDeepLink } from './gallery-navigation';
 import { galleryStore, rail, setRailBounds, useGallery } from './gallery-store';
 
 /**
@@ -18,7 +20,11 @@ import { galleryStore, rail, setRailBounds, useGallery } from './gallery-store';
  */
 export function GalleryExperience() {
   const [device] = useState(() => detectDevice());
-  const [renderer, setRenderer] = useState<RendererSupport>(device.renderer);
+  const [renderer, setRenderer] = useState<RendererSupport>(() =>
+    new URLSearchParams(window.location.search).get('rendu') === 'css'
+      ? 'none'
+      : device.renderer,
+  );
   const state = useGallery();
   const placed = useMemo(() => placeArtworks(artworks), []);
 
@@ -27,6 +33,7 @@ export function GalleryExperience() {
     setRailBounds(bounds.min, bounds.max);
     rail.target = bounds.min;
     rail.current = bounds.min;
+    applyDeepLink(placed);
   }, [placed]);
 
   useEffect(
@@ -53,6 +60,7 @@ export function GalleryExperience() {
           <GalleryFallback placed={placed} />
         )}
       </main>
+      {renderer === 'webgl' ? <WallCartel placed={placed} /> : null}
       <GalleryOverlay placed={placed} />
       <ArtworkFocus />
       {atEntrance ? (

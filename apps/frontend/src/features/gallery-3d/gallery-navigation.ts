@@ -1,11 +1,48 @@
+import { artworks } from './gallery-content';
 import { clamp, nearestIndex } from './gallery-layout';
 import type { PlacedArtwork } from './gallery-layout';
 import { galleryStore, rail, railTo } from './gallery-store';
 
 /*
  * Discrete navigation shared by the 3D controls, the DOM overlay and the
- * no-WebGL fallback: stepping from work to work and the keyboard map.
+ * no-WebGL fallback: stepping from work to work, the keyboard map and the
+ * deep links that open the visit inside the room.
  */
+
+/**
+ * `?salle` starts inside the room, `?oeuvre=<id>` opens that work's notice,
+ * `&zoom=<n>` applies n zoom steps and `&inspect` turns a sculpture.
+ * These are the future `/galerie` and `/oeuvre/:id` routes.
+ */
+export function applyDeepLink(
+  placed: readonly PlacedArtwork[],
+  search: string = window.location.search,
+): void {
+  const params = new URLSearchParams(search);
+  const workId = params.get('oeuvre');
+  if (!params.has('salle') && workId === null) {
+    return;
+  }
+  galleryStore.enter();
+  galleryStore.introDone();
+  const index =
+    workId === null ? -1 : artworks.findIndex((work) => work.id === workId);
+  const work = index >= 0 ? placed[index] : undefined;
+  if (!work) {
+    return;
+  }
+  railTo(work.x);
+  rail.current = rail.target;
+  galleryStore.setActive(index);
+  galleryStore.focus(index);
+  const zoomSteps = Number.parseInt(params.get('zoom') ?? '0', 10);
+  for (let step = 0; step < zoomSteps; step += 1) {
+    galleryStore.zoomStep();
+  }
+  if (params.has('inspect')) {
+    galleryStore.toggleInspect();
+  }
+}
 
 export function stepWork(
   placed: readonly PlacedArtwork[],

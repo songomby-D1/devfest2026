@@ -16,7 +16,9 @@ export const ROOM = {
   spacing: 3.1,
   /** Height of the centre of a painting. */
   hangHeight: 1.62,
-  eyeHeight: 1.58,
+  eyeHeight: 1.62,
+  /** Where the visitor looks on the wall: a little below the works, so the floor shows. */
+  lookHeight: 1.28,
   /** Distance of the visitor rail from the wall. */
   railZ: 3.6,
   /** Pedestals stand in front of the wall. */
@@ -147,7 +149,7 @@ export interface CameraPose {
 export function visitPose(railX: number): CameraPose {
   return {
     position: [railX, ROOM.eyeHeight, ROOM.railZ],
-    target: [railX, ROOM.hangHeight - 0.08, ROOM.wallZ],
+    target: [railX, ROOM.lookHeight, ROOM.wallZ],
   };
 }
 

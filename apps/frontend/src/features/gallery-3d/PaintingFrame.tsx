@@ -13,6 +13,8 @@ interface PaintingFrameProps {
 const FRAME_WIDTH = 0.085;
 const FRAME_DEPTH = 0.07;
 const LIP = 0.018;
+const MOULDING = 0.022;
+const MOULDING_DEPTH = 0.016;
 
 /**
  * A canvas with its gilded frame, built from boxes: the frame is real
@@ -35,11 +37,21 @@ export function PaintingFrame({ work, hovered }: PaintingFrameProps) {
       }),
     [],
   );
+  const moulding = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: '#e2c58a',
+        metalness: 0.7,
+        roughness: 0.28,
+      }),
+    [],
+  );
   useEffect(
     () => () => {
       gold.dispose();
+      moulding.dispose();
     },
-    [gold],
+    [gold, moulding],
   );
 
   useFrame((_, delta) => {
@@ -59,6 +71,7 @@ export function PaintingFrame({ work, hovered }: PaintingFrameProps) {
       <mesh position={[0, 0, 0.012]}>
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial
+          key={texture ? 'textured' : 'linen'}
           map={texture}
           color={texture ? '#ffffff' : '#24140f'}
           roughness={0.78}
@@ -98,6 +111,48 @@ export function PaintingFrame({ work, hovered }: PaintingFrameProps) {
         castShadow
       >
         <boxGeometry args={[FRAME_WIDTH, outerH, FRAME_DEPTH]} />
+      </mesh>
+
+      {/* Raised inner moulding, so the frame reads as a profile and not a band. */}
+      <mesh
+        material={moulding}
+        position={[
+          0,
+          height / 2 + MOULDING / 2,
+          FRAME_DEPTH + MOULDING_DEPTH / 2,
+        ]}
+      >
+        <boxGeometry args={[width + MOULDING * 2, MOULDING, MOULDING_DEPTH]} />
+      </mesh>
+      <mesh
+        material={moulding}
+        position={[
+          0,
+          -(height / 2 + MOULDING / 2),
+          FRAME_DEPTH + MOULDING_DEPTH / 2,
+        ]}
+      >
+        <boxGeometry args={[width + MOULDING * 2, MOULDING, MOULDING_DEPTH]} />
+      </mesh>
+      <mesh
+        material={moulding}
+        position={[
+          -(width / 2 + MOULDING / 2),
+          0,
+          FRAME_DEPTH + MOULDING_DEPTH / 2,
+        ]}
+      >
+        <boxGeometry args={[MOULDING, height, MOULDING_DEPTH]} />
+      </mesh>
+      <mesh
+        material={moulding}
+        position={[
+          width / 2 + MOULDING / 2,
+          0,
+          FRAME_DEPTH + MOULDING_DEPTH / 2,
+        ]}
+      >
+        <boxGeometry args={[MOULDING, height, MOULDING_DEPTH]} />
       </mesh>
     </group>
   );

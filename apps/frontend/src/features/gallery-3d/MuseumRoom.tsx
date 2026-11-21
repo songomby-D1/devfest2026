@@ -29,6 +29,7 @@ export function MuseumRoom({ length }: MuseumRoomProps) {
       >
         <planeGeometry args={[length, ROOM.depth]} />
         <meshStandardMaterial
+          key={parquet ? 'parquet' : 'plain'}
           color={parquet ? '#d8c8b4' : '#3a2417'}
           map={parquet}
           roughness={0.5}

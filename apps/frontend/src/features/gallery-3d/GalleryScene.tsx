@@ -2,12 +2,13 @@ import { PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { Component, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { PMREMGenerator, WebGLRenderer } from 'three';
+import { PCFShadowMap, PMREMGenerator, WebGLRenderer } from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { Artwork } from './Artwork';
 import { GalleryCamera } from './GalleryCamera';
 import { GalleryControls } from './GalleryControls';
 import { GalleryLighting } from './GalleryLighting';
+import { LabelProjector } from './LabelProjector';
 import { MuseumRoom } from './MuseumRoom';
 import type { DeviceProfile } from './device';
 import { artworks } from './gallery-content';
@@ -91,7 +92,9 @@ export function GalleryScene({ device, placed, onFailure }: GallerySceneProps) {
     <SceneErrorBoundary onError={onFailure}>
       <Canvas
         dpr={dpr}
-        shadows={!device.lowPower}
+        shadows={
+          device.lowPower ? false : { enabled: true, type: PCFShadowMap }
+        }
         gl={{
           antialias: !device.lowPower,
           powerPreference: 'high-performance',
@@ -128,16 +131,12 @@ export function GalleryScene({ device, placed, onFailure }: GallerySceneProps) {
         {placed.map((item) => {
           const work = artworks[item.index];
           return work ? (
-            <Artwork
-              key={item.id}
-              work={work}
-              placed={item}
-              total={placed.length}
-            />
+            <Artwork key={item.id} work={work} placed={item} />
           ) : null;
         })}
         <GalleryCamera placed={placed} reducedMotion={device.reducedMotion} />
         <GalleryControls placed={placed} />
+        <LabelProjector placed={placed} />
       </Canvas>
     </SceneErrorBoundary>
   );

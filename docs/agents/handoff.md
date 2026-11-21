@@ -2,7 +2,15 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: 3D feasibility (shidoAdr)
+## Latest session: WebGL museum room (Sesedra)
+
+- [CREATED, NOT MERGED] Branch `feature/gallery-3d`, built in a separate worktree from the FE-01 base commit while FE-02 continued in the main checkout. It adds `apps/frontend/src/features/gallery-3d/`, a self-contained React Three Fiber room: entrance screen, camera travelling, damped lateral rail (wheel, drag, keyboard), one spot per work whose intensity follows the visitor, gilded frames built from geometry, procedural clay pots on pedestals with drag rotation in inspection mode, focus camera with zoom levels, HTML wall label and notice, a CSS fallback without WebGL and reduced-motion handling. `main.tsx` mounts it directly; `App.tsx` and its test are untouched.
+- Dependencies added on the oral go reported by Sesedra, to confirm at PR review: `three` 0.187.0, `@react-three/fiber` 9.8.2, `@react-three/drei` 10.7.9, `@types/three` 0.187.0. Three 0.187 was chosen because drei's dependencies pin `@types/three` 0.187 and a second typings copy broke the typecheck.
+- Demo media stay out of Git: six Wikimedia Commons portraits (public domain, credits shown in the notice) and a CC0 parquet texture live in the ignored `apps/frontend/public/media/`; a missing file shows a missing-media state. The sculptures are procedural and labelled as demonstration content.
+- Reconnection with FE-02: the module uses scoped `--g-*` custom properties that mirror the Figma variables and system font fallbacks; switch them to `tokens.css` and `fonts.css` once FE-02 lands, route `/galerie` to `GalleryExperience`, and wire the sound toggle to `lib/audio/ambience`. Deep links already exist: `?salle`, `?oeuvre=<id>`, `&zoom=<n>`, `&inspect`, `?rendu=css`.
+- [NOT IMPLEMENTED] GPU frame rate was not measured: checks ran in headless Chrome on SwiftShader. Measure on the demo laptop and a phone before rehearsal. The 1.2 MB bundle should be code-split so the room loads lazily.
+
+## Previous session: 3D feasibility (shidoAdr)
 
 - [CONFIRMED] 3D-01, groomed as 3D-01a ([#7](https://github.com/songomby-D1/devfest2026/issues/7)): added the [3D feasibility spike](../architecture/3d-feasibility-spike.md) and linked it from [MVP section E](../product/MVP.md#e-lidar-and-3d). The groomed 3D tickets are sub-issues of [#6](https://github.com/songomby-D1/devfest2026/issues/6).
 - Next: 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)) tests a real Reality Composer scan. 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)) depends only on 3D-01 in the [backlog](../product/task.md), which still shows 3D-01 as Backlog until this work is approved. 3D-03 waits on endy-rkt-06 (D12). 3D-04 and 3D-05 follow 3D-03 and the content, UX and frontend foundation tasks.
