@@ -4,10 +4,12 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# Hardhat output (lot L1).
+# Hardhat output (lot L1): build artifacts, cache and coverage. The generated
+# contract types in hardhat/generated/ stay committed so that the shared lint
+# can type-check the contract tests without compiling first.
 artifacts/
 cache/
-typechain-types/
+coverage.json
 
 # Local environment files: commit only the example.
 .env

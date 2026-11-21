@@ -2,7 +2,15 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: NFT lot L0 (salandri-42)
+## Latest session: NFT lot L1 (salandri-42)
+
+- [IMPLEMENTED, NOT DEPLOYED] Lot L1 of the [NFT spec](../../apps/backend/nft/nft_context.md) on `feature/nft-l1`: the `PreservingArt` ERC-721 contract of spec §8.4, a Hardhat 2.29.2 project with toolbox 5.0.0 and OpenZeppelin 5.6.1 in `apps/backend/nft/hardhat/`, the deployment and ABI export scripts of §8.6, and 16 contract tests. The ABI is exported to `apps/backend/nft/src/blockchain/abi/`.
+- Checks run: 16 contract tests and 32 Jest tests passed, and contract coverage is 100% for statements, branches, functions and lines. `npm run typecheck`, `nest build` and a Prettier check passed, and the shared ESLint config, run with the root tool versions in a scratch install, reports no problems. A deployment to a local Hardhat node succeeded. Read-only `eth_call` probes show that the Fuji C-Chain supports `PUSH0` and `MCOPY`, and a simulated Fuji deployment returned the compiled runtime code for about 1.58 M gas.
+- The generated contract types in `apps/backend/nft/hardhat/generated/` are committed so that the shared lint passes without a compile step. `apps/backend/nft/.gitattributes` keeps LF line endings when `core.autocrlf=true`.
+- [HUMAN] Before the Fuji deployment, salandri-42 confirms the contract name and symbol (spec Q4), funds the dedicated wallet and approves the deployment. salandri-42 then runs it, verifies the contract on Snowtrace and records the address. The Routescan verification settings of spec §8.5 still need checking.
+- Next: the Fuji deployment, then lot L2 after the spec reconciliation, or lot L5, which depends only on L1.
+
+## Earlier session: NFT lot L0 (salandri-42)
 
 - [IMPLEMENTED] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), merged into `develop` through [#100](https://github.com/songomby-D1/devfest2026/pull/100) with endy-rkt's approval. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
 - Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
