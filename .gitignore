@@ -1,0 +1,4 @@
+**/node_modules/
+**/dist/
+apps/frontend/public/demo/
+apps/frontend/public/draco/
