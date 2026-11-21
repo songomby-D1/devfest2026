@@ -4,7 +4,7 @@ This page defines the required topology and presents decisions on the gateway, c
 
 [CONFIRMED] Microservices are mandatory. Auth, Content & Verification, NFT and LiDAR are independently deployable NestJS services with a dedicated API gateway. The React/TypeScript frontend uses the gateway as its sole application entry point. Each service has its own application boundary, data ownership, explicit contract, appropriate tests and a future Dockerfile. Add business services only with written justification.
 
-[CONFIRMED] Every future Dockerfile lives in its own application or service directory. `infrastructure/docker/` is reserved for non-service configuration. See [per-service Dockerfile placement](services.md#dockerfile-placement).
+[CONFIRMED] endy-rkt maintains the system overview. App and service owners maintain their own implementation, tests, Dockerfile and entry in the shared Compose file. Stateful services use Prisma with one shared PostgreSQL instance per environment. [Dockerfile placement](services.md#dockerfile-placement) · [Data ownership](data-storage.md#postgresql-isolation)
 
 [NOT IMPLEMENTED] The diagram shows proposed dependencies. Auth owns the identity the gateway validates and propagates. Resource authorization stays with the owning service.
 
@@ -49,7 +49,7 @@ docker-compose.yml
 infrastructure/docker/
 ```
 
-The root Compose file would reference each application's build context and Dockerfile. Reserve `infrastructure/docker/` for non-service configuration such as database initialization scripts, storage settings and Nginx configuration if used.
+The root Compose file would reference each application's build context and Dockerfile and declare one shared PostgreSQL service. Reserve `infrastructure/docker/` for non-service configuration such as database initialization scripts, storage settings and Nginx configuration if used.
 
 ## Future deployment
 

@@ -17,6 +17,7 @@ List the commands and results. Mark unavailable checks “not runnable yet”.
 ## Scope and guardrails
 
 - [ ] Covers one logical task and stays within the owner's service or the agreed cross-service scope.
+- [ ] App or service changes include owner-written or updated tests where applicable. A new app or service includes its Dockerfile and root Compose entry.
 - [ ] New dependencies and lint, formatting or TypeScript config changes have approval from endy-rkt.
 - [ ] Any lint suppression includes a reason.
 

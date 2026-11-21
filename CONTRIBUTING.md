@@ -12,7 +12,11 @@ This guide defines the Git workflow and review requirements.
 
 [CONFIRMED] Follow the [shared code policy](docs/development/code-policy.md) and complete the [PR checklist](.github/PULL_REQUEST_TEMPLATE.md). Changes to lint, formatting and TypeScript configs require approval from endy-rkt.
 
-[RECOMMENDED] Link the approved task and record why the change is needed, assumptions and unresolved risks. Request review by endy-rkt for architecture, security and service contract changes.
+[CONFIRMED] Owners may revise their [own tasks](docs/team/responsibilities.md#task-ownership). Link the task in the PR and coordinate changes to contracts, shared security policy or Compose resources with the affected owners. Bring MVP or system-wide architecture changes to endy-rkt.
+
+[CONFIRMED] App and service owners include and verify their own tests. When introducing a service, include its Dockerfile and its entry in the root Compose file. See the [service definition of done](docs/development/quality-gates.md#testing-and-service-definition-of-done).
+
+[RECOMMENDED] Record why the change is needed, along with assumptions and unresolved risks.
 
 ## Public repository
 

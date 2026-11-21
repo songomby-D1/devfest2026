@@ -2,11 +2,11 @@
 
 Use this workflow to turn approved specifications into small, reviewable tasks while conserving the team's limited AI subscriptions.
 
-[CONFIRMED] endy-rkt defines the specification → assigns one task owner → the agent inspects existing implementation → proposes a plan → receives approval from endy-rkt when needed → implements → tests and verifies → reports results → the review by endy-rkts integration.
+[CONFIRMED] endy-rkt defines the MVP and system overview. The task owner defines or revises the task specification, then directs the agent to inspect, plan, implement, verify and report. The task owner reviews the result and coordinates integration with affected owners.
 
-[CONFIRMED] Attach acceptance criteria to every task and give the agent the relevant docs, code, contracts and constraints. Coordinate any overlapping edits before work starts. Agents escalate architectural choices to endy-rkt. Use parallel agents only for independent work with a clear need. Each agent reports changed files, tests executed, assumptions and unresolved issues.
+[CONFIRMED] Attach acceptance criteria and give the agent the relevant docs, code, contracts and constraints. Owners decide implementation details for their area. Agents surface decisions to their task owner. Coordinate overlapping edits and shared contracts with affected owners. Bring changes to MVP scope or system-wide architecture to endy-rkt.
 
-[RECOMMENDED] Assign primary ownership by service directory once the layout is approved. Coordinate edits to the gateway, shared package, contracts and root tooling with endy-rkt first, since they affect multiple owners.
+[CONFIRMED] For service work, follow the [ownership rules](../team/responsibilities.md#task-ownership), including coordination for the root Compose file. Use parallel agents only for independent work with a clear need.
 
 The reference informs these principles: write the specification first, give clear context, keep tasks small, define explicit acceptance criteria, plan implementation, verify results and obtain human review. [AI-Native Development: Specifications, Loop and Graph Engineering](https://aishippingblog.com/p/ai-native-development-specifications)
 
