@@ -1,0 +1,50 @@
+/* Moulding insets follow the Figma frame at 1440x900 and scale with --u. */
+.frame {
+  --frame-px: max(0.5px, var(--u));
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--frame-wood-outer);
+  box-shadow: var(--shadow-wall);
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}
+
+.edge,
+.gorge,
+.beads,
+.inner,
+.lip,
+.opening {
+  position: absolute;
+}
+
+.edge {
+  inset: calc(3 * var(--frame-px));
+  border: 1px solid var(--frame-wood-edge);
+}
+
+.gorge {
+  inset: calc(6 * var(--frame-px));
+  background: var(--frame-wood-gorge);
+}
+
+.beads {
+  inset: calc(9 * var(--frame-px));
+  border: 1px solid var(--frame-wood-beads);
+}
+
+.inner {
+  inset: calc(11 * var(--frame-px));
+  background: var(--frame-wood-inner);
+}
+
+.lip {
+  inset: calc(15 * var(--frame-px));
+  border: 1px solid var(--frame-wood-lip);
+}
+
+.opening {
+  inset: calc(16 * var(--frame-px));
+  overflow: hidden;
+}

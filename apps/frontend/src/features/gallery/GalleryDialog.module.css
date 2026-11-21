@@ -1,0 +1,60 @@
+.dialog {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  color: var(--color-ink);
+  background: transparent;
+  border: 0;
+}
+
+.dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* Notice: a side panel on the right */
+.side .panel {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(460px, 100%);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  box-shadow: var(--shadow-label-raised);
+}
+
+/* Mobile wall text and room menu: a bottom sheet */
+.sheet .panel {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  max-height: 80dvh;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border-radius: 12px 12px 0 0;
+}
+
+/* Close-up viewer: full screen on black */
+.fullscreen .panel {
+  inset: 0;
+  overflow: hidden;
+  color: var(--color-paper);
+  background: var(--color-gallery-black);
+}
+
+.fullscreen::backdrop {
+  background: var(--color-gallery-black);
+}
