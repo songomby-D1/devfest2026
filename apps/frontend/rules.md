@@ -8,7 +8,7 @@ Frontend implementation awaits an owner under D02 in the [backlog](../../docs/pr
 
 ## Stack
 
-- [RECOMMENDED] React 19 and TypeScript, built with Vite 8 and tested with Vitest 5, Testing Library and jsdom, on Node 24 LTS from the root `.nvmrc`. [ADR 0001](../../docs/decisions/0001-frontend-toolchain.md) proposes this toolchain and awaits approval from endy-rkt.
+- [RECOMMENDED] React 19 and TypeScript, built with Vite 8 and tested with Vitest 5, Testing Library and jsdom, on Node 22 LTS from the root `.nvmrc`. [ADR 0001](../../docs/decisions/0001-frontend-toolchain.md) proposes this toolchain and awaits approval from endy-rkt.
 - [CONFIRMED] The browser reaches the backend only through the gateway. [RECOMMENDED] The frontend is therefore a static single-page app with no server code of its own: no Next.js, no API routes and no server-side rendering. NestJS is for the gateway and backend services only.
 - [CONFIRMED] Dependencies are pinned to exact versions in the root lockfile. Adding, removing or upgrading one needs approval from endy-rkt and a one-line justification in the PR. Prefer platform and React features over a new package.
 - [DECISION REQUIRED: endy-rkt] Routing, data fetching and the 3D viewer library are not chosen yet. Propose them with FE-02, FE-03 and 3D-05.
