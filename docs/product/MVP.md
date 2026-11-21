@@ -63,6 +63,7 @@ Use this specification to size a functional demo of Malagasy cultural heritage d
 - **Purpose and owner.** [CONFIRMED] shidoAdr owns LiDAR scanning feasibility and 3D.
 - **MVP delivery decision.** [DECISION REQUIRED: shidoAdr] **D12 3D demo experience.** [RECOMMENDED] Display one rights-cleared, pre-produced, optimized binary glTF (GLB) model inside an item detail with basic interaction and a still-image fallback. This makes the viewing experience independent of live capture. Coordinate the viewer with the frontend owner. [Khronos glTF specification](https://registry.khronos.org/glTF/)
 - **Scanning investigation.** [RECOMMENDED] Check device and OS availability, capture permissions, lighting, export and cleanup tools, asset weight, network and mobile rendering. Document capture → export → offline cleanup and optimization → validate → store → associate with content → display. The LiDAR service owns 3D asset state. [Data and storage](../architecture/data-storage.md).
+- **Feasibility spike.** [CONFIRMED] The spike ran the USDZ → optimized GLB → web viewer steps on Apple's photogrammetry sample. [NOT IMPLEMENTED] Capture on a device remains unverified until 3D-01b. [3D feasibility spike](../architecture/3d-feasibility-spike.md)
 - **Future.** [RECOMMENDED] Defer in-app capture, automated reconstruction and processing jobs until the feasibility work supports them.
 - **Dependencies.** Content association, LiDAR metadata, storage and gateway delivery, and a viewer validated on demo devices.
 - **Acceptance criteria.**
