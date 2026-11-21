@@ -11,7 +11,7 @@
 
 - [CREATED, NOT MERGED] Branch `feature/frontend-init`, proposed by Sesedra. It contains the FE-01 React shell in `apps/frontend/`, the root npm workspace, pinned quality tooling, the lockfile, `.nvmrc`, `.npmrc` and a filled `.gitignore`. It also adds the [frontend rules](../../apps/frontend/rules.md) and [ADR 0001](../decisions/0001-frontend-toolchain.md).
 - [DECISION REQUIRED: endy-rkt] Before merge: name the frontend owner under D02, approve the dependencies and Node 24 in ADR 0001, and approve Prettier formatting of `.github/workflows/ci.yml`, `.github/dependabot.yml`, `eslint.config.mjs` and the docs (endy-rkt-17). Without that formatting, the CI `lint` job fails once the root manifest lands.
-- [NOT IMPLEMENTED] FE-02 home and gallery screens are planned from Sesedra's Figma frames (nodes 12:88 and 114:3877). They wait for the D02 owner and for approval of `gsap` and `@gsap/react`. Licensed fonts and demo media stay in ignored local folders until D18.
+- [IN PROGRESS] Sesedra is implementing FE-02, the home and gallery screens from her Figma frames (nodes 12:88 and 114:3877), on `feature/home-gallery`, stacked on `feature/frontend-init`. Sesedra reports a go from endy-rkt that is not recorded in the repository yet. `gsap` and `@gsap/react` are added pending endy-rkt's approval at PR review. Licensed fonts and demo media stay in ignored local folders until D18.
 
 - [CREATED, NOT EXECUTED] Added [CI](../../.github/workflows/ci.yml), [Dependabot](../../.github/dependabot.yml) and the [CI guide](../development/ci.md). Contributor and agent docs point to the guide and the required `ci-ok` status.
 - PyYAML 6.0.3 parsed both YAML files. `actionlint` was unavailable. No hosted jobs, scans, builds or tests ran.
