@@ -57,7 +57,7 @@ Display on real phones is not measured yet. It is planned in 3D-05b ([#15](https
 | Let model-viewer generate the USDZ        | No extra object. model-viewer 4.4.0 generates it when `ios-src` is absent (`ar.js:317`). Output not tested on a device.                                                                |
 | No AR in the MVP                          | No AR risk. Loses an iPhone demo moment.                                                                                                                                               |
 
-## Proposed decision
+## Decision
 
 [CONFIRMED] shidoAdr, the D12 decision owner, chose option A, prepared offline, with these terms. endy-rkt approved this ADR in [PR #83](https://github.com/songomby-D1/devfest2026/pull/83).
 
@@ -98,11 +98,13 @@ The detection column comes from reading the model-viewer 4.4.0 source and was no
 - **D16 async processing.** No job table or queue for 3D. The LiDAR service stores records for assets prepared offline and authorizes their delivery through the gateway.
 - **LiDAR service image.** No browser in the image. 3D-07 ([#82](https://github.com/songomby-D1/devfest2026/issues/82)) stays a plain NestJS and Prisma service.
 - **Frontend.** One viewer component with preset views, a 2K control and the fallback, in 3D-05a ([#14](https://github.com/songomby-D1/devfest2026/issues/14)). The content security policy should allow the self-hosted decoder only (not tested), and the gateway or static host must serve its `.js` and `.wasm` files.
-- **Preparation script.** 3D-04a ([#11](https://github.com/songomby-D1/devfest2026/issues/11)) produces the four objects. [NOT IMPLEMENTED] Poster generation was not tested in the spike.
+- **Preparation script.** 3D-04a ([#11](https://github.com/songomby-D1/devfest2026/issues/11)) produces the four objects. The [3D asset procedure](../architecture/3d-asset-procedure.md) generates the poster with `poster.mjs` until 3D-04a replaces it.
 - **Validation.** 3D-05b ([#15](https://github.com/songomby-D1/devfest2026/issues/15)) measures load time and smoothness on the agreed phones and confirms or removes AR.
 
-## Open questions for endy-rkt
+## Follow-ups
 
-- Confirm that offline preparation fits D16 and the demo plan.
-- Confirm the storage footprint under D05 and that the gateway can stream GLB and USDZ files with the right content types.
-- Name the frontend owner for 3D-05a under D02.
+These points were open when the ADR was approved and are tracked in the backlog:
+
+- D16 async processing: endy-rkt-06 ([#27](https://github.com/songomby-D1/devfest2026/issues/27)).
+- D05 storage footprint: endy-rkt-04 ([#25](https://github.com/songomby-D1/devfest2026/issues/25)). Streaming GLB and USDZ with the right content types: 3D-04c ([#13](https://github.com/songomby-D1/devfest2026/issues/13)).
+- Frontend owner for 3D-05a under D02: endy-rkt-01 ([#22](https://github.com/songomby-D1/devfest2026/issues/22)).

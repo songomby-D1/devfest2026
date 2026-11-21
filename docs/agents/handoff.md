@@ -4,7 +4,7 @@
 
 ## Latest session: 3D asset procedure (shidoAdr)
 
-- [CONFIRMED] 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)): drafted the [3D asset procedure](../architecture/3d-asset-procedure.md) for D12 option A, with `prepare.sh` and `poster.mjs`. The USDZ is withheld until 3D-04a strips its device metadata and checks its references. The documented commands reproduced the reference run byte for byte from a clean directory.
+- [CONFIRMED] 3D-03 ([#10](https://github.com/songomby-D1/devfest2026/issues/10)): drafted the [3D asset procedure](../architecture/3d-asset-procedure.md) for D12 option A, with `prepare.sh` and `poster.mjs`. The USDZ is withheld until 3D-04a strips its device metadata and checks its references. Two successive runs of the documented commands from clean directories gave identical outputs.
 - [NOT IMPLEMENTED] Another team member must follow the procedure alone, and shidoAdr must confirm the Reality Composer menu steps.
 
 ## Earlier session: D12 proposal (shidoAdr)
