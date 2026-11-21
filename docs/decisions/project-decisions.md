@@ -92,6 +92,6 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## Decisions already delegated
 
-- **D08–D11:** salandri-42 chooses the NFT ecosystem, wallet, standard and minting approach within the MVP, with affected owners agreeing on API and metadata contracts.
-- **D12:** shidoAdr chooses the 3D delivery approach within the MVP and coordinates viewer and asset contracts with the frontend and Content owners.
+- **D08–D11:** salandri-42 owns the NFT choices. The [service proposal](../../apps/backend/nft/nft_context.md) documents candidate chain, standard, wallet and metadata choices. Reconcile its queue, mint trigger, data ownership and storage assumptions with D01, D05, D13 and D16 through NFT-01 and endy-rkt-06.
+- **D12:** [ADR 0001](0001-d12-3d-demo-experience.md) is accepted. Use an offline-prepared GLB at 1K by default and 2K on demand with a poster and still-image fallback. Viewer and asset contracts and real-device verification remain with the affected owners.
 - **Service-local work:** Owners can proceed with approved work on their own API, schema, tests and packaging while the team resolves unrelated shared decisions. A shared dependency only blocks work that needs it.

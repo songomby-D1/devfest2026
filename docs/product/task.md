@@ -103,8 +103,12 @@ endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibiliti
 | CONTENT-02 | Publish content and expose published items for browsing. D18                                             | P0       | CONTENT-01, endy-rkt-05                       | Backlog |
 | CONTENT-03 | Support authenticated image and video uploads. D05, D18                                                  | P1       | CONTENT-01, endy-rkt-04, endy-rkt-05, AUTH-06 | Backlog |
 | CONTENT-04 | Support human verification of items and descriptions separately from automated analysis. D13, D18        | P1       | CONTENT-01, endy-rkt-05, AUTH-05, AUTH-06     | Backlog |
-| CONTENT-05 | Explore AI-assisted analysis. D18                                                                        | P1       | endy-rkt-05                                   | Backlog |
-| CONTENT-06 | Defer production integration of AI-assisted analysis. | P2 | CONTENT-05 | Backlog |
+| CONTENT-05 | Explore AI-assisted analysis as advisory signals only, groomed as CONTENT-05a to CONTENT-05c ([#57](https://github.com/songomby-D1/devfest2026/issues/57)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05a | Explore AI-generated media detection with Sightengine for images and videos, with costs, limits and an accuracy test ([#84](https://github.com/songomby-D1/devfest2026/issues/84)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05b | Explore a description-to-media coherence check with an AI vision API, using pictures from several angles for 3D models ([#85](https://github.com/songomby-D1/devfest2026/issues/85)). [DECISION REQUIRED: endy-rkt] D18 | P1 | endy-rkt-05 | Groomed |
+| CONTENT-05c | Propose the advisory-signal contract that leaves the CONTENT-04 verification status unchanged ([#86](https://github.com/songomby-D1/devfest2026/issues/86)). | P1 | CONTENT-05a, CONTENT-05b, CONTENT-04 | Backlog |
+| CONTENT-06 | Defer production integration of AI-assisted analysis into Content & Verification ([#58](https://github.com/songomby-D1/devfest2026/issues/58)). | P2 | CONTENT-05 | Backlog |
+| CONTENT-08 | Defer content moderation until after the MVP ([#87](https://github.com/songomby-D1/devfest2026/issues/87)). | P2 | CONTENT-06 | Backlog |
 
 ## salandri-42: NFT
 
@@ -133,7 +137,7 @@ endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibiliti
 | 3D-07 | Initialize LiDAR with Prisma, write its initial tests and Dockerfile, and register it in root Compose. | P0 | endy-rkt-07, INFRA-01 | Backlog |
 | 3D-01 | Investigate LiDAR and viewing feasibility. | P0 | endy-rkt-01 | Backlog |
 | 3D-02 | Choose the 3D delivery approach within the agreed MVP for D12. | P0 | 3D-01 | Backlog |
-| 3D-03 | Document the scanning and asset preparation workflow. [DECISION REQUIRED: shidoAdr] D12 | P1 | 3D-02 | Backlog |
+| 3D-03 | Document the scanning and asset preparation workflow. D12: option A, ADR 0001 accepted | P1 | 3D-02 | Backlog |
 | 3D-04 | Process, store and associate the demo 3D asset. D05                                                    | P0       | 3D-03, 3D-07, CONTENT-02 | Backlog |
 | 3D-05 | Provide the frontend 3D display and fallback. | P1 | 3D-04, UX-02, FE-01 | Backlog |
 | 3D-06 | Defer automated 3D reconstruction. | P2 | | Backlog |
