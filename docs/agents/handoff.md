@@ -2,7 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: 3D feasibility (shidoAdr)
+## Latest session: 3D real scan (shidoAdr)
+
+- [CONFIRMED] 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)): added the [real scan](../architecture/3d-feasibility-spike.md#real-scan-3d-01b) results to the spike report. A Reality Composer scan of about 1 min 30 s gave a 4.9 MB USDZ and a 148 KB optimized 2K GLB. Display on demo devices moved to 3D-05b ([#15](https://github.com/songomby-D1/devfest2026/issues/15)).
+- [NOT IMPLEMENTED] Next: 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)), the D12 proposal. 3D-07 (LiDAR service and Dockerfile) waits on endy-rkt-07 and INFRA-01.
+
+## Earlier session: 3D feasibility (shidoAdr)
 
 - [CONFIRMED] 3D-01, groomed as 3D-01a ([#7](https://github.com/songomby-D1/devfest2026/issues/7)): added the [3D feasibility spike](../architecture/3d-feasibility-spike.md) and linked it from [MVP section E](../product/MVP.md#e-lidar-and-3d). The groomed 3D tickets are sub-issues of [#6](https://github.com/songomby-D1/devfest2026/issues/6).
 - Next: 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)) tests a real Reality Composer scan. 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)) depends only on 3D-01 in the [backlog](../product/task.md), which still shows 3D-01 as Backlog until this work is approved. 3D-03 waits on endy-rkt-06 (D12). 3D-04 and 3D-05 follow 3D-03 and the content, UX and frontend foundation tasks.
