@@ -1,0 +1,10 @@
+**/build/
+**/coverage/
+**/dist/
+**/generated/
+**/node_modules/
+**/*.generated.*
+**/.env
+**/.env.*
+!**/.env.example
+package-lock.json

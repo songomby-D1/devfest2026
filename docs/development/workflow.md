@@ -1,8 +1,8 @@
 # Development workflow
 
-This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules.
+This page proposes local commands and runtime onboarding. See [Contributing](../../CONTRIBUTING.md) for Git and review rules and the [code quality policy](code-policy.md) for shared rules and commands.
 
-[NOT IMPLEMENTED] No commands below exist yet. [CTO DECISION REQUIRED] **D17 Tooling and quality baseline.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
+[NOT IMPLEMENTED] No commands below exist yet. [CTO DECISION REQUIRED] **D17 Tooling rollout.** [RECOMMENDED] Keep Taskfile as a thin root interface around future npm workspace scripts and Docker Compose. Define commands once and delegate to their owning workspace. Support an optional `SERVICE` selector where meaningful, defaulting to all applicable targets. Reuse the underlying commands in CI so contributors and CI check the same behavior. [Task templating reference](https://taskfile.dev/docs/reference/templating)
 
 | Proposed command | Intended behavior and scope |
 |---|---|
@@ -14,8 +14,8 @@ This page proposes local commands and runtime onboarding. See [Contributing](../
 | `task test` | Run required unit and integration suites for all workspaces or a selected service. |
 | `task test:unit` | Run isolated unit tests across the workspace or one service. |
 | `task test:integration` | Run integration suites against isolated disposable dependencies for all applicable workspaces or one service. |
-| `task lint` | Check source lint rules across the workspace or a selected service. |
-| `task format` | Format workspace files or a selected service. CI uses the corresponding non-writing check. |
+| `task lint` | Run the shared lint check across the workspace or a selected service. |
+| `task format` | Run the shared formatter across the workspace or a selected service. |
 | `task build` | Build all workspaces or a selected service with its workspace dependencies. |
 | `task clean` | Remove only generated local outputs at workspace or selected service scope. Retain data volumes and local environment files. |
 

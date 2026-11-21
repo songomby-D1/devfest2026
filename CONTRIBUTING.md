@@ -10,7 +10,9 @@ This guide defines the Git workflow and review requirements.
 
 [RECOMMENDED] Use commits in the form `type(scope): summary`, with types aligned to task branches. This makes changes easy to scan. Use `demo-v0.1.0` for demo tags and `v0.1.0` for release tags to distinguish milestones.
 
-[RECOMMENDED] In each PR, record what changed, why, tests actually run and results, assumptions and unresolved risks. Link the approved task and call out changes to shared contracts. This gives reviewers enough context to confirm scope while the template file is empty. Use at least one approval and request CTO review for architecture, security and service contract changes. New substantive commits should receive fresh review.
+[CONFIRMED] Follow the [shared code policy](docs/development/code-policy.md) and complete the [PR checklist](.github/PULL_REQUEST_TEMPLATE.md). Changes to lint, formatting and TypeScript configs require CTO approval.
+
+[RECOMMENDED] Link the approved task and record why the change is needed, assumptions and unresolved risks. Use at least one approval and request CTO review for architecture, security and service contract changes. New substantive commits should receive fresh review.
 
 ## Branch protection checklist
 

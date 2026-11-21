@@ -15,6 +15,7 @@
 | [Team responsibilities](docs/team/responsibilities.md) | Assignments and integration handoffs |
 | [Contributing](CONTRIBUTING.md) | Git workflow and review |
 | [Development workflow](docs/development/workflow.md) | Planned local commands and tool versions |
+| [Code quality policy](docs/development/code-policy.md) | Shared rules and enforcement for contributors and agents |
 | [Quality gates](docs/development/quality-gates.md) | Planned checks, testing and CI |
 | [Agent instructions](AGENTS.md) | Shared instructions for Claude and Codex |
 
