@@ -1,4 +1,24 @@
+# Local stack. Each app or service owner maintains its own entry.
+
 services:
+  # NFT service (owner: salandri-42). See apps/backend/nft/nft_context.md.
+  # No published port: the gateway relays its read-only routes (§10.4).
+  nft-service:
+    build:
+      context: .
+      dockerfile: apps/backend/nft/Dockerfile
+      target: development
+    restart: unless-stopped
+    env_file:
+      - path: apps/backend/nft/.env
+        required: true
+    environment:
+      MEDIA_ROOT: /data/media
+    volumes:
+      # Shared media, read-only for NFT. Pending decision E5 (volume or S3).
+      - media:/data/media:ro
+    networks: [internal_net, egress_net]
+
   # PROVISIONAL: minimal PostgreSQL until INFRA-01 (endy-rkt) delivers the shared instance.
   # Replace this service and infrastructure/docker/postgres/init/ when INFRA-01 lands.
   postgres:
@@ -56,5 +76,12 @@ services:
       postgres:
         condition: service_healthy
 
+networks:
+  internal_net:
+    internal: true
+  # Outbound access to the blockchain RPC and Pinata.
+  egress_net: {}
+
 volumes:
+  media:
   postgres-data:

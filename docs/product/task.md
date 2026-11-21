@@ -114,7 +114,7 @@ endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibiliti
 
 | ID | Task (one line) | Priority | Depends on | Status |
 |---|---|---|---|---|
-| NFT-07 | Initialize NFT with Prisma, write its initial tests and Dockerfile, and register it in root Compose. | P0 | endy-rkt-07, INFRA-01 | Backlog |
+| NFT-07 | Initialize NFT with Prisma, write its initial tests and Dockerfile, and register it in root Compose. | P0 | endy-rkt-07, INFRA-01 | In progress |
 | NFT-01 | Evaluate and choose the chain, standard, wallet and contract approach for D08–D11. | P0 | endy-rkt-01 | Backlog |
 | NFT-02 | Integrate with Content for published item references. | P0 | NFT-07, endy-rkt-08, CONTENT-02 | Backlog |
 | NFT-03 | Link NFT metadata to its published content. [DECISION REQUIRED: salandri-42] D09, D11 | P0 | NFT-01, NFT-02 | Backlog |

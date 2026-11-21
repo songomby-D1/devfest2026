@@ -8,6 +8,25 @@
 - [NOT IMPLEMENTED] The gateway route `/api/lidar/files/*` (Agent 1), the SeaweedFS service and the LiDAR bucket and credentials (Agent 1, D05), and the merge of `apps/backend/lidar/compose.fragment.yml`.
 - [DECISION REQUIRED: Agent 1] The display response of #101 does not yet match the frozen 3D contract (`missing` and `glb1k`/`glb2k`). The gateway adapts it, or a follow-up aligns it.
 
+## Earlier session: open-question settlements (rivon0507)
+
+- [PROPOSED] [ADR 0002](../decisions/0002-open-question-settlements.md) gathers every open question from the Auth contract, the UX-01 journey, the 3D spike and the pending decisions into 22 proposed settlements (S1–S22) chosen by rivon0507, each with the owner who confirms it. Source documents are unchanged.
+- [DECISION REQUIRED: endy-rkt, papangoo, salandri-42, shidoAdr, Sesedra] Confirm or amend your rows. Key items: owner-only mint with a custodial wallet (S1, S2), automatic publication after review (S3), the `GET /api/items` filters that need a `[CONTRACT CHANGE]` (S4), and the decision register winning over the NFT spec (S20).
+
+## Earlier session: UX-01 primary user journey (rivon0507, Agent 3)
+
+- [PROPOSED] UX-01 ([#65](https://github.com/songomby-D1/devfest2026/issues/65)): drafted the [primary user journey](../../apps/frontend/docs/user-journey.md) with personas, the eight journey steps, screens, the gateway route behind each step, states (loading, empty, error, 3D processing and missing, mint pending, confirmed and failed), desktop and mobile notes and proposed acceptance criteria.
+- [DECISION REQUIRED: Sesedra] Confirm or amend the journey before UX-02. Open questions Q1 to Q6 in the document go to papangoo, endy-rkt and salandri-42, notably the missing publish route (Q1) and caller-scoped item lists (Q2). The frozen contract is unchanged.
+
+## Earlier session: NFT lot L0 (salandri-42)
+
+- [IMPLEMENTED] NFT-07, lot L0 of the [NFT spec](../../apps/backend/nft/nft_context.md), merged into `develop` through [#100](https://github.com/songomby-D1/devfest2026/pull/100) with endy-rkt's approval. `apps/backend/nft/` is a standalone npm project with its own lockfile until endy-rkt-19 delivers the root workspace. It contains a NestJS 11 skeleton on Node 22 (D15) and TypeScript 5.9.3, the validated environment of spec §9.8 without Redis, a minimal `GET /health`, a Dockerfile with `development` and `runtime` targets built from the repository root, and the `nft-service` entry in the root Compose file without published ports.
+- Checks run: `npm run typecheck`, 32 Jest tests, `nest build` and a Prettier check passed. The shared ESLint config from #99, run with the root tool versions in a scratch install, reports no errors or warnings. The runtime image runs as `node` without dev tools and reports healthy. `docker compose up --wait nft-service` reported healthy. A missing variable stops the service with exit code 1 and names the variable without its value.
+- [NOT IMPLEMENTED] When endy-rkt-19 lands the root workspace and lockfile, delete `apps/backend/nft/package-lock.json` and `.npmrc`, run `npm install` at the root and switch the Dockerfile to the root `npm ci`. Align the Docker image and engines to the exact Node patch from endy-rkt-18.
+- [DECISION REQUIRED: salandri-42] The [decision register](../decisions/project-decisions.md) resolves gaps E3 to E6 of spec §4.0.4 against the spec's assumptions: synchronous HTTP with gateway polling instead of a shared Redis queue (D16), an NFT database with Prisma (D04), SeaweedFS media instead of a shared volume (D05) and a mint started by an eligible user (D01, D13). Reconcile spec §3 and lots L2, L3, L6 and L7 under NFT-01 and endy-rkt-06 before L2. Runtime validators stay in the NFT service rather than a shared package (D14). Prisma is not set up yet. Lot L1, the smart contract, is unaffected.
+- [HUMAN] salandri-42 creates a dedicated testnet wallet, gets Fuji test AVAX, creates a Pinata account and JWT, and fills `apps/backend/nft/.env` from `.env.example`.
+- Next: lot L1, the smart contract.
+
 ## Earlier session: Auth contract (shidoAdr)
 
 - [PROPOSED] AUTH-01 to AUTH-07 ([#46](https://github.com/songomby-D1/devfest2026/issues/46)–[#51](https://github.com/songomby-D1/devfest2026/issues/51), [#97](https://github.com/songomby-D1/devfest2026/issues/97)): drafted the [Auth contract specification](../specs/auth-contract.md) for endy-rkt-05 and endy-rkt-08. It covers the internal Auth API, opaque sessions with a 2 h idle and 7-day absolute limit, the caller-context headers, per-pair service secrets, the D13 permission matrix and the error shape, with 16 acceptance criteria.
