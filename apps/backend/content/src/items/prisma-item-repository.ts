@@ -5,14 +5,38 @@ import type {
   ItemChanges,
   ItemListFilter,
   ItemRecord,
+  MediaChange,
+  MediaChangeResult,
+  MediaRecord,
   NewItem,
   PublicationTransition,
 } from './item';
 import type { ItemRepository } from './item-repository';
 
-const INCLUDE = { author: true, description: true } as const;
+const INCLUDE = {
+  author: true,
+  description: true,
+  media: { orderBy: { position: 'asc' } },
+} as const satisfies Prisma.ItemInclude;
 
 type ItemRow = Prisma.ItemGetPayload<{ include: typeof INCLUDE }>;
+type MediaRow = ItemRow['media'][number];
+type Transaction = Prisma.TransactionClient;
+
+function toMediaRecord(row: MediaRow): MediaRecord {
+  return {
+    id: row.id,
+    kind: row.kind,
+    // Only allowlisted types are ever written (media-format.ts).
+    contentType: row.contentType as MediaRecord['contentType'],
+    bytes: row.bytes,
+    sha256: row.sha256,
+    storageKey: row.storageKey,
+    caption: row.caption,
+    position: row.position,
+    createdAt: row.createdAt,
+  };
+}
 
 /** Prisma error code for "record to update not found". */
 const RECORD_NOT_FOUND = 'P2025';
@@ -87,6 +111,7 @@ function toRecord(row: ItemRow): ItemRecord {
     publishedAt: row.publishedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    media: row.media.map(toMediaRecord),
   };
 }
 
@@ -162,6 +187,51 @@ export class PrismaItemRepository implements ItemRepository {
     });
   }
 
+  async changeMedia(
+    id: string,
+    decide: (current: ItemRecord) => MediaChange,
+  ): Promise<MediaChangeResult | null> {
+    return this.prisma.$transaction(async (tx) => {
+      // The same row lock as publication changes: a media change cannot
+      // interleave with a publish that relies on the item claim.
+      await tx.$queryRaw`SELECT 1 FROM items WHERE id = ${id}::uuid FOR UPDATE`;
+      const row = await tx.item.findUnique({ where: { id }, include: INCLUDE });
+      if (row === null) return null;
+      const current = toRecord(row);
+      const change = decide(current);
+
+      const removed =
+        change.removeId === undefined
+          ? null
+          : (current.media.find((media) => media.id === change.removeId) ??
+            null);
+      if (removed !== null) {
+        await tx.media.delete({ where: { id: removed.id } });
+      }
+      let added: MediaRecord | null = null;
+      if (change.add !== undefined) {
+        const position =
+          removed?.position ?? (current.media.at(-1)?.position ?? -1) + 1;
+        added = toMediaRecord(
+          await tx.media.create({
+            data: { ...change.add, itemId: id, position },
+          }),
+        );
+      }
+      if (removed === null && added === null) {
+        return { item: current, added, removed };
+      }
+      await markAdvisorySignalsStale(tx, id, [removed?.id, added?.id]);
+      const updated = await tx.item.update({
+        where: { id },
+        // A media change is a material change of the item claims (D18).
+        data: { claimStatus: 'unreviewed', updatedAt: new Date() },
+        include: INCLUDE,
+      });
+      return { item: toRecord(updated), added, removed };
+    });
+  }
+
   async updateUnpublished(
     id: string,
     changes: ItemChanges,
@@ -208,4 +278,19 @@ export class PrismaItemRepository implements ItemRepository {
       throw error;
     }
   }
+}
+
+/**
+ * Staleness hook for advisory signals (ai-assisted-analysis-spike.md,
+ * "Staleness"): a media change makes the `ai_generated` signals of that
+ * media and every `description_mismatch` signal of the item stale, in the
+ * same transaction. The `advisory_signals` table arrives with CONTENT-06, so
+ * there is nothing to mark yet.
+ */
+function markAdvisorySignalsStale(
+  _tx: Transaction,
+  _itemId: string,
+  _mediaIds: readonly (string | undefined)[],
+): Promise<void> {
+  return Promise.resolve();
 }

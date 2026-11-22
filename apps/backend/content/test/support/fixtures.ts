@@ -1,6 +1,6 @@
 import type { CallerContext } from '../../src/common/caller-context';
 import type { AppConfig } from '../../src/config/app-config';
-import { InboundTokens } from '../../src/config/app-config';
+import { InboundTokens, StorageCredentials } from '../../src/config/app-config';
 
 export const OWNER_ID = '6f1c1d1e-2a3b-4c5d-8e9f-0a1b2c3d4e5f';
 export const OTHER_ID = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d';
@@ -19,6 +19,15 @@ export function testConfig(
       gateway: GATEWAY_TOKEN,
       nft: NFT_TOKEN,
     }),
+    storage: {
+      endpoint: 'http://storage.invalid:8333',
+      region: 'us-east-1',
+      bucket: 'lova-media',
+      prefix: 'content/',
+      forcePathStyle: true,
+      credentials: new StorageCredentials('test', 'test'),
+    },
+    media: { maxImageBytes: 4096, maxVideoBytes: 8192, maxPerItem: 3 },
   };
 }
 

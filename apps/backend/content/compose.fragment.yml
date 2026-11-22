@@ -4,6 +4,12 @@
 # runtime roles (D04), and the root .env variables of the agent1-foundation
 # branch (CONTENT_* database variables and SERVICE_TOKEN_*_TO_CONTENT).
 # The gateway already targets http://content:3000.
+#
+# CONTENT-03 (#54) adds media storage. It assumes the shared `seaweedfs`
+# service and `seaweedfs-buckets` job of agent1-foundation (D05): the
+# `S3_MEDIA_BUCKET` bucket exists and the SEAWEEDFS_CONTENT_* identity is
+# scoped to it. No other service receives these credentials, and the secrets
+# come from .env, never from this file.
 services:
   content:
     build:
@@ -18,8 +24,22 @@ services:
       CONTENT_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_CONTENT:?Set SERVICE_TOKEN_GATEWAY_TO_CONTENT}
       CONTENT_INBOUND_TOKEN_NFT: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
       CONTENT_INBOUND_TOKEN_LIDAR: ${SERVICE_TOKEN_LIDAR_TO_CONTENT:-}
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_REGION: us-east-1
+      STORAGE_BUCKET: ${S3_MEDIA_BUCKET:-lova-media}
+      STORAGE_PREFIX: ${CONTENT_STORAGE_PREFIX:-content/}
+      STORAGE_FORCE_PATH_STYLE: 'true'
+      STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_CONTENT_ACCESS_KEY:?Set SEAWEEDFS_CONTENT_ACCESS_KEY}
+      STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_CONTENT_SECRET_KEY:?Set SEAWEEDFS_CONTENT_SECRET_KEY}
+      # Keep the video limit below the gateway's MAX_UPLOAD_BYTES, which
+      # counts the whole multipart body.
+      MEDIA_MAX_IMAGE_BYTES: ${CONTENT_MEDIA_MAX_IMAGE_BYTES:-12582912}
+      MEDIA_MAX_VIDEO_BYTES: ${CONTENT_MEDIA_MAX_VIDEO_BYTES:-52428800}
+      MEDIA_MAX_PER_ITEM: ${CONTENT_MEDIA_MAX_PER_ITEM:-10}
     expose: ['3000']
     depends_on:
       postgres:
         condition: service_healthy
+      seaweedfs-buckets:
+        condition: service_completed_successfully
     networks: [internal_net]

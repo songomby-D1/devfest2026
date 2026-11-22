@@ -2,6 +2,8 @@ import type {
   ItemChanges,
   ItemListFilter,
   ItemRecord,
+  MediaChange,
+  MediaChangeResult,
   NewItem,
   PublicationTransition,
 } from './item';
@@ -36,4 +38,16 @@ export interface ItemRepository {
     id: string,
     decide: (current: ItemRecord) => PublicationTransition | null,
   ): Promise<ItemRecord | null>;
+
+  /**
+   * Locks the item, passes its current state to `decide` and applies the
+   * returned media change in the same transaction, together with the reset
+   * of the item claim to `unreviewed` (D18) and, once advisory signals exist
+   * (CONTENT-06), marking the affected signals stale. `decide` may throw to
+   * abort. Returns `null` only when the item does not exist.
+   */
+  changeMedia(
+    id: string,
+    decide: (current: ItemRecord) => MediaChange,
+  ): Promise<MediaChangeResult | null>;
 }
