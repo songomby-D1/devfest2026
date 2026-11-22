@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { PublicError } from '../common/public-error';
 import type { ItemRecord, PublicationTransition } from './item';
+import { notInReview } from './review';
 
 /** Rule codes answered with `422` when an item cannot be published (D18). */
 export const PUBLISH_RULES = {
@@ -90,6 +91,59 @@ export function planUnpublish(
     note,
     publicationStatus: 'unpublished',
     submissionStatus: item.submissionStatus,
+    publishedAt: item.publishedAt,
+  };
+}
+
+/**
+ * `in_review` to `returned` (CONTENT-04): the reviewer sends the submission
+ * back to its owner for changes. The owner's next edit puts it back
+ * `in_review`. Returning a returned item is a no-op, so a retry is harmless.
+ * The publication status does not change: an item in review is never
+ * published.
+ */
+export function planReturn(
+  item: ItemRecord,
+  actorId: string,
+  note: string,
+): PublicationTransition | null {
+  if (item.submissionStatus === 'returned') return null;
+  if (item.submissionStatus !== 'in_review') {
+    throw notInReview('Only a submission in review can be returned');
+  }
+  return {
+    action: 'return',
+    actorId,
+    note,
+    publicationStatus: item.publicationStatus,
+    submissionStatus: 'returned',
+    publishedAt: item.publishedAt,
+  };
+}
+
+/**
+ * `in_review` or `returned` to `rejected` (CONTENT-04). Rejection closes the
+ * submission for good: it can no longer be edited, reviewed or published,
+ * and the owner submits a new item instead. Rejecting a rejected item is a
+ * no-op. An `accepted` submission is taken down with unpublish instead.
+ */
+export function planReject(
+  item: ItemRecord,
+  actorId: string,
+  note: string,
+): PublicationTransition | null {
+  if (item.submissionStatus === 'rejected') return null;
+  if (item.submissionStatus === 'accepted') {
+    throw notInReview(
+      'An accepted submission cannot be rejected; unpublish it instead',
+    );
+  }
+  return {
+    action: 'reject',
+    actorId,
+    note,
+    publicationStatus: item.publicationStatus,
+    submissionStatus: 'rejected',
     publishedAt: item.publishedAt,
   };
 }

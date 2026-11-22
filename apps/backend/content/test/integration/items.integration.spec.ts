@@ -558,6 +558,198 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
     });
   });
 
+  describe('claim review (CONTENT-04)', () => {
+    const SECOND_REVIEWER_ID = '9c4d5e6f-7a8b-4c3d-9e4f-5a6b7c8d9e0f';
+    const reviewBody = (overrides: Record<string, unknown> = {}) => ({
+      target: 'item',
+      outcome: 'verified',
+      rationale: 'Matches the museum inventory card.',
+      evidence: ['Inventory card 1932-14', 'Field notes, 1998'],
+      ...overrides,
+    });
+    const postReview = (
+      id: string,
+      body: object,
+      reviewerId: string = REVIEWER_ID,
+    ) =>
+      http()
+        .post(`/internal/v1/items/${id}/review`)
+        .set(gatewayHeaders(reviewerId, ['reviewer']))
+        .send(body);
+    const decide = (id: string, decision: string, note: string) =>
+      http()
+        .post(`/internal/v1/items/${id}/decision`)
+        .set(reviewer())
+        .send({ decision, note });
+
+    it('records both reviews with their history, then publishes', async () => {
+      const id = await submitAs(OWNER_ID);
+
+      expect((await postReview(id, reviewBody())).status).toBe(201);
+      const second = await postReview(
+        id,
+        reviewBody({
+          target: 'description',
+          outcome: 'uncertain',
+          evidence: [],
+        }),
+        SECOND_REVIEWER_ID,
+      );
+      expect(second.status).toBe(201);
+      expect(second.body).toMatchObject({
+        claims: { item: 'verified', description: 'uncertain' },
+        publicationStatus: 'draft',
+      });
+
+      const rows = await prisma.claimReview.findMany({
+        where: { itemId: id },
+        orderBy: { reviewedAt: 'asc' },
+      });
+      expect(
+        rows.map((row) => ({
+          target: row.target,
+          fromStatus: row.fromStatus,
+          outcome: row.outcome,
+          reviewerId: row.reviewerId,
+          evidence: row.evidence,
+        })),
+      ).toEqual([
+        {
+          target: 'item',
+          fromStatus: 'unreviewed',
+          outcome: 'verified',
+          reviewerId: REVIEWER_ID,
+          evidence: ['Inventory card 1932-14', 'Field notes, 1998'],
+        },
+        {
+          target: 'description',
+          fromStatus: 'unreviewed',
+          outcome: 'uncertain',
+          reviewerId: SECOND_REVIEWER_ID,
+          evidence: [],
+        },
+      ]);
+
+      const owner = await http()
+        .get(`/internal/v1/items/${id}`)
+        .set(gatewayHeaders(OWNER_ID));
+      const reviews = (owner.body as { reviews: { target: string }[] }).reviews;
+      expect(reviews.map((review) => review.target).sort()).toEqual([
+        'description',
+        'item',
+      ]);
+
+      const published = await decide(id, 'publish', 'Both reviewed');
+      expect(published.status).toBe(200);
+      expect(published.body).toMatchObject({ publicationStatus: 'published' });
+    });
+
+    it('serializes concurrent reviews of one claim under the item lock', async () => {
+      const id = await submitAs(OWNER_ID);
+      const outcomes = ['verified', 'uncertain', 'verified', 'uncertain'];
+
+      const responses = await Promise.all(
+        outcomes.map((outcome) => postReview(id, reviewBody({ outcome }))),
+      );
+      expect(responses.map((response) => response.status)).toEqual([
+        201, 201, 201, 201,
+      ]);
+
+      const rows = await prisma.claimReview.findMany({
+        where: { itemId: id, target: 'item' },
+        orderBy: { reviewedAt: 'asc' },
+      });
+      expect(rows).toHaveLength(4);
+      // Each review starts from the outcome of the one before it.
+      rows.forEach((row, index) => {
+        expect(row.fromStatus).toBe(
+          index === 0 ? 'unreviewed' : rows[index - 1]?.outcome,
+        );
+      });
+      const times = rows.map((row) => row.reviewedAt.getTime());
+      expect(new Set(times).size).toBe(4);
+      const item = await prisma.item.findUniqueOrThrow({ where: { id } });
+      expect(item.claimStatus).toBe(rows.at(-1)?.outcome);
+    });
+
+    it('refuses an unreviewed outcome at the database level', async () => {
+      const id = await submitAs(OWNER_ID);
+      await expect(
+        prisma.claimReview.create({
+          data: {
+            itemId: id,
+            target: 'item',
+            fromStatus: 'verified',
+            outcome: 'unreviewed',
+            rationale: 'Reset',
+            evidence: [],
+            reviewerId: REVIEWER_ID,
+            reviewedAt: new Date(),
+          },
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('returns, puts back in review on edit or media change, and rejects', async () => {
+      const id = await submitAs(OWNER_ID);
+      await postReview(id, reviewBody()).expect(201);
+
+      const returned = await decide(id, 'return', 'Add the weaving period');
+      expect(returned.body).toMatchObject({ submissionStatus: 'returned' });
+      const queued = async () => {
+        const page = await http()
+          .get('/internal/v1/items?scope=review&limit=50')
+          .set(gatewayHeaders(SECOND_REVIEWER_ID, ['reviewer']));
+        return (page.body as { items: { id: string }[] }).items.map(
+          (item) => item.id,
+        );
+      };
+      expect(await queued()).not.toContain(id);
+
+      // A media change is an edit: back in review, item claim reset.
+      const upload = await http()
+        .post(`/internal/v1/items/${id}/media`)
+        .set(gatewayHeaders(OWNER_ID))
+        .attach('file', pngBytes(), {
+          filename: 'photo.png',
+          contentType: 'image/png',
+        });
+      expect(upload.status).toBe(201);
+      let row = await prisma.item.findUniqueOrThrow({ where: { id } });
+      expect(row.submissionStatus).toBe('in_review');
+      expect(row.claimStatus).toBe('unreviewed');
+      expect(await queued()).toContain(id);
+
+      await decide(id, 'return', 'Still missing the period').expect(200);
+      const edited = await http()
+        .patch(`/internal/v1/items/${id}`)
+        .set(gatewayHeaders(OWNER_ID))
+        .send({ period: 'Around 1910' });
+      expect(edited.body).toMatchObject({ submissionStatus: 'in_review' });
+
+      await decide(id, 'reject', 'Duplicate of another item').expect(200);
+      const refused = await http()
+        .patch(`/internal/v1/items/${id}`)
+        .set(gatewayHeaders(OWNER_ID))
+        .send({ title: 'Another title' });
+      expect(refused.status).toBe(409);
+      expect(refused.body).toMatchObject({ code: 'SUBMISSION_REJECTED' });
+      row = await prisma.item.findUniqueOrThrow({ where: { id } });
+      expect(row.submissionStatus).toBe('rejected');
+      expect(row.period).toBe('Around 1910');
+
+      const events = await prisma.publicationEvent.findMany({
+        where: { itemId: id },
+        orderBy: { createdAt: 'asc' },
+      });
+      expect(events.map((event) => event.action)).toEqual([
+        'return',
+        'return',
+        'reject',
+      ]);
+    });
+  });
+
   it('runs with a runtime role that cannot change the schema (D04)', async () => {
     await expect(
       prisma.$executeRawUnsafe('DROP TABLE descriptions'),

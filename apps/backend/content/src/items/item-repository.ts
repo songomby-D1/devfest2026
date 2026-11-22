@@ -1,4 +1,5 @@
 import type {
+  ClaimReviewChange,
   ItemChanges,
   ItemListFilter,
   ItemRecord,
@@ -20,12 +21,29 @@ export interface ItemRepository {
   list(filter: ItemListFilter): Promise<ItemRecord[]>;
 
   /**
-   * Applies the changes atomically, only while the item is not published.
-   * Returns `null` when the item is missing or was published meanwhile.
+   * Locks the item, passes its current state to `decide` and applies the
+   * returned owner edit in the same transaction: the claim resets it carries
+   * and, for a real change, the move of a `returned` or `accepted`
+   * submission back `in_review` (CONTENT-04). `decide` returns `null` for no
+   * change and may throw to abort. Returns `null` only when the item does
+   * not exist.
    */
-  updateUnpublished(
+  changeDetails(
     id: string,
-    changes: ItemChanges,
+    decide: (current: ItemRecord) => ItemChanges | null,
+  ): Promise<ItemRecord | null>;
+
+  /**
+   * Locks the item, passes its current state to `decide` and records the
+   * returned claim review in the same transaction: the target's claim status
+   * becomes the outcome and the review history keeps the previous status.
+   * This is the only write of a `verified` or `uncertain` claim status
+   * (CONTENT-04). `decide` may throw to abort. Returns `null` only when the
+   * item does not exist.
+   */
+  reviewClaim(
+    id: string,
+    decide: (current: ItemRecord) => ClaimReviewChange,
   ): Promise<ItemRecord | null>;
 
   /**
@@ -42,7 +60,9 @@ export interface ItemRepository {
   /**
    * Locks the item, passes its current state to `decide` and applies the
    * returned media change in the same transaction, together with the reset
-   * of the item claim to `unreviewed` (D18) and, once advisory signals exist
+   * of the item claim to `unreviewed` (D18), the move of a `returned` or
+   * `accepted` submission back `in_review` (CONTENT-04) and, once advisory
+   * signals exist
    * (CONTENT-06), marking the affected signals stale. `decide` may throw to
    * abort. Returns `null` only when the item does not exist.
    */

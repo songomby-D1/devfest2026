@@ -145,16 +145,41 @@ describe('content-service HTTP: publication and listing (CONTENT-02)', () => {
       expect(unknown.status).toBe(404);
     });
 
-    it('answers 422 DECISION_NOT_AVAILABLE for return and reject', async () => {
+    it('returns and rejects a submission (CONTENT-04)', async () => {
+      const id = await submit();
+
+      const returned = await http()
+        .post(`/internal/v1/items/${id}/decision`)
+        .set(REVIEWER)
+        .send({ decision: 'return', note: 'Add the period' });
+      expect(returned.status).toBe(200);
+      expect(returned.body).toMatchObject({ submissionStatus: 'returned' });
+
+      const rejected = await http()
+        .post(`/internal/v1/items/${id}/decision`)
+        .set(REVIEWER)
+        .send({ decision: 'reject', note: 'Out of scope' });
+      expect(rejected.status).toBe(200);
+      expect(rejected.body).toMatchObject({ submissionStatus: 'rejected' });
+    });
+
+    it('needs a note to return or reject', async () => {
       const id = await submit();
 
       const response = await http()
         .post(`/internal/v1/items/${id}/decision`)
         .set(REVIEWER)
-        .send({ decision: 'reject', note: 'Out of scope' });
+        .send({ decision: 'reject', note: '   ' });
 
-      expect(response.status).toBe(422);
-      expect(response.body).toMatchObject({ code: 'DECISION_NOT_AVAILABLE' });
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        code: 'VALIDATION_FAILED',
+        message: expect.any(String) as string,
+        requestId: 'req-123',
+        details: [
+          { field: 'note', reason: 'must not be empty for return or reject' },
+        ],
+      });
     });
   });
 

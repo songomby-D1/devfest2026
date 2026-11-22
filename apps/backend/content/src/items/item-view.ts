@@ -2,13 +2,38 @@ import type { CallerContext } from '../common/caller-context';
 import { isReviewer } from '../common/caller-context';
 import type { MediaKind } from '../media/media-format';
 import type {
+  ClaimReviewRecord,
   ClaimStatus,
+  ClaimTarget,
   ItemKind,
   ItemRecord,
   MediaRecord,
   PublicationStatus,
+  ReviewOutcome,
   SubmissionStatus,
 } from './item';
+import { currentReviews } from './review';
+
+/** `ClaimReview` of the gateway contract (packages/shared `content.ts`). */
+export interface ClaimReviewView {
+  readonly target: ClaimTarget;
+  readonly outcome: ReviewOutcome;
+  readonly rationale: string;
+  readonly evidence: readonly string[];
+  readonly reviewerId: string;
+  readonly reviewedAt: string;
+}
+
+export function toClaimReview(review: ClaimReviewRecord): ClaimReviewView {
+  return {
+    target: review.target,
+    outcome: review.outcome,
+    rationale: review.rationale,
+    evidence: [...review.evidence],
+    reviewerId: review.reviewerId,
+    reviewedAt: review.reviewedAt.toISOString(),
+  };
+}
 
 /** `MediaRef` of the gateway contract (packages/shared `content.ts`). */
 export interface MediaRefView {
@@ -67,7 +92,8 @@ export interface ItemDetailView {
   };
   readonly rights: { readonly statement: string; readonly confirmed: boolean };
   readonly media: readonly MediaRefView[];
-  readonly reviews: readonly never[];
+  /** Latest review per target, while that claim is reviewed. */
+  readonly reviews: readonly ClaimReviewView[];
   readonly isOwner: boolean;
   readonly advisorySignals?: readonly never[];
   readonly createdAt: string;
@@ -75,9 +101,11 @@ export interface ItemDetailView {
 }
 
 /**
- * Maps a record to the contract shape. Reviews (CONTENT-04) and advisory
- * signals (CONTENT-05c) are empty until those tasks land; advisory signals
- * are only present for the owner and reviewers.
+ * Maps a record to the contract shape. Everyone who may see the item sees
+ * its claim statuses and current reviews: guests only ever see published
+ * items, which matches settlement S5 (rationale to the owner and reviewers,
+ * or to everyone once published). Advisory signals (CONTENT-05c) stay empty
+ * and are only present for the owner and reviewers.
  */
 export function toItemDetail(
   item: ItemRecord,
@@ -103,7 +131,7 @@ export function toItemDetail(
     creator: { ...item.author },
     rights: { ...item.rights },
     media: item.media.map((media) => toMediaRef(item.id, media)),
-    reviews: [],
+    reviews: currentReviews(item).map(toClaimReview),
     isOwner,
     ...(isOwner || isReviewer(caller) ? { advisorySignals: [] } : {}),
     createdAt: item.createdAt.toISOString(),

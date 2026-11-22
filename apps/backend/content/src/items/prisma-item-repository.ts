@@ -2,6 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type {
+  ClaimReviewChange,
+  ClaimReviewRecord,
   ItemChanges,
   ItemListFilter,
   ItemRecord,
@@ -12,16 +14,45 @@ import type {
   PublicationTransition,
 } from './item';
 import type { ItemRepository } from './item-repository';
+import { claimStatusOf, nextReviewTime, resubmittedStatus } from './review';
 
 const INCLUDE = {
   author: true,
   description: true,
   media: { orderBy: { position: 'asc' } },
+  // The latest review of each target (reviewedAt is strictly increasing).
+  claimReviews: { orderBy: { reviewedAt: 'desc' }, distinct: ['target'] },
 } as const satisfies Prisma.ItemInclude;
 
 type ItemRow = Prisma.ItemGetPayload<{ include: typeof INCLUDE }>;
 type MediaRow = ItemRow['media'][number];
+type ReviewRow = ItemRow['claimReviews'][number];
 type Transaction = Prisma.TransactionClient;
+
+function toReviewRecord(row: ReviewRow): ClaimReviewRecord {
+  if (row.outcome === 'unreviewed') {
+    // Excluded by the claim_reviews_outcome_reviewed check constraint.
+    throw new Error('Claim review without an outcome');
+  }
+  return {
+    target: row.target,
+    fromStatus: row.fromStatus,
+    outcome: row.outcome,
+    rationale: row.rationale,
+    evidence: row.evidence,
+    reviewerId: row.reviewerId,
+    reviewedAt: row.reviewedAt,
+  };
+}
+
+/** Locks the item row and reads it, inside a transaction. */
+async function lockItem(tx: Transaction, id: string): Promise<ItemRow | null> {
+  // The row lock serializes every change of an item: edits, media changes,
+  // reviews and publication decisions, so each one decides on the state
+  // that its write relies on.
+  await tx.$queryRaw`SELECT 1 FROM items WHERE id = ${id}::uuid FOR UPDATE`;
+  return tx.item.findUnique({ where: { id }, include: INCLUDE });
+}
 
 function toMediaRecord(row: MediaRow): MediaRecord {
   return {
@@ -37,9 +68,6 @@ function toMediaRecord(row: MediaRow): MediaRecord {
     createdAt: row.createdAt,
   };
 }
-
-/** Prisma error code for "record to update not found". */
-const RECORD_NOT_FOUND = 'P2025';
 
 /** Escapes LIKE wildcards so that `q` matches literally. */
 function likeLiteral(text: string): string {
@@ -112,6 +140,7 @@ function toRecord(row: ItemRow): ItemRecord {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     media: row.media.map(toMediaRecord),
+    latestReviews: row.claimReviews.map(toReviewRecord),
   };
 }
 
@@ -159,10 +188,7 @@ export class PrismaItemRepository implements ItemRepository {
     decide: (current: ItemRecord) => PublicationTransition | null,
   ): Promise<ItemRecord | null> {
     return this.prisma.$transaction(async (tx) => {
-      // The row lock serializes publication changes and edits of the item,
-      // so `decide` sees the claim statuses that the update will rely on.
-      await tx.$queryRaw`SELECT 1 FROM items WHERE id = ${id}::uuid FOR UPDATE`;
-      const row = await tx.item.findUnique({ where: { id }, include: INCLUDE });
+      const row = await lockItem(tx, id);
       if (row === null) return null;
       const current = toRecord(row);
       const transition = decide(current);
@@ -192,10 +218,9 @@ export class PrismaItemRepository implements ItemRepository {
     decide: (current: ItemRecord) => MediaChange,
   ): Promise<MediaChangeResult | null> {
     return this.prisma.$transaction(async (tx) => {
-      // The same row lock as publication changes: a media change cannot
-      // interleave with a publish that relies on the item claim.
-      await tx.$queryRaw`SELECT 1 FROM items WHERE id = ${id}::uuid FOR UPDATE`;
-      const row = await tx.item.findUnique({ where: { id }, include: INCLUDE });
+      // A media change cannot interleave with a review or a publish that
+      // relies on the item claim.
+      const row = await lockItem(tx, id);
       if (row === null) return null;
       const current = toRecord(row);
       const change = decide(current);
@@ -225,28 +250,35 @@ export class PrismaItemRepository implements ItemRepository {
       const updated = await tx.item.update({
         where: { id },
         // A media change is a material change of the item claims (D18).
-        data: { claimStatus: 'unreviewed', updatedAt: new Date() },
+        data: {
+          claimStatus: 'unreviewed',
+          submissionStatus: resubmittedStatus(current.submissionStatus),
+          updatedAt: new Date(),
+        },
         include: INCLUDE,
       });
       return { item: toRecord(updated), added, removed };
     });
   }
 
-  async updateUnpublished(
+  async changeDetails(
     id: string,
-    changes: ItemChanges,
+    decide: (current: ItemRecord) => ItemChanges | null,
   ): Promise<ItemRecord | null> {
-    const description: Prisma.DescriptionUpdateWithoutItemInput = {
-      ...(changes.descriptionText === undefined
-        ? {}
-        : { text: changes.descriptionText }),
-      ...(changes.resetDescriptionClaim ? { claimStatus: 'unreviewed' } : {}),
-    };
-    try {
-      // The status filter makes the edit fail if the item was published
-      // between the read and this write.
-      const row = await this.prisma.item.update({
-        where: { id, publicationStatus: { not: 'published' } },
+    return this.prisma.$transaction(async (tx) => {
+      const row = await lockItem(tx, id);
+      if (row === null) return null;
+      const current = toRecord(row);
+      const changes = decide(current);
+      if (changes === null) return current;
+      const description: Prisma.DescriptionUpdateWithoutItemInput = {
+        ...(changes.descriptionText === undefined
+          ? {}
+          : { text: changes.descriptionText }),
+        ...(changes.resetDescriptionClaim ? { claimStatus: 'unreviewed' } : {}),
+      };
+      const updated = await tx.item.update({
+        where: { id },
         data: {
           ...changes.metadata,
           ...(changes.rights?.statement === undefined
@@ -256,6 +288,7 @@ export class PrismaItemRepository implements ItemRepository {
             ? {}
             : { rightsConfirmed: changes.rights.confirmed }),
           ...(changes.resetItemClaim ? { claimStatus: 'unreviewed' } : {}),
+          submissionStatus: resubmittedStatus(current.submissionStatus),
           ...(changes.author === undefined
             ? {}
             : { author: { update: { ...changes.author } } }),
@@ -267,16 +300,48 @@ export class PrismaItemRepository implements ItemRepository {
         },
         include: INCLUDE,
       });
-      return toRecord(row);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === RECORD_NOT_FOUND
-      ) {
-        return null;
-      }
-      throw error;
-    }
+      return toRecord(updated);
+    });
+  }
+
+  async reviewClaim(
+    id: string,
+    decide: (current: ItemRecord) => ClaimReviewChange,
+  ): Promise<ItemRecord | null> {
+    return this.prisma.$transaction(async (tx) => {
+      const row = await lockItem(tx, id);
+      if (row === null) return null;
+      const current = toRecord(row);
+      const review = decide(current);
+      const latest = current.latestReviews.find(
+        (existing) => existing.target === review.target,
+      );
+      await tx.claimReview.create({
+        data: {
+          itemId: id,
+          target: review.target,
+          fromStatus: claimStatusOf(current, review.target),
+          outcome: review.outcome,
+          rationale: review.rationale,
+          evidence: [...review.evidence],
+          reviewerId: review.reviewerId,
+          reviewedAt: nextReviewTime(latest, new Date()),
+        },
+      });
+      // The only write of a reviewed claim status (CONTENT-04 guardrail).
+      const updated = await tx.item.update({
+        where: { id },
+        data:
+          review.target === 'item'
+            ? { claimStatus: review.outcome, updatedAt: new Date() }
+            : {
+                description: { update: { claimStatus: review.outcome } },
+                updatedAt: new Date(),
+              },
+        include: INCLUDE,
+      });
+      return toRecord(updated);
+    });
   }
 }
 
