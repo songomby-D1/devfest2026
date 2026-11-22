@@ -2,6 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: CTO-24 CODEOWNERS proposal (rivon0507)
+
+- [IMPLEMENTED] CTO-24 ([#45](https://github.com/songomby-D1/devfest2026/issues/45)) on `rivon0507/cto-24-codeowners`: [.github/CODEOWNERS](../../.github/CODEOWNERS) proposes the settlement S19 scope, with every handle confirmed to exist. `apps/frontend` goes to `@Sesedra`, Content to `@papangoo`, NFT to `@salandri-42`, Auth, LiDAR and `scripts/3d` to `@ShidoADR`, and endy-rkt is the fallback owner for the gateway, root configs, Compose files, `.github/`, documentation and `packages/shared`.
+- [NOT IMPLEMENTED] The file routes reviews only. No branch protection or ruleset was applied and no required code-owner review exists, so merges are not blocked by it; that remains endy-rkt-12 and endy-rkt-22, which the owner has deliberately not applied.
+- [IMPLEMENTED] Stale-issue audit: 21 open issues that were already delivered on `develop` (CTO, Auth, gateway, frontend shell and the FE-03 flows) were verified and closed with per-issue evidence.
+
 ## Latest session: CTO-21 first hosted CI with initialized workspaces (rivon0507)
 
 - [IMPLEMENTED] CTO-21 ([#42](https://github.com/songomby-D1/devfest2026/issues/42)) on `rivon0507/cto-21-hosted-ci`: the first hosted run with initialized workspaces passed on 2026-11-22, [run 45000699433](https://github.com/songomby-D1/devfest2026/actions/runs/45000699433), a manual dispatch of `ci.yml` on a `develop`-based branch. Every job is green: `branch-guard`, `secrets`, `detect`, `lint`, `compose`, the `service` matrix for `packages/shared`, `apps/frontend` and `apps/backend/{auth,content,gateway,lidar,nft}`, and `ci-ok`.

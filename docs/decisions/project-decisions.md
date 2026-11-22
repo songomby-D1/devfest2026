@@ -88,7 +88,7 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## GitHub rollout settings
 
-[CONFIRMED] Apply protection after hosted `ci-ok` exercises initialized workspaces. Use one review, no routine admin bypass, strict branch updates on `main` and looser updates on `develop`. Squash topic PRs into `develop` and use merge commits for promotions to `main`. Reviewer coverage and CODEOWNERS remain open under endy-rkt-24. [CI rollout](../development/ci.md#repository-settings-checklist)
+[CONFIRMED] Apply protection after hosted `ci-ok` exercises initialized workspaces. Use one review, no routine admin bypass, strict branch updates on `main` and looser updates on `develop`. Squash topic PRs into `develop` and use merge commits for promotions to `main`. Reviewer coverage and CODEOWNERS are proposed under endy-rkt-24 in [.github/CODEOWNERS](../../.github/CODEOWNERS), using settlement S19's scope and confirmed handles. [CI rollout](../development/ci.md#repository-settings-checklist)
 
 ## Decisions already delegated
 

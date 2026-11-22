@@ -1,0 +1,23 @@
+# Code owners for the Malagasy cultural heritage platform.
+#
+# Scope agreed in settlement S19 (docs/decisions/0002-open-question-settlements.md)
+# and tracked by endy-rkt-24: one owner per directory, mirroring the
+# responsibilities in docs/team/responsibilities.md.
+#
+# The last matching pattern wins. `*` is the fallback for the gateway, root
+# configs, Compose files, `.github/`, documentation, `packages/shared` and
+# anything not listed below.
+#
+# This file only routes reviews. Code-owner review becomes blocking when branch
+# protection requires it; on its own this file does not block merges.
+
+*                      @endy-rkt
+
+/apps/frontend/        @Sesedra
+/apps/backend/content/ @papangoo
+/apps/backend/nft/     @salandri-42
+
+# Auth, LiDAR and the 3D asset tooling share one owner.
+/apps/backend/auth/    @ShidoADR
+/apps/backend/lidar/   @ShidoADR
+/scripts/3d/           @ShidoADR
