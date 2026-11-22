@@ -143,30 +143,57 @@ function parse(
     let failure: Error | null = null;
     let caption: string | undefined;
     let written: Promise<SpooledFile> | null = null;
+    let settled = false;
 
+    /**
+     * Rejects or resolves once, after the temporary file is closed so that it
+     * can be removed. The parser is never torn down synchronously from one of
+     * its own events: busboy keeps using the part stream after emitting them.
+     */
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      const file: Promise<SpooledFile | null> =
+        written ?? Promise.resolve(null);
+      file.then(
+        (spooled) => {
+          if (failure !== null) {
+            reject(failure);
+          } else if (spooled === null) {
+            reject(invalid(FILE_FIELD, 'is required'));
+          } else if (spooled.bytes === 0) {
+            reject(invalid(FILE_FIELD, 'must not be empty'));
+          } else {
+            resolve({ file: spooled, caption });
+          }
+        },
+        (error: unknown) => {
+          reject(
+            failure ??
+              (error instanceof Error ? error : new Error('Upload failed')),
+          );
+        },
+      );
+    };
+
+    /** Records the first failure; the rest of the body is still drained. */
     const fail = (cause: unknown): void => {
-      if (failure !== null) return;
-      const error = cause instanceof Error ? cause : new Error('Upload failed');
-      failure = error;
-      // Drain the rest of the body so that the error response is delivered,
-      // and stop the parser, which also ends the file part being written.
-      source.stream.unpipe(parser);
-      source.stream.resume();
-      parser.destroy();
-      // Reject once the temporary file is closed, so that it can be removed.
-      const settled: Promise<unknown> = written ?? Promise.resolve();
-      const rejectWithError = (): void => {
-        reject(error);
-      };
-      settled.then(rejectWithError, rejectWithError);
+      failure ??= cause instanceof Error ? cause : new Error('Upload failed');
+    };
+
+    /** Discards a part without writing it; late errors are ignored. */
+    const skip = (stream: Readable): void => {
+      stream.on('error', () => undefined);
+      stream.resume();
     };
 
     parser.on('file', (name, stream, info) => {
-      if (name !== FILE_FIELD || written !== null) {
-        stream.resume();
+      if (failure !== null || name !== FILE_FIELD || written !== null) {
         fail(invalid(name, 'is not allowed'));
+        skip(stream);
         return;
       }
+      // busboy truncates and ends the part itself after this event.
       stream.on('limit', () => {
         fail(payloadTooLarge(maxFileBytes));
       });
@@ -204,33 +231,23 @@ function parse(
     // `partsLimit` fires on reaching the limit, not exceeding it; any third
     // part already exceeds the file or field limit above.
     parser.on('fieldsLimit', tooManyParts);
+    // Stays attached for the parser's whole life, so late errors are handled.
     parser.on('error', () => {
       fail(invalid('body', 'is not valid multipart'));
+      // A failed parser is unpiped; drain the rest so the response is delivered.
+      source.stream.unpipe(parser);
+      source.stream.resume();
+      finish();
     });
-
-    parser.on('close', () => {
-      if (failure !== null) return;
-      if (written === null) {
-        fail(invalid(FILE_FIELD, 'is required'));
-        return;
-      }
-      written.then(
-        (file) => {
-          if (failure !== null) return;
-          if (file.bytes === 0) {
-            fail(invalid(FILE_FIELD, 'must not be empty'));
-            return;
-          }
-          resolve({ file, caption });
-        },
-        (error: unknown) => {
-          fail(error);
-        },
-      );
-    });
+    parser.on('close', finish);
 
     source.stream.on('aborted', () => {
       fail(invalid('body', 'the upload was interrupted'));
+      // No more data will come: stop the parser, which ends the open part.
+      setImmediate(() => {
+        parser.destroy();
+        finish();
+      });
     });
     source.stream.pipe(parser);
   });
