@@ -2,7 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: issue triage and develop review (rivon0507)
+## Latest session: npm cache for Docker builds (rivon0507)
+
+- [PROPOSED] Every `npm ci` in the five backend Dockerfiles now uses `RUN --mount=type=cache,id=npm,target=/root/.npm` and `--prefer-offline`, so packages are downloaded once and reused by every image and rebuild. LiDAR's Dockerfile gains `# syntax=docker/dockerfile:1`. The rule is in [services.md](../architecture/services.md#dockerfile-placement).
+- [DECISION REQUIRED: shidoAdr, papangoo, salandri-42, endy-rkt] Confirm the change to your Dockerfile (Auth and LiDAR, Content, NFT, gateway).
+- [NOT IMPLEMENTED] Image builds were not run because the npm registry was unreachable. Only `docker buildx build --check` ran.
+
+## Earlier session: issue triage and develop review (rivon0507)
 
 - [CONFIRMED] Closed #8, #9, #14, #22 and #23 as done, each with an evidence comment.
 - [DECISION REQUIRED: rivon0507] Work merged on `develop` covers these issues, but the backlog still marks them `Review` or the PR used `Refs`: AUTH-01 to AUTH-07 (#46–#51, #97, via #110), FE-01 (#68, via #80), CTO-07 (#28), CTO-09 (#30), and CTO-13/14/17/18/19/20 (#34, #35, #38, #39, #40, #41). Decide whether to close them.
