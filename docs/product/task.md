@@ -63,7 +63,7 @@ The backend service directories are placeholders. Each owner initializes their a
 | endy-rkt-18 | Validate the exact Node and npm pins and align CI, .nvmrc and the package engines policy under D15. | P0       | endy-rkt-01              | Review      |
 | endy-rkt-19 | Install pinned dev tooling and commit the root npm workspaces manifest and lockfile.                | P0       | endy-rkt-02, endy-rkt-18 | Review      |
 | endy-rkt-20 | Coordinate app-owner adoption of the workspace scripts and shared TypeScript base.                  | P0       | endy-rkt-19              | In progress |
-| endy-rkt-21 | Run the first hosted CI and fix failures, including the first initialized-workspace checks.         | P0       | endy-rkt-20              | Backlog     |
+| endy-rkt-21 | Run the first hosted CI and fix failures, including the first initialized-workspace checks.         | P0       | endy-rkt-20              | Review      |
 | endy-rkt-22 | Apply the manual repository settings and verify the required check on both branches.                | P0       | endy-rkt-21              | Backlog     |
 | endy-rkt-23 | Provide one disposable PostgreSQL instance in CI for the Prisma-backed integration suites.          | P1       | endy-rkt-04, endy-rkt-20 | Review      |
 | endy-rkt-24 | Decide CODEOWNERS scope and confirm available reviewers. [DECISION REQUIRED: endy-rkt] CODEOWNERS   | P2       | endy-rkt-01              | Backlog     |

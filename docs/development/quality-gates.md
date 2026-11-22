@@ -2,7 +2,7 @@
 
 This page describes quality and test expectations. The [shared code policy](code-policy.md) defines code conventions, and the [CI guide](ci.md) describes execution and GitHub settings.
 
-[IMPLEMENTED] Root scripts and the Auth, gateway, NFT and shared package suites run locally. [CREATED, NOT EXECUTED] The hosted workflow has not run with them yet. The tooling rollout approval point is [D17](workflow.md).
+[IMPLEMENTED] Root scripts and the Auth, gateway, NFT and shared package suites run locally. [IMPLEMENTED] The hosted workflow passed on 2026-11-22 with every initialized workspace ([run 45000699433](https://github.com/songomby-D1/devfest2026/actions/runs/45000699433)). The tooling rollout approval point is [D17](workflow.md).
 
 | Stack item                                 | Recommendation and rationale                                                                                                                                  |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
