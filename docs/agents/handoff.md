@@ -2,6 +2,11 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Session: deferred scope for CONTENT-06, CONTENT-08 and NFT-06 (rivon0507, Agent 2)
+
+- [PROPOSED] [Content deferred scope](../../apps/backend/content/docs/deferred-scope.md) (CONTENT-06 [#58](https://github.com/songomby-D1/devfest2026/issues/58), CONTENT-08 [#87](https://github.com/songomby-D1/devfest2026/issues/87)) and [NFT deferred scope](../../apps/backend/nft/docs/deferred-scope.md) (NFT-06 [#64](https://github.com/songomby-D1/devfest2026/issues/64)) record what is deferred, why, what the MVP does instead, the guardrails the code keeps, the dependencies, when to revisit and the open questions. Documentation only, nothing implemented.
+- [DECISION REQUIRED: papangoo, salandri-42] Confirm the entries and the [PROPOSED] guardrails. Agent 1 updates the three rows in the backlog.
+
 ## Latest session: CONTENT-05c advisory-signal contract (rivon0507, Agent 2)
 
 - [PROPOSED] CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)): the [AI-assisted analysis spike](../architecture/ai-assisted-analysis-spike.md#advisory-signal-contract-content-05c) proposes an append-only `advisory_signals` table keyed by ContentId and target (`item` or `description`), its fields, invariants (never changes a claim status, never a gate, stale on material change), privacy, failure modes, the reviewer panel and a sketched API. The 05a and 05b sections are placeholders.
