@@ -1,4 +1,6 @@
 import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import type { INestApplication } from '@nestjs/common';
@@ -21,6 +23,12 @@ import { InMemoryObjectStorage } from './in-memory-object-storage.js';
 
 const POSTGRES_IMAGE = 'postgres:18.6';
 const SERVICE_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+// Resolved through Node because the root workspace may hoist prisma out of the service.
+const PRISMA_CLI = join(
+  dirname(createRequire(import.meta.url).resolve('prisma/package.json')),
+  'build',
+  'index.js',
+);
 
 export const TEST_ADMIN_TOKEN = 'integration-admin-token-0123456789abcdef';
 export const TEST_ASSET_BASE_PATH = '/api/lidar/files';
@@ -35,13 +43,17 @@ export class FakeContentDirectory implements ContentDirectory {
 
 export async function startPostgres(): Promise<StartedPostgreSqlContainer> {
   const container = await new PostgreSqlContainer(POSTGRES_IMAGE).start();
-  await promisify(execFile)('node_modules/.bin/prisma', ['migrate', 'deploy'], {
-    cwd: SERVICE_ROOT,
-    env: {
-      ...process.env,
-      MIGRATION_DATABASE_URL: container.getConnectionUri(),
+  await promisify(execFile)(
+    process.execPath,
+    [PRISMA_CLI, 'migrate', 'deploy'],
+    {
+      cwd: SERVICE_ROOT,
+      env: {
+        ...process.env,
+        MIGRATION_DATABASE_URL: container.getConnectionUri(),
+      },
     },
-  });
+  );
   return container;
 }
 

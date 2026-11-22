@@ -13,10 +13,10 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
     "typecheck": "prisma generate && tsc --noEmit -p tsconfig.json",
-    "test": "prisma generate && node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --selectProjects unit",
-    "test:http": "node --experimental-vm-modules node_modules/jest/bin/jest.js --selectProjects http",
-    "test:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --selectProjects integration"
+    "test": "prisma generate && NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects unit",
+    "test:http": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects http",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects integration"
   },
   "dependencies": {
     "@nestjs/common": "11.2.11",

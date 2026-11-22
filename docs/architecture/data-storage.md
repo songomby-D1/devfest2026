@@ -2,7 +2,7 @@
 
 This page compares PostgreSQL ownership and S3-compatible options, and defines proposed media handling and backup expectations.
 
-[CONFIRMED] Use one shared PostgreSQL instance per environment, Prisma as the ORM for services that persist data, and S3-compatible object storage. [NOT IMPLEMENTED] No databases, Prisma setup, buckets, migration flow or storage policies exist yet.
+[CONFIRMED] Use one shared PostgreSQL instance per environment, Prisma as the ORM for services that persist data, and S3-compatible object storage. [IMPLEMENTED] INFRA-01 provides PostgreSQL 18.6 and SeaweedFS 4.54 in root Compose. [`00-service-databases.sh`](../../infrastructure/docker/postgres/init/00-service-databases.sh) creates one database per service with a migration role that owns it and a runtime role limited to data access. Auth uses Prisma 7 and applies its migrations at startup with the migration role.
 
 ## PostgreSQL isolation
 
@@ -14,16 +14,16 @@ This page compares PostgreSQL ownership and S3-compatible options, and defines p
 
 ## S3-compatible option
 
-[CONFIRMED] Use SeaweedFS for local S3-compatible object storage. endy-rkt owns its setup in shared Compose. [NOT IMPLEMENTED] Validate put/get, private access, ranged reads, restart persistence and deletion with representative video and 3D assets.
+[CONFIRMED] Use SeaweedFS for local S3-compatible object storage. endy-rkt owns its setup in shared Compose. [CREATED, NOT EXECUTED] [`start.sh`](../../infrastructure/docker/seaweedfs/start.sh) renders S3 identities from the root `.env`: `content` can only use the media bucket and `lidar` only the models bucket, and there is no anonymous identity. A one-shot job creates both buckets. [NOT IMPLEMENTED] endy-rkt-03 still has to validate put/get, private access, ranged reads, restart persistence and deletion with representative video and 3D assets, which needs Docker.
 
 [CONDITIONAL] **D05 Media delivery.** Start with gateway-mediated access once representative video and 3D assets pass the SeaweedFS access, range and persistence checks in endy-rkt-03. [D05 decision](../decisions/project-decisions.md#d05-media-delivery)
 
-| Option | MVP assessment |
-|---|---|
-| SeaweedFS | Correct product spelling, S3 support, Apache licensing and single-node quick start verified from upstream with high confidence. Project-specific compatibility still needs the spike. [SeaweedFS upstream](https://github.com/seaweedfs/seaweedfs) |
-| MinIO Community Edition | Upstream is archived and describes source-only distribution under AGPLv3. That adds maintenance and distribution considerations for a new demo dependency. [MinIO upstream](https://github.com/minio/minio) |
-| Garage | Alternative for local self-hosting. Upstream documents single-node setup and operation-specific S3 compatibility. [Garage quick start](https://github.com/deuxfleurs-org/garage/blob/main-v2/doc/book/quick-start/_index.md) · [Garage S3 compatibility](https://github.com/deuxfleurs-org/garage/blob/main-v2/doc/book/reference-manual/s3-compatibility.md) |
-| Managed Amazon S3 | Future migration target or explicit alternative if an account, budget and reliable network are available. Requires credentials, network access and environment-specific endpoint settings. [Amazon S3 documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html) |
+| Option                  | MVP assessment                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SeaweedFS               | Correct product spelling, S3 support, Apache licensing and single-node quick start verified from upstream with high confidence. Project-specific compatibility still needs the spike. [SeaweedFS upstream](https://github.com/seaweedfs/seaweedfs)                                                                                                            |
+| MinIO Community Edition | Upstream is archived and describes source-only distribution under AGPLv3. That adds maintenance and distribution considerations for a new demo dependency. [MinIO upstream](https://github.com/minio/minio)                                                                                                                                                   |
+| Garage                  | Alternative for local self-hosting. Upstream documents single-node setup and operation-specific S3 compatibility. [Garage quick start](https://github.com/deuxfleurs-org/garage/blob/main-v2/doc/book/quick-start/_index.md) · [Garage S3 compatibility](https://github.com/deuxfleurs-org/garage/blob/main-v2/doc/book/reference-manual/s3-compatibility.md) |
+| Managed Amazon S3       | Future migration target or explicit alternative if an account, budget and reliable network are available. Requires credentials, network access and environment-specific endpoint settings. [Amazon S3 documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html)                                                                      |
 
 ## Media flow and security
 

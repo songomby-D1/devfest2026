@@ -1,4 +1,5 @@
-import { dirname } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import js from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -15,7 +16,13 @@ const backendServices = ['gateway', 'auth', 'content', 'nft', 'lidar'].map(
   (service) => `apps/backend/${service}`,
 );
 const applications = [frontend, ...backendServices];
-const appFiles = (directory) => `${directory}/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}`;
+// Like CI workspace detection, an app directory without package.json is a placeholder: its
+// files have no TypeScript project yet, so typed linting starts when the app is initialized.
+const placeholders = applications.filter(
+  (directory) => !existsSync(join(root, directory, 'package.json')),
+);
+const appFiles = (directory) =>
+  `${directory}/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}`;
 const unusedNames = {
   args: 'all',
   argsIgnorePattern: '^_',
@@ -24,7 +31,8 @@ const unusedNames = {
   destructuredArrayIgnorePattern: '^_',
   varsIgnorePattern: '^_',
 };
-const boundaryMessage = 'Use an HTTP contract or approved shared types instead of importing app source.';
+const boundaryMessage =
+  'Use an HTTP contract or approved shared types instead of importing app source.';
 
 const applicationBoundaries = applications.map((directory) => {
   const peers = applications.filter((application) => application !== directory);
@@ -42,7 +50,8 @@ const applicationBoundaries = applications.map((directory) => {
               message: boundaryMessage,
             },
             {
-              regex: '(?:^|/)packages/shared(?:/|$)',
+              regex:
+                '(?:^|/)packages/shared(?:/|$)|^@devfest2026/shared(?:/|$)',
               allowTypeImports: true,
               message: 'Shared contracts are type-only.',
             },
@@ -68,6 +77,12 @@ export default defineConfig([
     '**/node_modules/',
     '**/generated/',
     '**/*.generated.*',
+    ...placeholders.map((directory) => `${directory}/`),
+    // Standalone tool with its own lockfile and TypeScript 7 toolchain, outside the app scope of
+    // the code policy. Its owner runs its typecheck and tests in scripts/3d.
+    'scripts/3d/',
+    // Draco decoder copied from three by apps/frontend/scripts/copy-draco.mjs before dev and build.
+    'apps/frontend/public/draco/',
   ]),
   {
     name: 'quality/base',
@@ -111,7 +126,11 @@ export default defineConfig([
     plugins: { import: importPlugin },
     settings: {
       'import/resolver': {
-        typescript: { project: applications.map((directory) => `${root}/${directory}/tsconfig.json`) },
+        typescript: {
+          project: applications.map(
+            (directory) => `${root}/${directory}/tsconfig.json`,
+          ),
+        },
       },
     },
   },
@@ -129,6 +148,11 @@ export default defineConfig([
     name: 'frontend/jsx-accessibility',
     files: [`${frontend}/**/*.{jsx,tsx}`],
     extends: [jsxA11y.flatConfigs.recommended],
+  },
+  {
+    name: 'scripts/node',
+    files: ['scripts/**/*.{js,mjs,cjs}', '*.{js,mjs,cjs}'],
+    languageOptions: { globals: globals.node },
   },
   ...backendServices.map((directory) => ({
     name: `nestjs/${directory}`,

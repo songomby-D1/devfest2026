@@ -8,12 +8,12 @@
     "node": ">=22 <23"
   },
   "scripts": {
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "prisma:generate": "prisma generate",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "typecheck": "prisma generate && tsc --noEmit",
+    "test": "prisma generate && vitest run",
     "test:unit": "vitest run src",
     "test:integration": "vitest run test"
   },

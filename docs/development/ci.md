@@ -4,14 +4,15 @@ This page is the reference for CI, Dependabot and manual GitHub settings. CI val
 
 ## Jobs
 
-| Job | What it does | Gate | Status |
-|---|---|---|---|
-| `branch-guard` | Rejects PRs into `main` unless the head is this repository's `develop` branch. | Blocking | [CREATED, NOT EXECUTED] |
-| `secrets` | Downloads the checksum-pinned Gitleaks binary. Scans PR commits from base SHA to head SHA. Pushes and dispatches scan all fetched refs. Findings are fully redacted. | Blocking | [CREATED, NOT EXECUTED] |
-| `detect` | Finds the root manifest and discovers initialized workspaces for the matrix. | Blocking | [CREATED, NOT EXECUTED] |
-| `lint` | Installs from the root lockfile and runs root Prettier and ESLint with zero warnings. Selects `.prettierrc.json` explicitly. | Blocking when the root manifest exists | [CREATED, NOT EXECUTED] |
-| `service` | Runs `typecheck`, `test` and `build` for every detected workspace. Reports missing scripts and fails incomplete workspaces. | Scripts block. Runtime audit uses a high failure threshold and is advisory. | [CREATED, NOT EXECUTED] |
-| `ci-ok` | Fails if any dependency fails or is cancelled. Accepts intentional skips. | Only required status check in GitHub | [CREATED, NOT EXECUTED] |
+| Job            | What it does                                                                                                                                                         | Gate                                                                        | Status                  |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------- |
+| `branch-guard` | Rejects PRs into `main` unless the head is this repository's `develop` branch.                                                                                       | Blocking                                                                    | [CREATED, NOT EXECUTED] |
+| `secrets`      | Downloads the checksum-pinned Gitleaks binary. Scans PR commits from base SHA to head SHA. Pushes and dispatches scan all fetched refs. Findings are fully redacted. | Blocking                                                                    | [CREATED, NOT EXECUTED] |
+| `detect`       | Finds the root manifest and discovers initialized workspaces for the matrix.                                                                                         | Blocking                                                                    | [CREATED, NOT EXECUTED] |
+| `lint`         | Installs from the root lockfile and runs `npm run format:check` and `npm run lint` with zero warnings. Prettier uses `.prettierrc.json` explicitly.                  | Blocking when the root manifest exists                                      | [CREATED, NOT EXECUTED] |
+| `service`      | Runs `typecheck`, `test` and `build` for every detected workspace with a disposable PostgreSQL service. Reports missing scripts and fails incomplete workspaces.     | Scripts block. Runtime audit uses a high failure threshold and is advisory. | [CREATED, NOT EXECUTED] |
+| `compose`      | Generates throwaway secrets with `npm run setup:env` and validates `docker compose config`.                                                                          | Blocking when the root manifest exists                                      | [CREATED, NOT EXECUTED] |
+| `ci-ok`        | Fails if any dependency fails or is cancelled. Accepts intentional skips.                                                                                            | Only required status check in GitHub                                        | [CREATED, NOT EXECUTED] |
 
 [CREATED, NOT EXECUTED] Releases checked upstream are `actions/checkout@v7` (v7.0.1), `actions/setup-node@v7` (v7.1.0), and Gitleaks v8.30.1. The Gitleaks docs confirm `--log-opts` for commit ranges and `--redact=100` for complete secret redaction. [UNVERIFIED] Hosted checkout availability for the event SHAs and the actual scan results await the first run. Update the archive version and checksum together. [Checkout releases](https://github.com/actions/checkout/releases) · [Setup Node releases](https://github.com/actions/setup-node/releases) · [Gitleaks archive and digest](https://github.com/gitleaks/gitleaks/releases/expanded_assets/v8.30.1) · [Gitleaks scan options](https://github.com/gitleaks/gitleaks#usage)
 
@@ -70,7 +71,7 @@ Keep secrets and real `.env` files out of Git and keep real credentials out of d
 
 ## Deferred checks and open rollout choices
 
-- [NOT IMPLEMENTED] In endy-rkt-23, provision one disposable PostgreSQL instance when the first database-backed integration test lands. Prisma-backed suites share that instance with isolated test data and apply only their own service's migrations. [Test plan](quality-gates.md#testing-and-service-definition-of-done) · [Data ownership](../architecture/data-storage.md#postgresql-isolation)
+- [CREATED, NOT EXECUTED] endy-rkt-23: the `service` job starts one disposable PostgreSQL 18.6 service. Auth's suite creates, migrates and drops its own database, and `REQUIRE_DB_TESTS` makes it fail instead of skipping. The same suite passed locally against PostgreSQL 18.1. Earlier wording: provision one disposable PostgreSQL instance when the first database-backed integration test lands. Prisma-backed suites share that instance with isolated test data and apply only their own service's migrations. [Test plan](quality-gates.md#testing-and-service-definition-of-done) · [Data ownership](../architecture/data-storage.md#postgresql-isolation)
 - [NOT IMPLEMENTED] Add changed-service Docker builds on PRs into `main` after the service Dockerfiles exist. Changes to shared build inputs must trigger rebuild coverage for every dependent image. E2E smoke tests and CD are future work. [Build context policy](../architecture/services.md#dockerfile-placement)
 - [CONFIRMED] Keep full-history Gitleaks scans on pushes and manual dispatches initially, and retain base-to-head scans on PRs. Revisit incremental push scans after a trusted baseline exists.
 - [CONFIRMED] Keep the runtime audit advisory with `npm audit --audit-level=high --omit=dev -w <workspace>` and triage findings. Revisit blocking severity after findings and triage capacity are known.
