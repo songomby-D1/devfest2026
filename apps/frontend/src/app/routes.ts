@@ -12,6 +12,8 @@ export type Route =
   | { kind: 'review-queue' }
   | { kind: 'review'; id: string }
   | { kind: 'visit' }
+  /** A narrated exhibition travelled in depth: `/expositions/:id`. */
+  | { kind: 'exhibition'; id: string }
   /** `room` is the room template; its artworks load from the API in GalleryRoute. */
   | { kind: 'gallery'; room: Room; artworkNumber: string | null }
   | { kind: 'redirect'; to: string }
@@ -65,6 +67,13 @@ export function matchRoute(pathname: string): Route {
     const id = decode(second);
     if (id === null || id === '') return { kind: 'not-found' };
     return { kind: ITEM_PAGES[first as keyof typeof ITEM_PAGES], id };
+  }
+  if (first === 'expositions' && segments.length <= 2) {
+    if (second === undefined) return { kind: 'redirect', to: '/expositions/1' };
+    const id = decode(second);
+    return id === null || id === ''
+      ? { kind: 'not-found' }
+      : { kind: 'exhibition', id };
   }
   if (first !== 'musee' || segments.length > 3) {
     return { kind: 'not-found' };

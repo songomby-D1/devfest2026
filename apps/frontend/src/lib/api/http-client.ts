@@ -1,6 +1,7 @@
 import { ApiError, NETWORK_ERROR_CODE, type ApiClient } from './client';
 import type {
   ApiErrorBody,
+  Generation,
   ItemListQuery,
   MintRecord,
   UploadOptions,
@@ -175,5 +176,16 @@ export function createHttpClient(
     getProvenance: (id) => request(`${item(id)}/provenance`),
     getModel3d: async (id) =>
       toModel3d(id, await request<unknown>(`${item(id)}/model3d`)),
+    createGeneration: (body) =>
+      request<Generation>('/generations', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      }),
+    getGeneration: (id) =>
+      request<Generation>(`/generations/${encodeURIComponent(id)}`),
+    listGenerations: async () =>
+      (await request<{ generations: Generation[] }>('/generations'))
+        .generations,
   };
 }

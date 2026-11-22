@@ -1,7 +1,9 @@
 import type {
   ApiErrorBody,
   ContentId,
+  CreateGenerationRequest,
   CreateItemRequest,
+  Generation,
   DecisionRequest,
   ItemDetail,
   ItemListQuery,
@@ -43,6 +45,11 @@ export interface ApiClient {
   mintItem(id: ContentId, idempotencyKey: string): Promise<MintResult>;
   getProvenance(id: ContentId): Promise<Provenance>;
   getModel3d(id: ContentId): Promise<Model3d>;
+  /** Starts an image-to-3D generation for the signed-in visitor. */
+  createGeneration(request: CreateGenerationRequest): Promise<Generation>;
+  /** Polled while the generation runs; the server throttles Meshy itself. */
+  getGeneration(id: string): Promise<Generation>;
+  listGenerations(): Promise<Generation[]>;
 }
 
 export class ApiError extends Error {

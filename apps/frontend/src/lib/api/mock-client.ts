@@ -11,6 +11,7 @@ import type {
 } from './contract';
 import { fixtureItems, fixtureUsers } from './fixtures';
 import { checkMediaFile, MEDIA_UPLOAD_LIMITS } from './media-limits';
+import { createMockGenerations } from './mock-generations';
 import { createMockProvenance } from './mock-provenance';
 
 export interface MockClientOptions {
@@ -514,6 +515,12 @@ export function createMockClient(options: MockClientOptions = {}): ApiClient {
         }
         return view(entry);
       }),
+    ...createMockGenerations({
+      requireUserId: () => requireUser().me.userId,
+      respond,
+      nextRequestId,
+      createId,
+    }),
     ...createMockProvenance({
       // Like the NFT service: unknown, draft and unpublished items are the same 404.
       assertPublished: (id) => {

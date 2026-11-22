@@ -8,6 +8,11 @@ import {
   AuthController,
   type AuthRateLimiters,
 } from './http/auth.controller.js';
+import {
+  GENERATION_RATE_LIMITER,
+  GENERATIONS_PER_HOUR,
+  GenerationsController,
+} from './http/generations.controller.js';
 import { HealthController } from './http/health.controller.js';
 import { ItemsController } from './http/items.controller.js';
 import { ProxyService } from './proxy/proxy.service.js';
@@ -18,6 +23,7 @@ import { AuthClient } from './session/auth-client.js';
 import { SessionResolver } from './session/session-resolver.js';
 
 const MINUTE_MS = 60_000;
+const HOUR_MS = 60 * MINUTE_MS;
 
 @Module({})
 export class AppModule {
@@ -39,10 +45,15 @@ export class AppModule {
         AuthController,
         AdminController,
         ItemsController,
+        GenerationsController,
       ],
       providers: [
         { provide: APP_CONFIG, useValue: config },
         { provide: AUTH_RATE_LIMITERS, useValue: limiters },
+        {
+          provide: GENERATION_RATE_LIMITER,
+          useValue: new FixedWindowRateLimiter(GENERATIONS_PER_HOUR, HOUR_MS),
+        },
         { provide: APP_FILTER, useClass: GatewayExceptionFilter },
         UpstreamClient,
         AuthClient,

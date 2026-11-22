@@ -28,6 +28,7 @@ const config: AppConfig = {
     forcePathStyle: true,
     credentials: new StorageCredentials('unused', 'unused'),
   },
+  generation: null,
 };
 
 class InMemoryAssetRepository implements AssetRepository {

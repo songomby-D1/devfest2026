@@ -41,6 +41,16 @@ const appConfigSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((value) => value === 'true'),
+  // Image-to-3D generation. Disabled unless both the Meshy key and the gateway token are set.
+  MESHY_API_KEY: z.string().optional(),
+  MESHY_BASE_URL: z
+    .url({ protocol: /^https?$/ })
+    .default('https://api.meshy.ai'),
+  LIDAR_INBOUND_TOKEN_GATEWAY: z
+    .string()
+    .min(MIN_ADMIN_TOKEN_LENGTH)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 const REDACTED = '[redacted]';
@@ -75,6 +85,30 @@ export interface StorageConfig {
   readonly credentials: StorageCredentials;
 }
 
+/** A secret that renders as redacted when logged or serialized. */
+export class Secret {
+  constructor(readonly value: string) {}
+
+  toJSON(): string {
+    return REDACTED;
+  }
+
+  toString(): string {
+    return REDACTED;
+  }
+
+  [inspect.custom](): string {
+    return `Secret ${REDACTED}`;
+  }
+}
+
+export interface GenerationConfig {
+  readonly meshyBaseUrl: string;
+  readonly meshyApiKey: Secret;
+  /** Token the gateway sends in `x-service-token` on generation routes. */
+  readonly gatewayToken: Secret;
+}
+
 export interface AppConfig {
   readonly port: number;
   readonly databaseUrl: string;
@@ -82,6 +116,8 @@ export interface AppConfig {
   readonly publicAssetBasePath: string;
   readonly adminToken: string;
   readonly storage: StorageConfig;
+  /** Null when generation is not configured: its routes then answer 503. */
+  readonly generation: GenerationConfig | null;
 }
 
 export class InvalidConfigError extends Error {
@@ -120,5 +156,15 @@ export function loadAppConfig(env: NodeJS.ProcessEnv): AppConfig {
         parsed.STORAGE_SECRET_ACCESS_KEY,
       ),
     },
+    generation:
+      parsed.MESHY_API_KEY !== undefined &&
+      parsed.MESHY_API_KEY !== '' &&
+      parsed.LIDAR_INBOUND_TOKEN_GATEWAY !== undefined
+        ? {
+            meshyBaseUrl: parsed.MESHY_BASE_URL,
+            meshyApiKey: new Secret(parsed.MESHY_API_KEY),
+            gatewayToken: new Secret(parsed.LIDAR_INBOUND_TOKEN_GATEWAY),
+          }
+        : null,
   };
 }

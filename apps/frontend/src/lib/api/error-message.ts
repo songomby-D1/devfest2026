@@ -30,6 +30,19 @@ const MESSAGES: Record<string, string> = {
     'Publication impossible : seul un dépôt en relecture ou accepté peut être publié.',
   SUBMISSION_NOT_IN_REVIEW: 'Ce dépôt n’est plus en relecture.',
   SUBMISSION_REJECTED: 'Ce dépôt a été refusé et ne peut plus être modifié.',
+  IMAGE_INVALID: 'Image refusée : choisissez une photo JPEG, PNG ou WebP.',
+  GENERATION_LIMIT_REACHED:
+    'Deux générations sont déjà en cours. Attendez qu’elles se terminent.',
+  GENERATION_REJECTED:
+    'Le service de génération 3D a refusé cette image. Essayez une autre photo, sur fond simple.',
+  GENERATION_CREDITS_EXHAUSTED:
+    'Le quota de génération 3D est épuisé pour le moment.',
+  GENERATION_BUSY:
+    'Le service de génération 3D est saturé. Réessayez dans un instant.',
+  GENERATION_UNAVAILABLE:
+    'Le service de génération 3D est momentanément indisponible.',
+  GENERATION_DISABLED: 'La génération 3D n’est pas activée sur ce serveur.',
+  LIDAR_UNAVAILABLE: 'Le service 3D est momentanément indisponible.',
 };
 
 export interface DisplayError {

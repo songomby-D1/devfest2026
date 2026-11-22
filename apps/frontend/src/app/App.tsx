@@ -21,6 +21,13 @@ const GalleryExperience = lazy(() =>
   })),
 );
 
+// The exhibition carries its own WebGL corridor: loaded on demand too.
+const ExhibitionPage = lazy(() =>
+  import('../features/exhibition').then((module) => ({
+    default: module.ExhibitionPage,
+  })),
+);
+
 const MotionLab = lazy(() =>
   import('./MotionLab').then((module) => ({ default: module.MotionLab })),
 );
@@ -64,6 +71,12 @@ function Screen({ pathname }: { pathname: string }) {
       return (
         <Suspense fallback={null}>
           <GalleryExperience />
+        </Suspense>
+      );
+    case 'exhibition':
+      return (
+        <Suspense fallback={null}>
+          <ExhibitionPage key={route.id} id={route.id} />
         </Suspense>
       );
     case 'gallery':

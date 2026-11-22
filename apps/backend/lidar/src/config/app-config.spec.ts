@@ -44,7 +44,26 @@ describe('loadAppConfig', () => {
           secretAccessKey: STORAGE_SECRET,
         },
       },
+      generation: null,
     });
+  });
+
+  it('enables generation only with the Meshy key and the gateway token, both redacted', () => {
+    const meshyKey = 'msy_example-key-0123456789';
+    const gatewayToken = 'g'.repeat(32);
+    expect(
+      loadAppConfig({ ...validEnv, MESHY_API_KEY: meshyKey }).generation,
+    ).toBeNull();
+    const config = loadAppConfig({
+      ...validEnv,
+      MESHY_API_KEY: meshyKey,
+      LIDAR_INBOUND_TOKEN_GATEWAY: gatewayToken,
+    });
+    expect(config.generation?.meshyBaseUrl).toBe('https://api.meshy.ai');
+    expect(config.generation?.meshyApiKey.value).toBe(meshyKey);
+    expect(config.generation?.gatewayToken.value).toBe(gatewayToken);
+    expect(JSON.stringify(config)).not.toContain(meshyKey);
+    expect(inspect(config, { depth: 10 })).not.toContain(gatewayToken);
   });
 
   it('maps the optional storage settings', () => {
@@ -105,6 +124,8 @@ describe('loadAppConfig', () => {
     ['STORAGE_PREFIX', 'lidar/../'],
     ['STORAGE_FORCE_PATH_STYLE', 'yes'],
     ['STORAGE_SECRET_ACCESS_KEY', ''],
+    ['LIDAR_INBOUND_TOKEN_GATEWAY', 'short'],
+    ['MESHY_BASE_URL', 'ftp://api.meshy.ai'],
   ])('rejects an invalid %s', (name, value) => {
     expect(
       captureConfigError({ ...validEnv, [name]: value }).invalidVariables,
