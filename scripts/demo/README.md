@@ -13,8 +13,8 @@ node scripts/demo/seed.mjs             # submit, review (item and description se
 node scripts/demo/nft-walkthrough.mjs  # NFT + blockchain acceptance checks; add --all to mint every work
 ```
 
-- `docker-compose.demo.yml` adds the local chain (Ganache, chain id 31337) and applies the Content and NFT
-  compose fragments that the root file does not include yet.
+- `docker-compose.demo.yml` adds the local chain (Ganache, chain id 31337) and runs the NFT service from its
+  runtime image; the Content storage and NFT database settings come from the root Compose file.
 - IPFS uses the NFT service's `fake` driver: CIDs are computed but nothing is served online.
 - Works, sources and licenses: [items.json](items.json). Images stay out of Git until cleared under D18.
 - After `deploy-contract.mjs` on a running stack, restart `nft-service` so it reads `CONTRACT_ADDRESS`.

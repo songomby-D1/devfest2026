@@ -1,5 +1,6 @@
-# Compose fragment for NFT-02 (#60), for Agent 1 to merge into the root
-# docker-compose.yml `nft-service` entry. It adds only the NFT -> Content
+# Compose fragment for NFT-02 (#60). Merged into the root docker-compose.yml
+# `nft-service` entry by CTO-10 (#31) and kept as the NFT owner's record.
+# It adds the NFT -> Content
 # publication lookup settings; the other variables still come from
 # apps/backend/nft/.env.
 #
