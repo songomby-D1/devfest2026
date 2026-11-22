@@ -9,7 +9,12 @@ set -eu
 : "${SEAWEEDFS_CONTENT_ACCESS_KEY:?}" "${SEAWEEDFS_CONTENT_SECRET_KEY:?}"
 : "${SEAWEEDFS_LIDAR_ACCESS_KEY:?}" "${SEAWEEDFS_LIDAR_SECRET_KEY:?}"
 
-config=/tmp/lova-s3.json
+# A fresh file per run: `docker compose restart` re-runs this script inside the existing
+# container, where the image entrypoint may switch to the unprivileged user and a file
+# left by the previous run at a fixed path would be unwritable in the sticky /tmp
+# (exit 1, crash loop). mktemp always creates a file owned by the current user;
+# BusyBox requires the template to end with XXXXXX, so no file extension is used.
+config="$(mktemp /tmp/lova-s3.XXXXXX)"
 umask 077
 cat > "$config" <<JSON
 {
