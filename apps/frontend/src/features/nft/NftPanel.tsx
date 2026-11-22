@@ -37,8 +37,10 @@ export function NftPanel({
   client = api,
 }: NftPanelProps) {
   const headingId = useId();
-  const { state, feedback, stalled, pollTrouble, mint, reload } =
-    useProvenance(contentId, client);
+  const { state, feedback, stalled, pollTrouble, mint, reload } = useProvenance(
+    contentId,
+    client,
+  );
 
   if (state.kind === 'not-found') {
     // Unknown, draft and unpublished items answer the same 404.
@@ -60,7 +62,9 @@ export function NftPanel({
   const submitting = feedback.kind === 'submitting';
   const pending = status === 'pending';
   const canRequest =
-    isOwner && state.kind === 'ready' && (status === 'none' || status === 'failed');
+    isOwner &&
+    state.kind === 'ready' &&
+    (status === 'none' || status === 'failed');
 
   let statusLine = '';
   if (state.kind === 'loading') statusLine = 'Chargement du certificat…';
@@ -122,7 +126,9 @@ export function NftPanel({
         </div>
       )}
 
-      {status === 'confirmed' && current && <ProvenanceDetails mint={current} />}
+      {status === 'confirmed' && current && (
+        <ProvenanceDetails mint={current} />
+      )}
 
       {isOwner && (canRequest || pending || submitting) && (
         <div className={styles.action}>

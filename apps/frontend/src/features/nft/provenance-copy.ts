@@ -30,7 +30,8 @@ const FAILURE_TEXT: Record<string, string> = {
   CONTRACT_REVERTED: 'Le contrat de certificat a refusé cette inscription.',
   INSUFFICIENT_FUNDS:
     'La galerie ne peut pas payer les frais du réseau pour le moment. Réessayez plus tard.',
-  CHAIN_UNAVAILABLE: 'Le réseau blockchain est injoignable. Réessayez plus tard.',
+  CHAIN_UNAVAILABLE:
+    'Le réseau blockchain est injoignable. Réessayez plus tard.',
   METADATA_UNAVAILABLE:
     'Les informations du certificat n’ont pas pu être publiées. Réessayez plus tard.',
   INVALID_METADATA: 'Cette œuvre ne peut pas être inscrite dans un certificat.',

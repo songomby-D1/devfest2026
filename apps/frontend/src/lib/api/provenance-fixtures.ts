@@ -85,7 +85,12 @@ export function confirmedMint(
     owner: MOCK_GALLERY_WALLET,
   };
   const checks: Record<MintVerification['state'], MintVerification> = {
-    verified: { state: 'verified', fixity: true, onChain, checkedAt: CHECKED_AT },
+    verified: {
+      state: 'verified',
+      fixity: true,
+      onChain,
+      checkedAt: CHECKED_AT,
+    },
     mismatch: {
       state: 'mismatch',
       fixity: false,

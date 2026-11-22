@@ -59,7 +59,13 @@ afterEach(() => {
 describe('NftPanel provenance states', () => {
   it('shows that no certificate exists, without action for a visitor', async () => {
     const { client } = spyClient();
-    render(<NftPanel contentId={fixtureIds.textile} isOwner={false} client={client} />);
+    render(
+      <NftPanel
+        contentId={fixtureIds.textile}
+        isOwner={false}
+        client={client}
+      />,
+    );
     await flush();
 
     expect(status()).toHaveTextContent('Aucun certificat');
@@ -70,23 +76,37 @@ describe('NftPanel provenance states', () => {
 
   it('shows a confirmed certificate with explorer, IPFS and hash references', async () => {
     const { client } = spyClient();
-    render(<NftPanel contentId={fixtureIds.sculpture} isOwner={false} client={client} />);
+    render(
+      <NftPanel
+        contentId={fixtureIds.sculpture}
+        isOwner={false}
+        client={client}
+      />,
+    );
     await flush();
 
     expect(status()).toHaveTextContent('Certificat confirmé');
     expect(screen.getByText('Vérifié sur la blockchain')).toBeInTheDocument();
-    expect(screen.getByText(/empreinte SHA-256 de l’image originale correspond/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/empreinte SHA-256 de l’image originale correspond/),
+    ).toBeInTheDocument();
 
     const tx = `0x${'01'.repeat(32)}`;
-    const txLink = screen.getByRole('link', { name: new RegExp(`Transaction ${tx}`) });
+    const txLink = screen.getByRole('link', {
+      name: new RegExp(`Transaction ${tx}`),
+    });
     expect(txLink).toHaveAttribute('href', `${MOCK_EXPLORER}/tx/${tx}`);
     expect(txLink).toHaveAttribute('rel', 'noopener noreferrer');
     expect(txLink).toHaveTextContent('0x0101…0101');
-    expect(screen.getByRole('link', { name: /Jeton n° 1/ })).toHaveTextContent('n° 1');
-    expect(screen.getByRole('link', { name: /Métadonnées du certificat/ })).toHaveTextContent(
-      'ipfs://bafkreimockmetadata0001',
+    expect(screen.getByRole('link', { name: /Jeton n° 1/ })).toHaveTextContent(
+      'n° 1',
     );
-    expect(screen.getByText('Empreinte SHA-256 de l’image originale')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /Métadonnées du certificat/ }),
+    ).toHaveTextContent('ipfs://bafkreimockmetadata0001');
+    expect(
+      screen.getByText('Empreinte SHA-256 de l’image originale'),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Galerie LOVA \(garde\)/)).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
@@ -94,17 +114,27 @@ describe('NftPanel provenance states', () => {
   it('explains a mismatch between the chain and the gallery record', async () => {
     const { client } = spyClient();
     render(
-      <NftPanel contentId={provenanceFixtureIds.mismatch} isOwner={false} client={client} />,
+      <NftPanel
+        contentId={provenanceFixtureIds.mismatch}
+        isOwner={false}
+        client={client}
+      />,
     );
     await flush();
     expect(screen.getByText('Incohérence détectée')).toBeInTheDocument();
-    expect(screen.getByText(/ne correspond pas à celle de l’image/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ne correspond pas à celle de l’image/),
+    ).toBeInTheDocument();
   });
 
   it('shows the stored record as unverifiable when the chain cannot be read', async () => {
     const { client } = spyClient();
     render(
-      <NftPanel contentId={provenanceFixtureIds.unverifiable} isOwner={false} client={client} />,
+      <NftPanel
+        contentId={provenanceFixtureIds.unverifiable}
+        isOwner={false}
+        client={client}
+      />,
     );
     await flush();
     expect(screen.getByText('Vérification indisponible')).toBeInTheDocument();
@@ -114,7 +144,11 @@ describe('NftPanel provenance states', () => {
   it('shows a failed mint with its public code and a retry for the owner only', async () => {
     const { client } = spyClient();
     const view = render(
-      <NftPanel contentId={fixtureIds.painting} isOwner={false} client={client} />,
+      <NftPanel
+        contentId={fixtureIds.painting}
+        isOwner={false}
+        client={client}
+      />,
     );
     await flush();
     expect(status()).toHaveTextContent('La certification a échoué');
@@ -123,9 +157,13 @@ describe('NftPanel provenance states', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
 
     view.unmount();
-    render(<NftPanel contentId={fixtureIds.painting} isOwner client={client} />);
+    render(
+      <NftPanel contentId={fixtureIds.painting} isOwner client={client} />,
+    );
     await flush();
-    expect(screen.getByRole('button', { name: 'Relancer la certification' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Relancer la certification' }),
+    ).toBeEnabled();
   });
 
   it('hides itself from visitors when the item is not published', async () => {
@@ -145,7 +183,13 @@ describe('NftPanel provenance states', () => {
   it('offers a retry when provenance cannot be loaded', async () => {
     const { client, getProvenance } = spyClient();
     getProvenance.mockRejectedValueOnce(apiError(503, 'NFT_UNAVAILABLE'));
-    render(<NftPanel contentId={fixtureIds.sculpture} isOwner={false} client={client} />);
+    render(
+      <NftPanel
+        contentId={fixtureIds.sculpture}
+        isOwner={false}
+        client={client}
+      />,
+    );
     await flush();
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('n’a pas pu être chargé');
@@ -164,7 +208,9 @@ describe('NftPanel mint and polling', () => {
     await flush();
     expect(getProvenance).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Certifier sur la blockchain' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Certifier sur la blockchain' }),
+    );
     expect(certifyButton()).toBeDisabled();
     await flush();
 
@@ -172,7 +218,9 @@ describe('NftPanel mint and polling', () => {
     expect(contentId).toBe(fixtureIds.textile);
     expect(key).toMatch(KEY_PATTERN);
     expect(status()).toHaveTextContent('Certification en cours');
-    expect(screen.getByRole('button', { name: 'Certification en cours…' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Certification en cours…' }),
+    ).toBeDisabled();
 
     // The mock reads the mint once more as pending, then confirms it.
     await flush(999);
@@ -188,19 +236,25 @@ describe('NftPanel mint and polling', () => {
     // A final state stops the polling and ends the intent.
     await flush(60_000);
     expect(getProvenance).toHaveBeenCalledTimes(3);
-    expect(window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`)).toBeNull();
+    expect(
+      window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`),
+    ).toBeNull();
   });
 
   it('reuses the same idempotency key on retry and after a reload', async () => {
     const { client, mintItem } = spyClient();
     mintItem.mockRejectedValueOnce(new TypeError('Failed to fetch'));
     mintItem.mockRejectedValueOnce(apiError(503, 'NFT_UNAVAILABLE'));
-    const view = render(<NftPanel contentId={fixtureIds.textile} isOwner client={client} />);
+    const view = render(
+      <NftPanel contentId={fixtureIds.textile} isOwner client={client} />,
+    );
     await flush();
 
     fireEvent.click(certifyButton());
     await flush();
-    expect(screen.getByRole('alert')).toHaveTextContent('sans risque de doublon');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'sans risque de doublon',
+    );
     fireEvent.click(certifyButton());
     await flush();
     expect(screen.getByRole('alert')).toHaveTextContent('req-503');
@@ -220,11 +274,18 @@ describe('NftPanel mint and polling', () => {
 
   it('starts a new intent with a new key after a failed mint', async () => {
     const { client, mintItem } = spyClient();
-    window.sessionStorage.setItem(`lova:mint-key:${fixtureIds.painting}`, 'old-key-of-failed-mint');
-    render(<NftPanel contentId={fixtureIds.painting} isOwner client={client} />);
+    window.sessionStorage.setItem(
+      `lova:mint-key:${fixtureIds.painting}`,
+      'old-key-of-failed-mint',
+    );
+    render(
+      <NftPanel contentId={fixtureIds.painting} isOwner client={client} />,
+    );
     await flush();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Relancer la certification' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Relancer la certification' }),
+    );
     await flush();
     expect(mintItem.mock.calls[0]?.[1]).not.toBe('old-key-of-failed-mint');
     expect(status()).toHaveTextContent('Certification en cours');
@@ -233,7 +294,11 @@ describe('NftPanel mint and polling', () => {
   it('stops polling on unmount', async () => {
     const { client, getProvenance } = spyClient();
     const view = render(
-      <NftPanel contentId={provenanceFixtureIds.pending} isOwner={false} client={client} />,
+      <NftPanel
+        contentId={provenanceFixtureIds.pending}
+        isOwner={false}
+        client={client}
+      />,
     );
     await flush();
     expect(status()).toHaveTextContent('Certification en cours');
@@ -251,14 +316,23 @@ describe('NftPanel mint and polling', () => {
       mint: pendingMint(fixtureIds.textile, 9),
       scope: '',
     };
+    // Load, then a failing first poll, then pending forever.
     getProvenance.mockResolvedValue(pending);
-    getProvenance.mockRejectedValueOnce(apiError(503, 'NFT_UNAVAILABLE'));
     getProvenance.mockResolvedValueOnce(pending);
-    render(<NftPanel contentId={fixtureIds.textile} isOwner={false} client={client} />);
+    getProvenance.mockRejectedValueOnce(apiError(503, 'NFT_UNAVAILABLE'));
+    render(
+      <NftPanel
+        contentId={fixtureIds.textile}
+        isOwner={false}
+        client={client}
+      />,
+    );
     await flush();
     await flush(1_000);
     expect(getProvenance).toHaveBeenCalledTimes(2);
-    expect(screen.getByText(/nouvelle tentative automatique/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/nouvelle tentative automatique/),
+    ).toBeInTheDocument();
 
     await flush(15_000 * POLL_MAX_ATTEMPTS);
     expect(getProvenance).toHaveBeenCalledTimes(1 + POLL_MAX_ATTEMPTS);
@@ -290,9 +364,13 @@ describe('NftPanel mint responses', () => {
     await flush();
     fireEvent.click(certifyButton());
     await flush();
-    expect(screen.getByRole('alert')).toHaveTextContent('déjà un certificat ou une demande');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'déjà un certificat ou une demande',
+    );
     expect(getProvenance).toHaveBeenCalledTimes(2);
-    expect(window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`)).toBeNull();
+    expect(
+      window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`),
+    ).toBeNull();
   });
 
   it('explains a 403 without retrying', async () => {
@@ -302,9 +380,13 @@ describe('NftPanel mint responses', () => {
     await flush();
     fireEvent.click(certifyButton());
     await flush();
-    expect(screen.getByRole('alert')).toHaveTextContent('Seul le ou la propriétaire');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Seul le ou la propriétaire',
+    );
     expect(screen.getByRole('alert')).not.toHaveTextContent('Upstream message');
-    expect(window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`)).toBeNull();
+    expect(
+      window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`),
+    ).toBeNull();
   });
 
   it('sends a signed-out owner to sign-in and keeps the key (401)', async () => {
@@ -320,8 +402,8 @@ describe('NftPanel mint responses', () => {
       'href',
       '/connexion?retour=%2Foeuvre%2Fabc',
     );
-    expect(window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`)).toMatch(
-      KEY_PATTERN,
-    );
+    expect(
+      window.sessionStorage.getItem(`lova:mint-key:${fixtureIds.textile}`),
+    ).toMatch(KEY_PATTERN);
   });
 });

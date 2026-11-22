@@ -44,11 +44,19 @@ describe('toModel3d', () => {
     [{ status: 'exploded' }, 'missing'],
     [null, 'missing'],
   ])('maps %j to %s', (body, status) => {
-    expect(toModel3d(ID, body)).toEqual({ contentId: ID, status, variants: null });
+    expect(toModel3d(ID, body)).toEqual({
+      contentId: ID,
+      status,
+      variants: null,
+    });
   });
 
   it('treats a ready body with an off-origin or incomplete URL as missing', () => {
-    for (const poster of ['https://evil.example/p', '//evil.example/p', '/api/../p']) {
+    for (const poster of [
+      'https://evil.example/p',
+      '//evil.example/p',
+      '/api/../p',
+    ]) {
       expect(
         toModel3d(ID, {
           status: 'ready',
@@ -57,8 +65,10 @@ describe('toModel3d', () => {
       ).toBe('missing');
     }
     expect(
-      toModel3d(ID, { status: 'ready', variants: { poster: '/api/p', glb1k: '/api/a' } })
-        .status,
+      toModel3d(ID, {
+        status: 'ready',
+        variants: { poster: '/api/p', glb1k: '/api/a' },
+      }).status,
     ).toBe('missing');
   });
 });

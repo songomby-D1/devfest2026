@@ -19,9 +19,7 @@ export interface Model3dPanelProps {
 }
 
 type PanelState =
-  | { kind: 'loading' }
-  | { kind: 'error' }
-  | { kind: 'loaded'; model: Model3d };
+  { kind: 'loading' } | { kind: 'error' } | { kind: 'loaded'; model: Model3d };
 
 /**
  * 3D view of an item, per ADR 0001: `ready` starts the viewer with the poster

@@ -83,7 +83,10 @@ describe('mock mint and provenance', () => {
 
   it('lets a failed mint be requested again with a new key', async () => {
     const result = await createMockClient().mintItem(fixtureIds.painting, KEY);
-    expect(result).toMatchObject({ created: true, mint: { status: 'pending' } });
+    expect(result).toMatchObject({
+      created: true,
+      mint: { status: 'pending' },
+    });
   });
 
   it('answers 422 for a key reused on another item and 400 for a bad key', async () => {

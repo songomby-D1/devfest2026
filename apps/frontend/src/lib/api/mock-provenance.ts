@@ -1,5 +1,10 @@
 import { ApiError, type ApiClient } from './client';
-import type { ContentId, Model3d, Provenance, ProvenanceMint } from './contract';
+import type {
+  ContentId,
+  Model3d,
+  Provenance,
+  ProvenanceMint,
+} from './contract';
 import {
   confirmedMint,
   fixtureModels,

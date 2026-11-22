@@ -22,9 +22,9 @@ describe('mint idempotency key', () => {
 
   it('replaces a stored value that the gateway would refuse', () => {
     window.sessionStorage.setItem('lova:mint-key:item-a', 'short');
-    expect(getOrCreateMintKey('item-a', window.sessionStorage, () => 'k'.repeat(20))).toBe(
-      'k'.repeat(20),
-    );
+    expect(
+      getOrCreateMintKey('item-a', window.sessionStorage, () => 'k'.repeat(20)),
+    ).toBe('k'.repeat(20));
   });
 
   it('keeps reusing the key in memory when storage throws', () => {
