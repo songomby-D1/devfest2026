@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import {
@@ -21,6 +21,12 @@ import { createTestApp, gatewayHeaders } from '../support/test-app';
 
 const POSTGRES_IMAGE = 'postgres:18.6';
 const SERVICE_ROOT = join(__dirname, '..', '..');
+// Resolved through Node because the root workspace may hoist prisma out of the service.
+const PRISMA_CLI = join(
+  dirname(require.resolve('prisma/package.json')),
+  'build',
+  'index.js',
+);
 const DATABASE = 'content';
 
 jest.setTimeout(180_000);
@@ -82,8 +88,8 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
     await runSql(container, DATABASE, DATABASE_STATEMENTS);
 
     await promisify(execFile)(
-      'node_modules/.bin/prisma',
-      ['migrate', 'deploy'],
+      process.execPath,
+      [PRISMA_CLI, 'migrate', 'deploy'],
       {
         cwd: SERVICE_ROOT,
         env: {
