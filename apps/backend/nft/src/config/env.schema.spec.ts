@@ -61,8 +61,11 @@ describe('validateEnv', () => {
       MAX_PREVIEW_BYTES: 5242880,
       LOW_BALANCE_AVAX: 0.5,
       BULL_BOARD_ENABLED: false,
+      CONTENT_SERVICE_URL: 'http://content:3000',
+      CONTENT_TIMEOUT_MS: 3000,
     });
     expect(env.FAULT_INJECT).toBeUndefined();
+    expect(env.CONTENT_SERVICE_TOKEN).toBeUndefined();
   });
 
   it('uses "pinata" as the default IPFS driver', () => {
@@ -152,6 +155,10 @@ describe('validateEnv', () => {
     ['LOW_BALANCE_AVAX', '-0.1'],
     ['BULL_BOARD_ENABLED', 'yes'],
     ['FAULT_INJECT', 'random'],
+    ['CONTENT_SERVICE_URL', 'content:3000'],
+    ['CONTENT_SERVICE_URL', 'ftp://content'],
+    ['CONTENT_TIMEOUT_MS', '0'],
+    ['CONTENT_TIMEOUT_MS', '120000'],
   ])('rejects %s=%s', (name, value) => {
     expect(problemsOf(validEnv({ [name]: value })).join('\n')).toContain(name);
   });
@@ -178,6 +185,51 @@ describe('validateEnv', () => {
     expect(problems).toContain(
       'BULL_BOARD_ENABLED must be false in production',
     );
+  });
+
+  describe('CONTENT_SERVICE_TOKEN', () => {
+    const token = 'c'.repeat(32);
+
+    it('is optional outside production', () => {
+      expect(validateEnv(validEnv()).CONTENT_SERVICE_TOKEN).toBeUndefined();
+      expect(
+        validateEnv(validEnv({ CONTENT_SERVICE_TOKEN: 'short' }))
+          .CONTENT_SERVICE_TOKEN,
+      ).toBe('short');
+    });
+
+    it('is required in production, with at least 32 characters', () => {
+      const production = {
+        NODE_ENV: 'production',
+        IPFS_DRIVER: 'pinata',
+        PINATA_JWT: 'jwt',
+      };
+      const message =
+        'CONTENT_SERVICE_TOKEN must be set in production, with at least 32 characters';
+
+      expect(problemsOf(validEnv(production))).toContain(message);
+      expect(
+        problemsOf(validEnv({ ...production, CONTENT_SERVICE_TOKEN: 'short' })),
+      ).toContain(message);
+      expect(
+        validateEnv(validEnv({ ...production, CONTENT_SERVICE_TOKEN: token }))
+          .CONTENT_SERVICE_TOKEN,
+      ).toBe(token);
+    });
+
+    it('never echoes the token value', () => {
+      const secret = 'leaky-token';
+      const problems = problemsOf(
+        validEnv({
+          NODE_ENV: 'production',
+          IPFS_DRIVER: 'fake',
+          CONTENT_SERVICE_TOKEN: secret,
+        }),
+      );
+
+      expect(problems.join('\n')).toContain('CONTENT_SERVICE_TOKEN');
+      expect(problems.join('\n')).not.toContain(secret);
+    });
   });
 
   it('reports every problem at once', () => {
