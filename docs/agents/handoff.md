@@ -2,6 +2,15 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: CTO-10 Compose integration for Content and NFT (rivon0507)
+
+- [IMPLEMENTED] CTO-10 ([#31](https://github.com/songomby-D1/devfest2026/issues/31)) on `rivon0507/cto-10-compose-integration`: the root [Compose file](../../docker-compose.yml) now carries the Content media-storage settings (`STORAGE_*`, `MEDIA_MAX_*`, waiting for `seaweedfs-buckets`) and the NFT cross-service settings (`CONTENT_SERVICE_URL`, `CONTENT_SERVICE_TOKEN`, `CONTENT_TIMEOUT_MS`, the runtime and migration database URLs, `NFT_INBOUND_TOKEN_GATEWAY`, waiting for `content` and `postgres`). Both fragments are merged and now say so; they stay as the owners' record.
+- [IMPLEMENTED] `docker-compose.demo.yml` only adds the local chain and the NFT runtime image now; the duplicated Content and NFT blocks are gone, and [the demo README](../../scripts/demo/README.md) matches.
+- [IMPLEMENTED] `docker compose up -d --no-build postgres seaweedfs seaweedfs-buckets content` brings Content to healthy. `/health` answers `{"status":"ok"}` and the container sees `STORAGE_ENDPOINT=http://seaweedfs:8333`, `STORAGE_BUCKET=lova-media`, `STORAGE_PREFIX=content/`, `STORAGE_FORCE_PATH_STYLE=true` and `MEDIA_MAX_VIDEO_BYTES=52428800`.
+- [IMPLEMENTED] `nft-service` now starts from the base Compose file once `apps/backend/nft/.env` holds chain values. Verified with throwaway local values (chain 31337, unreachable RPC, `IPFS_DRIVER=fake`): the entrypoint applied migrations and `/health` answered. The values were removed afterwards, so the base stack still needs salandri-42's chain and Pinata settings, or the demo setup, for NFT.
+- [DECISION REQUIRED: endy-rkt] The base stack still starts `nft-service` unconditionally, so `docker compose up` shows it restarting until the NFT env is configured. A Compose profile would keep the default stack green; not added here because it changes how the demo starts the service.
+- [NOT RUN] No mint or media upload round trip through the gateway, and no image rebuild: the local images were reused.
+
 ## Latest session: CTO-04 D05 media delivery confirmed (rivon0507)
 
 - [CONFIRMED] CTO-04 ([#25](https://github.com/songomby-D1/devfest2026/issues/25)) on `rivon0507/cto-04-d05-closure`: with the CTO-03 evidence merged in [#128](https://github.com/songomby-D1/devfest2026/pull/128), D05 is confirmed. D04 and D06 were already recorded. Gateway-mediated delivery stays, objects stay private, and reads are authorized against current item or asset visibility. [Decision register](../decisions/project-decisions.md#d05-media-delivery) · [Storage spike](../architecture/storage-spike.md)

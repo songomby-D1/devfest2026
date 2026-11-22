@@ -87,9 +87,11 @@ You need Node from `.nvmrc` (22.23.5) and Docker with Compose.
 ```bash
 npm ci                     # one root lockfile for every workspace
 npm run setup:env          # creates .env with random local secrets
-docker compose up --build  # PostgreSQL, SeaweedFS, Auth, the gateway and NFT
+docker compose up --build  # PostgreSQL, SeaweedFS, Auth, Content, LiDAR and the gateway
 npm run smoke:auth         # guest, register, login, protected call, logout
 ```
+
+The NFT service joins the stack once `apps/backend/nft/.env` holds its chain, minter and Content settings; `apps/backend/nft/.env.example` lists them and the [local demo](scripts/demo/README.md) generates a local chain configuration.
 
 The gateway listens on `http://localhost:3000/api`. Quality checks: `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test` and `npm run build`.
 

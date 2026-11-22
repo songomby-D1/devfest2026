@@ -1,11 +1,10 @@
 # Local demo override: docker compose -f docker-compose.yml -f docker-compose.demo.yml up
 #
 # - Adds a local EVM chain (Ganache, chain id 31337) for the PreservingArt contract.
-# - Applies the Content and NFT compose fragments that Agent 1 has not merged into the
-#   root file yet (Content media storage, NFT database, gateway and Content secrets).
 # - Runs the NFT service from its runtime image so migrations apply on start.
-# Chain settings, the minter key and IPFS_DRIVER=fake come from apps/backend/nft/.env,
-# written by scripts/demo/setup.mjs. Local demo only: never use these values elsewhere.
+# Chain settings, the minter key, CONTRACT_ADDRESS and IPFS_DRIVER=fake come from
+# apps/backend/nft/.env, written by scripts/demo/setup.mjs. Local demo only: never
+# use these values elsewhere.
 services:
   chain:
     image: trufflesuite/ganache:v7.9.2
@@ -23,36 +22,9 @@ services:
       - '127.0.0.1:8545:8545'
     networks: [internal_net, edge_net]
 
-  content:
-    environment:
-      STORAGE_ENDPOINT: http://seaweedfs:8333
-      STORAGE_REGION: us-east-1
-      STORAGE_BUCKET: ${S3_MEDIA_BUCKET:-lova-media}
-      STORAGE_PREFIX: ${CONTENT_STORAGE_PREFIX:-content/}
-      STORAGE_FORCE_PATH_STYLE: 'true'
-      STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_CONTENT_ACCESS_KEY:?Set SEAWEEDFS_CONTENT_ACCESS_KEY}
-      STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_CONTENT_SECRET_KEY:?Set SEAWEEDFS_CONTENT_SECRET_KEY}
-      MEDIA_MAX_IMAGE_BYTES: ${CONTENT_MEDIA_MAX_IMAGE_BYTES:-12582912}
-      MEDIA_MAX_VIDEO_BYTES: ${CONTENT_MEDIA_MAX_VIDEO_BYTES:-52428800}
-      MEDIA_MAX_PER_ITEM: ${CONTENT_MEDIA_MAX_PER_ITEM:-10}
-    depends_on:
-      seaweedfs-buckets:
-        condition: service_completed_successfully
-
   nft-service:
     build:
       target: runtime
-    environment:
-      CONTENT_SERVICE_URL: ${NFT_CONTENT_SERVICE_URL:-http://content:3000}
-      CONTENT_SERVICE_TOKEN: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
-      CONTENT_TIMEOUT_MS: ${NFT_CONTENT_TIMEOUT_MS:-3000}
-      DATABASE_URL: postgresql://${NFT_RUNTIME_DB_USER:-nft_runtime}:${NFT_RUNTIME_DB_PASSWORD:?Set NFT_RUNTIME_DB_PASSWORD}@postgres:5432/${NFT_DB_NAME:?Set NFT_DB_NAME}
-      MIGRATION_DATABASE_URL: postgresql://${NFT_MIGRATION_DB_USER:-nft_migrator}:${NFT_MIGRATION_DB_PASSWORD:?Set NFT_MIGRATION_DB_PASSWORD}@postgres:5432/${NFT_DB_NAME:?Set NFT_DB_NAME}
-      NFT_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_NFT:?Set SERVICE_TOKEN_GATEWAY_TO_NFT}
     depends_on:
-      content:
-        condition: service_started
-      postgres:
-        condition: service_healthy
       chain:
         condition: service_started

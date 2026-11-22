@@ -1,5 +1,6 @@
-# Compose fragment for CONTENT-01 (#52), for Agent 1 to merge into the root
-# docker-compose.yml. It assumes the shared `postgres` service and init script
+# Compose fragment for CONTENT-01 (#52). Merged into the root docker-compose.yml
+# by CTO-10 (#31) and kept as the Content owner's record of the settings it needs.
+# It assumes the shared `postgres` service and init script
 # of INFRA-01, which provision the `content` database with its migration and
 # runtime roles (D04), and the root .env variables of the agent1-foundation
 # branch (CONTENT_* database variables and SERVICE_TOKEN_*_TO_CONTENT).
