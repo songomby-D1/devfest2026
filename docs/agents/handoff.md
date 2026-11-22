@@ -2,7 +2,14 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
+## Latest session: CONTENT-01 items, authors and descriptions (rivon0507, Agent 2)
+
+- [PROPOSED] CONTENT-01 ([#52](https://github.com/songomby-D1/devfest2026/issues/52)): `apps/backend/content/` is a standalone NestJS 11 service on Node 22 with Prisma 7.10.1 and its first migration (`authors`, `items`, `descriptions`). The item ID is the ContentId, `publicationStatus` defaults to `draft`, and claim status is stored separately on the item and on its description. Internal routes: `POST /internal/v1/items`, `GET /internal/v1/items/{id}` and `PATCH /internal/v1/items/{id}`, behind a per-caller service-token guard, with the `{ code, message, requestId }` error shape. Bodies follow the Gate 0 contract on `agent1-foundation` (`CreateItemRequest`, `ItemDetail`). Contract: [content.yaml](../api/content.yaml). Compose: `apps/backend/content/compose.fragment.yml` for Agent 1.
+- [DECISION REQUIRED: papangoo] Confirm the proposed acceptance criteria in the PR, the 1:1 author-per-item model, the claim reset on material edits (D18) and the edit rule (owner only, not while published).
+- [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
+- [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
+
+## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
 
 - [PROPOSED] 3D-04c ([#13](https://github.com/songomby-D1/devfest2026/issues/13)), stacked on PR #101: the LiDAR service stores the 3D-04a outputs in an S3-compatible bucket and streams them at `GET /files/{assetId}/{variant}` with Range (206/416), HEAD, immutable caching and the `{ code, message, requestId }` error shape. Uploads go through `PUT /assets/{assetId}/files/{variant}` behind the interim admin token. See [the OpenAPI contract](../api/lidar.yaml).
 - [NOT IMPLEMENTED] The gateway route `/api/lidar/files/*` (Agent 1), the SeaweedFS service and the LiDAR bucket and credentials (Agent 1, D05), and the merge of `apps/backend/lidar/compose.fragment.yml`.
