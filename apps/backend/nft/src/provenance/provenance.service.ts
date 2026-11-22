@@ -1,35 +1,41 @@
-import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
+import {
+  BLOCKCHAIN_PORT,
+  type BlockchainPort,
+} from '../blockchain/blockchain.port';
 import { PublicError, safeRequestId } from '../common/public-error';
+import { AppConfigService } from '../config/app-config.service';
 import {
   CONTENT_ERRORS,
   ContentReferenceService,
 } from '../content/content-reference.service';
+import { MINT_REPOSITORY, type MintRepository } from '../mint/mint-repository';
+import type { MintRequestRecord } from '../mint/mint-request';
 import {
-  CHAIN_PROVENANCE_READER,
-  type ChainProvenanceReader,
-  MINT_RECORD_READER,
-  type MintRecordReader,
-  type ProvenanceMintRecord,
-} from './provenance.ports';
-import {
-  toMintView,
+  toProvenanceMintView,
   toProvenanceView,
   type ProvenanceView,
   type VerificationView,
-  type ViewOptions,
 } from './provenance-view';
 
 /** Public error codes of the provenance route. */
 export const PROVENANCE_ERRORS = {
-  VALIDATION_FAILED: 'VALIDATION_FAILED',
   NOT_FOUND: 'NOT_FOUND',
-  CONTENT_UNAVAILABLE: 'CONTENT_UNAVAILABLE',
   NFT_UNAVAILABLE: 'NFT_UNAVAILABLE',
 } as const;
 
-export interface ProvenanceOptions extends ViewOptions {
-  /** Budget of the whole on-chain verification. */
-  readonly chainTimeoutMs: number;
+/** The on-chain verification gives up after this long. */
+export const CHAIN_READ_TIMEOUT_MS = 3_000;
+
+/** Optional overrides, for tests. */
+export interface ProvenanceOptions {
+  readonly chainTimeoutMs?: number;
 }
 
 export const PROVENANCE_OPTIONS = Symbol('PROVENANCE_OPTIONS');
@@ -61,57 +67,69 @@ function errorName(error: unknown): string {
 }
 
 /**
- * Provenance display data of a published item (NFT-05). The item must be
- * published: an unknown, draft or unpublished item answers the same `404`,
- * so a draft's existence never leaks. The chain read is best effort: when it
- * fails, the record is returned as stored with `verification.state`
- * `unverifiable`.
+ * Provenance display data of a published item (NFT-05), behind the frozen
+ * `GET /internal/v1/provenance/{contentId}`. The item must be published: an
+ * unknown, draft or unpublished item answers the same `404`, so a draft's
+ * existence never leaks. The chain read is best effort: when it fails, the
+ * record is returned as stored with `verification.state` `unverifiable`.
  */
 @Injectable()
 export class ProvenanceService {
   private readonly logger = new Logger(ProvenanceService.name);
+  private readonly chainTimeoutMs: number;
 
   constructor(
-    @Inject(ContentReferenceService)
     private readonly references: ContentReferenceService,
-    @Inject(MINT_RECORD_READER) private readonly mints: MintRecordReader,
-    @Inject(CHAIN_PROVENANCE_READER)
-    private readonly chain: ChainProvenanceReader,
-    @Inject(PROVENANCE_OPTIONS) private readonly options: ProvenanceOptions,
-  ) {}
+    @Inject(MINT_REPOSITORY) private readonly mints: MintRepository,
+    @Inject(BLOCKCHAIN_PORT) private readonly chain: BlockchainPort,
+    private readonly config: AppConfigService,
+    @Optional()
+    @Inject(PROVENANCE_OPTIONS)
+    options: ProvenanceOptions | undefined,
+  ) {
+    this.chainTimeoutMs = options?.chainTimeoutMs ?? CHAIN_READ_TIMEOUT_MS;
+  }
 
-  async read(
-    contentId: string,
-    context: { readonly requestId?: string | undefined } = {},
-  ): Promise<ProvenanceView> {
-    const requestId = safeRequestId(context.requestId);
-    await this.assertPublic(contentId, requestId);
+  async read(contentId: string, requestId?: string): Promise<ProvenanceView> {
+    const safeId = safeRequestId(requestId);
+    await this.assertPublic(contentId, safeId);
 
     const id = contentId.toLowerCase();
-    let record: ProvenanceMintRecord | null;
+    let record: MintRequestRecord | null;
     try {
       record = await this.mints.findLatestForContent(id);
     } catch (error) {
       this.logger.error(
-        `Mint records could not be read: ${errorName(error)} (request ${requestId})`,
+        `Mint records could not be read: ${errorName(error)} (request ${safeId})`,
       );
       throw new PublicError(
         PROVENANCE_ERRORS.NFT_UNAVAILABLE,
         'The provenance service is unavailable, try again later',
         HttpStatus.SERVICE_UNAVAILABLE,
-        requestId,
+        safeId,
       );
     }
     if (record === null) return toProvenanceView(id, null);
 
     const verification =
       record.status === 'confirmed'
-        ? await this.verify(record, requestId)
+        ? await this.verify(record, safeId)
         : undefined;
-    return toProvenanceView(id, toMintView(record, this.options, verification));
+    const options = {
+      explorerBaseUrl: this.config.chain.explorerBaseUrl,
+      ipfsGatewayUrl: this.config.ipfs.gatewayUrl,
+    };
+    return toProvenanceView(
+      id,
+      toProvenanceMintView(record, options, verification),
+    );
   }
 
-  /** Published items only; everything else is the same `404`. */
+  /**
+   * Published items only. `VALIDATION_FAILED` (400) and
+   * `CONTENT_UNAVAILABLE` (503) pass through; unknown and unpublished
+   * items become the same `404 NOT_FOUND`.
+   */
   private async assertPublic(
     contentId: string,
     requestId: string,
@@ -119,29 +137,34 @@ export class ProvenanceService {
     try {
       await this.references.assertPublished(contentId, { requestId });
     } catch (error) {
-      if (!(error instanceof PublicError)) throw error;
-      switch (error.code) {
-        case CONTENT_ERRORS.CONTENT_NOT_FOUND:
-        case CONTENT_ERRORS.CONTENT_NOT_PUBLISHED:
-          throw new PublicError(
-            PROVENANCE_ERRORS.NOT_FOUND,
-            'The item does not exist',
-            HttpStatus.NOT_FOUND,
-            requestId,
-          );
-        default:
-          // VALIDATION_FAILED (400) and CONTENT_UNAVAILABLE (503) as is.
-          throw error;
+      if (
+        error instanceof PublicError &&
+        (error.code === CONTENT_ERRORS.CONTENT_NOT_FOUND ||
+          error.code === CONTENT_ERRORS.CONTENT_NOT_PUBLISHED)
+      ) {
+        throw new PublicError(
+          PROVENANCE_ERRORS.NOT_FOUND,
+          'The item does not exist',
+          HttpStatus.NOT_FOUND,
+          requestId,
+        );
       }
+      throw error;
     }
   }
 
   /** Compares the stored record with the chain. Never throws. */
   private async verify(
-    record: ProvenanceMintRecord,
+    record: MintRequestRecord,
     requestId: string,
   ): Promise<VerificationView> {
     const checkedAt = new Date().toISOString();
+    const unverifiable: VerificationView = {
+      state: 'unverifiable',
+      fixity: null,
+      onChain: null,
+      checkedAt,
+    };
     const tokenId = record.tokenId;
     const masterHash = record.masterHash?.toLowerCase() ?? null;
     if (
@@ -150,20 +173,19 @@ export class ProvenanceService {
       masterHash === null ||
       !HASH.test(masterHash)
     ) {
-      this.logger.warn(
-        `Confirmed mint ${record.id} lacks a token ID or master hash (request ${requestId})`,
-      );
-      return { state: 'unverifiable', fixity: null, onChain: null, checkedAt };
+      // A token found by reconciliation may have no recorded hash.
+      return unverifiable;
     }
 
     try {
-      const [artwork, fixity, tokenUri] = await withTimeout(
+      const [artwork, fixity, tokenUri, owner] = await withTimeout(
         Promise.all([
           this.chain.getArtwork(tokenId),
           this.chain.verifyFixity(tokenId, masterHash),
           this.chain.tokenUri(tokenId),
+          this.chain.ownerOf(tokenId),
         ]),
-        this.options.chainTimeoutMs,
+        this.chainTimeoutMs,
       );
       if (artwork === null) {
         this.logger.warn(
@@ -185,6 +207,7 @@ export class ProvenanceService {
           mintedAt: artwork.mintedAt.toISOString(),
           masterHash: artwork.masterHash.toLowerCase(),
           tokenUri,
+          owner,
         },
         checkedAt,
       };
@@ -192,7 +215,7 @@ export class ProvenanceService {
       this.logger.warn(
         `On-chain verification of token ${tokenId} failed: ${errorName(error)} (request ${requestId})`,
       );
-      return { state: 'unverifiable', fixity: null, onChain: null, checkedAt };
+      return unverifiable;
     }
   }
 }

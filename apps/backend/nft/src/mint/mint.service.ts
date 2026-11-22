@@ -11,12 +11,7 @@ import { ContentReferenceService } from '../content/content-reference.service';
 import { MintProcessor } from './mint-processor';
 import { MINT_REPOSITORY, type MintRepository } from './mint-repository';
 import type { MintRequestRecord } from './mint-request';
-import {
-  type MintView,
-  type ProvenanceView,
-  toMintView,
-  toProvenanceView,
-} from './mint-view';
+import { type MintView, toMintView } from './mint-view';
 
 /** Same rule as the gateway (gateway.openapi.yaml, `Idempotency-Key`). */
 export const IDEMPOTENCY_KEY = /^[A-Za-z0-9_-]{16,128}$/;
@@ -154,28 +149,6 @@ export class MintService {
       );
     }
     return this.view(record);
-  }
-
-  /**
-   * Public provenance of an item: its live mint, otherwise the latest
-   * failed one, otherwise `mint: null`. No account data is returned.
-   */
-  async provenance(
-    contentId: string,
-    requestId: string,
-  ): Promise<ProvenanceView> {
-    if (!UUID.test(contentId)) {
-      throw new PublicError(
-        MINT_ERRORS.VALIDATION_FAILED,
-        'The request is invalid',
-        HttpStatus.BAD_REQUEST,
-        requestId,
-        [{ field: 'contentId', reason: 'must be a UUID' }],
-      );
-    }
-    const id = contentId.toLowerCase();
-    const record = await this.repository.findLatestForContent(id);
-    return toProvenanceView(id, record, this.config.chain.explorerBaseUrl);
   }
 
   private replayed(

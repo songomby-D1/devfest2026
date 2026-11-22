@@ -12,8 +12,14 @@ import {
 import type { Response } from 'express';
 import { Caller, type CallerContext } from '../common/caller-context';
 import { ServiceTokenGuard } from '../common/service-token.guard';
+import {
+  cacheControlOf,
+  NO_STORE,
+  type ProvenanceView,
+} from '../provenance/provenance-view';
+import { ProvenanceService } from '../provenance/provenance.service';
 import { MintService } from './mint.service';
-import type { MintView, ProvenanceView } from './mint-view';
+import type { MintView } from './mint-view';
 
 /**
  * Internal routes the gateway calls (platform contract, service-to-service
@@ -25,7 +31,10 @@ import type { MintView, ProvenanceView } from './mint-view';
 @Controller('internal/v1')
 @UseGuards(ServiceTokenGuard)
 export class MintController {
-  constructor(private readonly mints: MintService) {}
+  constructor(
+    private readonly mints: MintService,
+    private readonly provenanceData: ProvenanceService,
+  ) {}
 
   /** 202 with a new pending mint, 200 with the mint of a replayed key. */
   @Post('mints')
@@ -49,12 +58,21 @@ export class MintController {
     return this.mints.get(caller, mintId);
   }
 
-  /** Mint status and provenance of an item. Guests may read it; poll while pending. */
+  /**
+   * Mint status and provenance display data of a published item (NFT-05).
+   * Guests may read it; poll while pending. Unknown, draft and unpublished
+   * items answer the same 404.
+   */
   @Get('provenance/:contentId')
-  provenance(
+  async provenance(
     @Caller() caller: CallerContext,
     @Param('contentId') contentId: string,
+    @Res({ passthrough: true }) response: Response,
   ): Promise<ProvenanceView> {
-    return this.mints.provenance(contentId, caller.requestId);
+    // Errors keep this header; a success replaces it.
+    response.setHeader('Cache-Control', NO_STORE);
+    const view = await this.provenanceData.read(contentId, caller.requestId);
+    response.setHeader('Cache-Control', cacheControlOf(view));
+    return view;
   }
 }

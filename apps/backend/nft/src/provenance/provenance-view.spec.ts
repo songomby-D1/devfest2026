@@ -6,21 +6,25 @@ import {
   MASTER_HASH,
   METADATA_CID,
   mintRecord,
+  REQUESTER_ID,
   TOKEN_URI,
   TX_HASH,
 } from '../../test/fixtures/provenance';
+import { MINT_FAILURES } from '../mint/mint-failure';
+import { NO_MINT_SCOPE, PROVENANCE_SCOPE, toMintView } from '../mint/mint-view';
 import {
+  cacheControlOf,
   gatewayUrlOf,
-  NO_MINT_SCOPE,
-  PROVENANCE_SCOPE,
-  PUBLIC_FAILURES,
   publicFailureCode,
-  toMintView,
+  toProvenanceMintView,
   toProvenanceView,
   type VerificationView,
 } from './provenance-view';
 
-const OPTIONS = { explorerBaseUrl: `${EXPLORER}/`, ipfsGatewayUrl: IPFS_GATEWAY };
+const OPTIONS = {
+  explorerBaseUrl: `${EXPLORER}/`,
+  ipfsGatewayUrl: IPFS_GATEWAY,
+};
 
 const VERIFIED: VerificationView = {
   state: 'verified',
@@ -29,23 +33,17 @@ const VERIFIED: VerificationView = {
   checkedAt: '2026-11-22T11:00:00.000Z',
 };
 
-/** Keys of the frozen contract `MintRecord`. */
-const CONTRACT_KEYS = [
-  'mintId',
-  'contentId',
-  'status',
-  'network',
-  'tokenId',
-  'transactionHash',
-  'explorerUrl',
-  'failureReason',
-  'requestedAt',
-  'confirmedAt',
-];
+describe('toProvenanceMintView', () => {
+  it('keeps the NFT-04 MintRecord fields unchanged for every status', () => {
+    for (const status of ['pending', 'confirmed', 'failed'] as const) {
+      const record = mintRecord({ status });
+      const view = toProvenanceMintView(record, OPTIONS, undefined);
+      expect(view).toMatchObject({ ...toMintView(record, EXPLORER) });
+    }
+  });
 
-describe('toMintView', () => {
-  it('shows every public chain reference of a confirmed mint', () => {
-    const view = toMintView(mintRecord(), OPTIONS, VERIFIED);
+  it('adds every public chain reference to a confirmed mint', () => {
+    const view = toProvenanceMintView(mintRecord(), OPTIONS, VERIFIED);
     expect(view).toEqual({
       mintId: '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d',
       contentId: CONTENT_ID,
@@ -74,43 +72,30 @@ describe('toMintView', () => {
     });
   });
 
-  it('keeps every frozen MintRecord field for each status', () => {
-    for (const status of ['pending', 'confirmed', 'failed'] as const) {
-      const view = toMintView(mintRecord({ status }), OPTIONS, undefined);
-      expect(Object.keys(view)).toEqual(expect.arrayContaining(CONTRACT_KEYS));
-    }
-  });
-
-  it('shows the transaction of a pending mint once sent, and no token data', () => {
-    const view = toMintView(
+  it('adds only explorer links to a pending mint', () => {
+    const sent = toProvenanceMintView(
       mintRecord({ status: 'pending', tokenId: null, confirmedAt: null }),
       OPTIONS,
       undefined,
     );
-    expect(view).toMatchObject({
-      status: 'pending',
-      tokenId: null,
-      transactionHash: TX_HASH,
-      explorerUrl: `${EXPLORER}/tx/${TX_HASH}`,
-      confirmedAt: null,
+    expect(sent.explorer).toEqual({
+      transaction: `${EXPLORER}/tx/${TX_HASH}`,
+      token: null,
     });
-    expect(view).not.toHaveProperty('tokenUri');
-    expect(view).not.toHaveProperty('masterHash');
-    expect(view).not.toHaveProperty('verification');
-  });
+    expect(sent).not.toHaveProperty('tokenUri');
+    expect(sent).not.toHaveProperty('masterHash');
+    expect(sent).not.toHaveProperty('verification');
 
-  it('shows a pending mint not yet sent without links', () => {
-    const view = toMintView(
+    const unsent = toProvenanceMintView(
       mintRecord({ status: 'pending', txHash: null, tokenId: null }),
       OPTIONS,
       undefined,
     );
-    expect(view.explorerUrl).toBeNull();
-    expect(view.explorer).toEqual({ transaction: null, token: null });
+    expect(unsent.explorer).toEqual({ transaction: null, token: null });
   });
 
-  it('shows only the status and a public failure code of a failed mint', () => {
-    const view = toMintView(
+  it('adds only a public failure code to a failed mint', () => {
+    const view = toProvenanceMintView(
       mintRecord({ status: 'failed', failureCode: 'INSUFFICIENT_FUNDS' }),
       OPTIONS,
       undefined,
@@ -118,17 +103,16 @@ describe('toMintView', () => {
     expect(view).toMatchObject({
       status: 'failed',
       failureCode: 'INSUFFICIENT_FUNDS',
-      failureReason: PUBLIC_FAILURES.INSUFFICIENT_FUNDS,
+      failureReason: MINT_FAILURES.INSUFFICIENT_FUNDS,
       tokenId: null,
-      transactionHash: null,
-      explorerUrl: null,
     });
     expect(view).not.toHaveProperty('tokenUri');
     expect(view).not.toHaveProperty('explorer');
+    expect(view).not.toHaveProperty('verification');
   });
 
   it('never shows an unknown internal failure code', () => {
-    const view = toMintView(
+    const view = toProvenanceMintView(
       mintRecord({ status: 'failed', failureCode: 'RPC said: key 0xdead' }),
       OPTIONS,
       undefined,
@@ -137,41 +121,35 @@ describe('toMintView', () => {
     expect(JSON.stringify(view)).not.toContain('0xdead');
   });
 
-  it('drops stored values that do not have the expected public shape', () => {
-    const view = toMintView(
+  it('drops added values that do not have the expected public shape', () => {
+    const view = toProvenanceMintView(
       mintRecord({
         txHash: 'not-a-hash',
         tokenUri: 'https://internal.example/meta.json',
         tokenId: '-1',
         masterHash: 'sha256:abc',
+        metadataCid: '../x',
       }),
       OPTIONS,
       undefined,
     );
     expect(view).toMatchObject({
-      transactionHash: null,
+      explorer: { transaction: null, token: null },
       tokenUri: null,
       metadataUrl: null,
-      tokenId: null,
+      metadataCid: null,
       masterHash: null,
-      explorerUrl: null,
     });
   });
 
-  it('names an unknown chain by its ID', () => {
-    const view = toMintView(mintRecord({ chainId: 99 }), OPTIONS, undefined);
-    expect(view.network?.name).toBe('Chain 99');
-  });
-
-  it('never exposes requester or idempotency data', () => {
-    const record = {
-      ...mintRecord(),
-      requesterId: '11111111-2222-4333-8444-555555555555',
-      idempotencyKey: 'secret-key-value-123',
-    };
-    const json = JSON.stringify(toMintView(record, OPTIONS, VERIFIED));
-    expect(json).not.toContain('11111111-2222');
+  it('never exposes requester, idempotency or request data', () => {
+    const json = JSON.stringify(
+      toProvenanceMintView(mintRecord(), OPTIONS, VERIFIED),
+    );
+    expect(json).not.toContain(REQUESTER_ID);
     expect(json).not.toContain('secret-key-value');
+    expect(json).not.toContain('req-internal-1');
+    expect(json).not.toContain('attempts');
   });
 });
 
@@ -198,9 +176,30 @@ describe('helpers', () => {
     });
     const view = toProvenanceView(
       CONTENT_ID,
-      toMintView(mintRecord(), OPTIONS, VERIFIED),
+      toProvenanceMintView(mintRecord(), OPTIONS, VERIFIED),
     );
     expect(view.scope).toBe(PROVENANCE_SCOPE);
-    expect(view.scope).toContain('does not prove physical authenticity');
+  });
+
+  it('caches confirmed records briefly and nothing else', () => {
+    const confirmed = (state: VerificationView['state']) =>
+      toProvenanceView(
+        CONTENT_ID,
+        toProvenanceMintView(mintRecord(), OPTIONS, { ...VERIFIED, state }),
+      );
+    expect(cacheControlOf(confirmed('verified'))).toBe('public, max-age=60');
+    expect(cacheControlOf(confirmed('mismatch'))).toBe('public, max-age=60');
+    expect(cacheControlOf(confirmed('unverifiable'))).toBe(
+      'public, max-age=15',
+    );
+    expect(cacheControlOf(toProvenanceView(CONTENT_ID, null))).toBe('no-store');
+    const pending = toProvenanceMintView(
+      mintRecord({ status: 'pending' }),
+      OPTIONS,
+      undefined,
+    );
+    expect(cacheControlOf(toProvenanceView(CONTENT_ID, pending))).toBe(
+      'no-store',
+    );
   });
 });

@@ -5,6 +5,7 @@ import { AppModule } from '../../src/app.module';
 import { BLOCKCHAIN_PORT } from '../../src/blockchain/blockchain.port';
 import type { AppConfigService } from '../../src/config/app-config.service';
 import { ContentClient } from '../../src/content/content-client';
+import { METADATA_PUBLISHER } from '../../src/metadata/metadata-publisher.port';
 import {
   MINT_REPOSITORY,
   type MintRepository,
@@ -12,6 +13,7 @@ import {
 import { MintProcessor } from '../../src/mint/mint-processor';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { FakeBlockchain } from './fake-blockchain';
+import { FakeMetadataPublisher } from './fake-metadata-publisher';
 import { CONTENT_TOKEN } from './fake-content';
 
 export const GATEWAY_TOKEN = 'gateway-to-nft-test';
@@ -40,6 +42,8 @@ export async function createTestApp(options: {
   let builder = Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(BLOCKCHAIN_PORT)
     .useValue(chain)
+    .overrideProvider(METADATA_PUBLISHER)
+    .useClass(FakeMetadataPublisher)
     .overrideProvider(ContentClient)
     .useValue(
       new ContentClient({

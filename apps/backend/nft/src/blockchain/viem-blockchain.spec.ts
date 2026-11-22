@@ -419,3 +419,105 @@ describe('toChainError', () => {
     expect(toChainError(new Error('boom')).code).toBe('CHAIN_UNAVAILABLE');
   });
 });
+
+describe('ViemBlockchain public reads (NFT-05)', () => {
+  const HASH: Hex = `0x${'a1'.repeat(32)}`;
+
+  function nonexistent(): never {
+    throw new RpcError(
+      3,
+      'execution reverted',
+      encodeErrorResult({
+        abi: PRESERVING_ART_ABI,
+        errorName: 'ERC721NonexistentToken',
+        args: [7n],
+      }),
+    );
+  }
+
+  it('decodes getArtwork, verifyFixity, tokenURI and ownerOf', async () => {
+    const results: Record<string, () => string> = {
+      getArtwork: () =>
+        encodeFunctionResult({
+          abi: PRESERVING_ART_ABI,
+          functionName: 'getArtwork',
+          result: {
+            mintedAt: 1_795_000_000n,
+            category: 2,
+            masterHash: HASH,
+            title: 'Lamba mena',
+          },
+        }),
+      verifyFixity: () =>
+        encodeFunctionResult({
+          abi: PRESERVING_ART_ABI,
+          functionName: 'verifyFixity',
+          result: true,
+        }),
+      tokenURI: () =>
+        encodeFunctionResult({
+          abi: PRESERVING_ART_ABI,
+          functionName: 'tokenURI',
+          result: 'ipfs://bafy',
+        }),
+      ownerOf: () =>
+        encodeFunctionResult({
+          abi: PRESERVING_ART_ABI,
+          functionName: 'ownerOf',
+          result: TEST_ADDRESS,
+        }),
+    };
+    const selectors = Object.fromEntries(
+      Object.keys(results).map((name) => [
+        viem.toFunctionSelector(
+          PRESERVING_ART_ABI.find(
+            (item) => item.type === 'function' && item.name === name,
+          ) as never,
+        ),
+        name,
+      ]),
+    );
+    const chain = blockchain({
+      eth_call: ([call]) => {
+        const data = (call as { data: string }).data;
+        const name = selectors[data.slice(0, 10)];
+        if (name === undefined) throw new Error('unexpected call');
+        return results[name]?.();
+      },
+    });
+
+    await expect(chain.getArtwork('7')).resolves.toEqual({
+      mintedAt: new Date(1_795_000_000_000),
+      category: 'Craft',
+      masterHash: HASH,
+      title: 'Lamba mena',
+    });
+    await expect(chain.verifyFixity('7', HASH)).resolves.toBe(true);
+    await expect(chain.tokenUri('7')).resolves.toBe('ipfs://bafy');
+    await expect(chain.ownerOf('7')).resolves.toBe(TEST_ADDRESS);
+  });
+
+  it('answers null or false for a token that does not exist', async () => {
+    const chain = blockchain({ eth_call: nonexistent });
+
+    await expect(chain.getArtwork('7')).resolves.toBeNull();
+    await expect(chain.verifyFixity('7', HASH)).resolves.toBe(false);
+    await expect(chain.tokenUri('7')).resolves.toBeNull();
+    await expect(chain.ownerOf('7')).resolves.toBeNull();
+  });
+
+  it('rejects with CHAIN_UNAVAILABLE when the RPC fails', async () => {
+    const chain = blockchain({
+      eth_call: () => {
+        throw new RpcError(-32000, 'upstream down');
+      },
+    });
+
+    await expect(chain.getArtwork('7')).rejects.toMatchObject({
+      code: 'CHAIN_UNAVAILABLE',
+    });
+    await expect(chain.verifyFixity('7', HASH)).rejects.toMatchObject({
+      code: 'CHAIN_UNAVAILABLE',
+    });
+  });
+});

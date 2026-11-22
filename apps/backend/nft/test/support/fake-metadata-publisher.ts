@@ -1,21 +1,20 @@
 import { createHash } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import { AppConfigService } from '../config/app-config.service';
+import { AppConfigService } from '../../src/config/app-config.service';
 import type {
   MetadataContext,
   MetadataPublisher,
   PreparedMetadata,
-} from '../metadata/metadata-publisher.port';
+} from '../../src/metadata/metadata-publisher.port';
 
 /**
- * Stand-in `MetadataPublisher` until NFT-03 (#61) is wired in: the mint
- * module provides it for `METADATA_PUBLISHER`, and the follow-up after both
- * PRs merge replaces that provider with the real IPFS publisher.
+ * Test-only `MetadataPublisher`: the HTTP tests override
+ * `METADATA_PUBLISHER` with it, so the mint journey runs without Content
+ * snapshots or IPFS. The application binds NFT-03's `MetadataService`.
  *
  * It pins nothing and reads nothing from Content: every value is derived
  * from the ContentId, so it is deterministic and public. It refuses to run
- * in production, so a production mint fails with `METADATA_UNAVAILABLE`
- * instead of writing placeholder metadata on-chain.
+ * in production.
  */
 @Injectable()
 export class FakeMetadataPublisher implements MetadataPublisher {

@@ -1,22 +1,24 @@
-import type { MintStatus, ProvenanceMintRecord } from './provenance.ports';
+import { MINT_FAILURES } from '../mint/mint-failure';
+import type { MintRequestRecord } from '../mint/mint-request';
+import {
+  type MintView,
+  NO_MINT_SCOPE,
+  PROVENANCE_SCOPE,
+  toMintView,
+} from '../mint/mint-view';
 
 /**
- * Public provenance body. It is the frozen contract `Provenance`
- * (packages/shared, gateway OpenAPI): `{ contentId, mint, scope }` with the
- * `MintRecord` fields. NFT-05 adds optional fields only, which the platform
- * contract allows without a contract change.
+ * Public provenance body (NFT-05). It is the frozen contract `Provenance`
+ * (packages/shared, gateway OpenAPI): `{ contentId, mint, scope }`, where
+ * `mint` carries exactly the `MintRecord` fields NFT-04 returns, plus
+ * optional display fields. The platform contract allows added optional
+ * fields without a contract change.
  */
 export interface ProvenanceView {
   readonly contentId: string;
   /** `null` when no mint was ever requested for the item. */
   readonly mint: ProvenanceMintView | null;
   readonly scope: string;
-}
-
-export interface NetworkView {
-  readonly name: string;
-  readonly chainId: number;
-  readonly contractAddress: string;
 }
 
 export interface ExplorerLinks {
@@ -26,7 +28,7 @@ export interface ExplorerLinks {
 
 /** What the chain says about a confirmed record. */
 export type VerificationState =
-  /** The token exists, its master hash and token URI match the record. */
+  /** The token exists, and its master hash and token URI match the record. */
   | 'verified'
   /** The chain answered and disagrees with the record. */
   | 'mismatch'
@@ -39,6 +41,8 @@ export interface OnChainView {
   readonly mintedAt: string;
   readonly masterHash: string;
   readonly tokenUri: string | null;
+  /** `ownerOf(tokenId)`: the gallery wallet (custodial model, S2). */
+  readonly owner: string | null;
 }
 
 export interface VerificationView {
@@ -50,22 +54,11 @@ export interface VerificationView {
   readonly checkedAt: string;
 }
 
-export interface ProvenanceMintView {
-  // Frozen contract `MintRecord`.
-  readonly mintId: string;
-  readonly contentId: string;
-  readonly status: MintStatus;
-  readonly network: NetworkView | null;
-  readonly tokenId: string | null;
-  readonly transactionHash: string | null;
-  /** Transaction link, else token link (contract `explorerUrl`). */
-  readonly explorerUrl: string | null;
-  readonly failureReason: string | null;
-  readonly requestedAt: string;
-  readonly confirmedAt: string | null;
-  // Optional NFT-05 additions.
-  /** Allowlisted public failure code when `failed`, otherwise `null`. */
-  readonly failureCode?: string | null;
+/** Optional NFT-05 additions to the frozen `MintRecord`. */
+export interface ProvenanceMintView extends MintView {
+  /** Allowlisted public failure code, when `failed`. */
+  readonly failureCode?: string;
+  /** When pending or confirmed. */
   readonly explorer?: ExplorerLinks;
   /** `ipfs://<metadata CID>`, when confirmed. */
   readonly tokenUri?: string | null;
@@ -76,38 +69,14 @@ export interface ProvenanceMintView {
   readonly masterHash?: string | null;
   /** Time the confirmation was recorded, when confirmed. */
   readonly mintedAt?: string | null;
-  /** Present when confirmed. */
+  /** When confirmed. */
   readonly verification?: VerificationView;
 }
 
-/** What a record establishes and what it does not (MVP section C). */
-export const PROVENANCE_SCOPE =
-  'This certificate records that the LOVA gallery registered this published ' +
-  'item on a public test blockchain, with a fingerprint of its master file. ' +
-  'It does not prove physical authenticity, authorship or ownership of the ' +
-  'work or of its rights.';
-
-export const NO_MINT_SCOPE =
-  'No certificate has been requested for this item. Its record in LOVA is ' +
-  'unchanged; a certificate would only record a registration date.';
-
-/** Public failure codes and their safe sentences (same codes as NFT-04). */
-export const PUBLIC_FAILURES: Readonly<Record<string, string>> = {
-  CONTRACT_REVERTED: 'The certificate contract refused this mint.',
-  INSUFFICIENT_FUNDS:
-    'The gallery cannot pay the network fee right now. Try again later.',
-  CHAIN_UNAVAILABLE:
-    'The blockchain network could not be reached. Try again later.',
-  METADATA_UNAVAILABLE:
-    'The certificate details could not be published. Try again later.',
-  INVALID_METADATA: 'This item cannot be written into a certificate.',
-  UNKNOWN: 'The certificate could not be created. Try again later.',
-};
-
-const CHAIN_NAMES: Readonly<Record<number, string>> = {
-  43113: 'Avalanche Fuji',
-  31337: 'Hardhat local',
-};
+export interface ViewOptions {
+  readonly explorerBaseUrl: string;
+  readonly ipfsGatewayUrl: string;
+}
 
 const TX_HASH = /^0x[0-9a-fA-F]{64}$/;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -120,29 +89,13 @@ function shaped(value: string | null, pattern: RegExp): string | null {
   return value !== null && pattern.test(value) ? value : null;
 }
 
-export function publicFailureCode(code: string | null): string {
-  return code !== null && Object.hasOwn(PUBLIC_FAILURES, code)
-    ? code
-    : 'UNKNOWN';
-}
-
-export interface ViewOptions {
-  readonly explorerBaseUrl: string;
-  readonly ipfsGatewayUrl: string;
-}
-
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
 }
 
-function networkOf(record: ProvenanceMintRecord): NetworkView | null {
-  const contractAddress = shaped(record.contractAddress, ADDRESS);
-  if (contractAddress === null) return null;
-  return {
-    name: CHAIN_NAMES[record.chainId] ?? `Chain ${String(record.chainId)}`,
-    chainId: record.chainId,
-    contractAddress,
-  };
+/** The stored code when it is a known public one, otherwise `UNKNOWN`. */
+export function publicFailureCode(code: string | null): string {
+  return code !== null && Object.hasOwn(MINT_FAILURES, code) ? code : 'UNKNOWN';
 }
 
 /** `ipfs://<cid>` → `<gateway>/<cid>`, or `null` for any other value. */
@@ -154,79 +107,46 @@ export function gatewayUrlOf(
   return cid === undefined ? null : `${trimSlash(ipfsGatewayUrl)}/${cid}`;
 }
 
-function base(
-  record: ProvenanceMintRecord,
-  network: NetworkView | null,
-): ProvenanceMintView {
-  return {
-    mintId: record.id,
-    contentId: record.contentId,
-    status: record.status,
-    network,
-    tokenId: null,
-    transactionHash: null,
-    explorerUrl: null,
-    failureReason: null,
-    requestedAt: record.createdAt.toISOString(),
-    confirmedAt: null,
-  };
-}
-
 /**
- * Builds the public mint view. Only public fields leave the service: no
- * requester, idempotency key, attempts or internal failure detail.
- *
- * - `pending`: status, network and, once sent, the transaction and its link.
- * - `failed`: status, an allowlisted failure code and its safe sentence.
- * - `confirmed`: every chain reference, links and the verification block.
+ * Builds the public mint view: NFT-04's `MintRecord` unchanged, plus
+ * - `failed`: the allowlisted `failureCode`;
+ * - `pending`: explorer links once the transaction is sent;
+ * - `confirmed`: explorer links, token URI and its gateway URL, metadata
+ *   CID, master hash, `mintedAt` and the verification block.
+ * The requester, idempotency key, attempts and request ID never leave.
  */
-export function toMintView(
-  record: ProvenanceMintRecord,
+export function toProvenanceMintView(
+  record: MintRequestRecord,
   options: ViewOptions,
   verification: VerificationView | undefined,
 ): ProvenanceMintView {
-  const network = networkOf(record);
-  const explorer = trimSlash(options.explorerBaseUrl);
-  const txHash = shaped(record.txHash, TX_HASH);
-  const txLink = txHash === null ? null : `${explorer}/tx/${txHash}`;
-
+  const base = toMintView(record, options.explorerBaseUrl);
   if (record.status === 'failed') {
-    const failureCode = publicFailureCode(record.failureCode);
-    return {
-      ...base(record, network),
-      failureCode,
-      failureReason: PUBLIC_FAILURES[failureCode] ?? null,
-    };
+    return { ...base, failureCode: publicFailureCode(record.failureCode) };
   }
 
+  const explorer = trimSlash(options.explorerBaseUrl);
+  const txHash = shaped(record.txHash, TX_HASH);
+  const transaction = txHash === null ? null : `${explorer}/tx/${txHash}`;
   if (record.status === 'pending') {
-    return {
-      ...base(record, network),
-      transactionHash: txHash,
-      explorerUrl: txLink,
-      explorer: { transaction: txLink, token: null },
-    };
+    return { ...base, explorer: { transaction, token: null } };
   }
 
   const tokenId = shaped(record.tokenId, TOKEN_ID);
-  const tokenLink =
-    tokenId === null || network === null
+  const contract = shaped(record.contractAddress, ADDRESS);
+  const token =
+    tokenId === null || contract === null
       ? null
-      : `${explorer}/nft/${network.contractAddress}/${tokenId}`;
+      : `${explorer}/nft/${contract}/${tokenId}`;
   const tokenUri = shaped(record.tokenUri, IPFS_URI);
-  const confirmedAt = record.confirmedAt?.toISOString() ?? null;
   return {
-    ...base(record, network),
-    tokenId,
-    transactionHash: txHash,
-    explorerUrl: txLink ?? tokenLink,
-    confirmedAt,
-    explorer: { transaction: txLink, token: tokenLink },
+    ...base,
+    explorer: { transaction, token },
     tokenUri,
     metadataUrl: gatewayUrlOf(tokenUri, options.ipfsGatewayUrl),
     metadataCid: shaped(record.metadataCid, CID),
     masterHash: shaped(record.masterHash, TX_HASH)?.toLowerCase() ?? null,
-    mintedAt: confirmedAt,
+    mintedAt: base.confirmedAt,
     ...(verification === undefined ? {} : { verification }),
   };
 }
@@ -240,4 +160,18 @@ export function toProvenanceView(
     mint,
     scope: mint === null ? NO_MINT_SCOPE : PROVENANCE_SCOPE,
   };
+}
+
+/** Confirmed and checked: immutable on-chain, a short public cache is safe. */
+export const CONFIRMED_CACHE = 'public, max-age=60';
+/** Confirmed but the chain could not check it: retry the check soon. */
+export const UNVERIFIED_CACHE = 'public, max-age=15';
+/** No mint, pending or failed: the status may change on the next poll. */
+export const NO_STORE = 'no-store';
+
+export function cacheControlOf(view: ProvenanceView): string {
+  if (view.mint?.status !== 'confirmed') return NO_STORE;
+  return view.mint.verification?.state === 'unverifiable'
+    ? UNVERIFIED_CACHE
+    : CONFIRMED_CACHE;
 }
