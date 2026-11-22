@@ -1,0 +1,4 @@
+.missing {
+  display: block;
+  background: var(--color-media-missing);
+}

@@ -1,9 +1,16 @@
 import { cpSync, mkdirSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const source = join(appRoot, 'node_modules/three/examples/jsm/libs/draco/gltf');
+// Resolve three through Node so the script works whether npm hoists it to the
+// workspace root or keeps it in this app's node_modules.
+const threeRoot = join(
+  dirname(createRequire(import.meta.url).resolve('three')),
+  '..',
+);
+const source = join(threeRoot, 'examples/jsm/libs/draco/gltf');
 const target = join(appRoot, 'public/draco');
 const decoderFiles = [
   'draco_decoder.js',

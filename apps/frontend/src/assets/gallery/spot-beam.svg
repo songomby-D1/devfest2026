@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="492" height="817" viewBox="0 0 492 817" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Faisceau du spot (composite, mode Superposition lumi&#195;&#168;re)" style="mix-blend-mode:screen">
+<ellipse cx="246" cy="408.5" rx="246" ry="408.5" fill="url(#paint0_radial_0_29)"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_29" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(246 408.5) scale(246 408.5)">
+<stop stop-color="#F0896A" stop-opacity="0.55"/>
+<stop offset="0.55" stop-color="#E0704F" stop-opacity="0.36"/>
+<stop offset="0.82" stop-color="#C8553A" stop-opacity="0.14"/>
+<stop offset="1" stop-color="#C8553A" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>

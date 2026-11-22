@@ -1,0 +1,124 @@
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+  padding: var(--space-32) var(--space-32) var(--space-40);
+  font-family: var(--font-text);
+  color: var(--color-ink);
+}
+
+.header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding-right: 48px;
+}
+
+.eyebrow,
+.verification,
+.rights,
+.details dt {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-accent);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif-italic);
+  font-size: 32px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.close {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--color-ink-08);
+  border-radius: var(--radius-pill);
+  place-items: center;
+}
+
+.demo {
+  margin: 0;
+  padding: var(--space-10) var(--space-14);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: var(--space-14);
+  padding-bottom: var(--space-10);
+  border-bottom: 1px solid var(--color-ink-08);
+}
+
+.details dt {
+  padding-top: 2px;
+  color: var(--color-ink-60);
+}
+
+.details dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.story {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+}
+
+.story p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.verification {
+  margin: 0;
+  color: var(--color-ink-60);
+}
+
+.verification[data-status='verified'] {
+  color: #2f6b3a;
+}
+
+.verification[data-status='uncertain'] {
+  color: var(--color-accent);
+}
+
+.rights {
+  margin: 0;
+  color: var(--color-ink-60);
+  letter-spacing: 0.08em;
+  text-transform: none;
+}

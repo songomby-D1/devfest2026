@@ -95,23 +95,25 @@ The gateway listens on `http://localhost:3000/api`. Quality checks: `npm run lin
 
 ## Documentation
 
-| Document                                                         | Contents                                               |
-| ---------------------------------------------------------------- | ------------------------------------------------------ |
-| [MVP scope](docs/product/MVP.md)                                 | Capabilities, owners, and acceptance criteria          |
-| [Platform contract](docs/specs/platform-contract.md)             | Frozen vocabulary, gateway routes, sessions and errors |
-| [API contracts](docs/api/README.md)                              | OpenAPI documents owned by each producer               |
-| [Backlog](docs/product/task.md)                                  | Tasks, dependencies, and open decisions                |
-| [Project decisions](docs/decisions/project-decisions.md)         | Team authority and decisions that need endy-rkt        |
-| [Architecture overview](docs/architecture/overview.md)           | System layout and gateway                              |
-| [Services](docs/architecture/services.md)                        | Responsibilities, contracts, and Dockerfiles           |
-| [Data and storage](docs/architecture/data-storage.md)            | PostgreSQL, Prisma, media, and backups                 |
-| [Team](docs/team/responsibilities.md)                            | Ownership and coordination                             |
-| [Contributing](CONTRIBUTING.md)                                  | Git workflow and review                                |
-| [Development workflow](docs/development/workflow.md)             | Local commands and tooling decisions                   |
-| [Code quality policy](docs/development/code-policy.md)           | Shared rules for contributors and agents               |
-| [Tests and delivery criteria](docs/development/quality-gates.md) | Checks required for each service                       |
-| [CI](docs/development/ci.md)                                     | Workflow, troubleshooting, and GitHub settings         |
-| [Agent instructions](AGENTS.md)                                  | Shared rules for Claude and Codex                      |
+| Document                                                         | Contents                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------- |
+| [MVP scope](docs/product/MVP.md)                                 | Capabilities, owners, and acceptance criteria                   |
+| [Platform contract](docs/specs/platform-contract.md)             | Frozen vocabulary, gateway routes, sessions and errors          |
+| [API contracts](docs/api/README.md)                              | OpenAPI documents owned by each producer                        |
+| [Backlog](docs/product/task.md)                                  | Tasks, dependencies, and open decisions                         |
+| [Project decisions](docs/decisions/project-decisions.md)         | Team authority and decisions that need endy-rkt                 |
+| [Architecture overview](docs/architecture/overview.md)           | System layout and gateway                                       |
+| [Services](docs/architecture/services.md)                        | Responsibilities, contracts, and Dockerfiles                    |
+| [Data and storage](docs/architecture/data-storage.md)            | PostgreSQL, Prisma, media, and backups                          |
+| [Team](docs/team/responsibilities.md)                            | Ownership and coordination                                      |
+| [Contributing](CONTRIBUTING.md)                                  | Git workflow and review                                         |
+| [Development workflow](docs/development/workflow.md)             | Local commands and tooling decisions                            |
+| [Code quality policy](docs/development/code-policy.md)           | Shared rules for contributors and agents                        |
+| [Tests and delivery criteria](docs/development/quality-gates.md) | Checks required for each service                                |
+| [CI](docs/development/ci.md)                                     | Workflow, troubleshooting, and GitHub settings                  |
+| [Agent instructions](AGENTS.md)                                  | Shared rules for Claude and Codex                               |
+| [Frontend](apps/frontend/README.md)                              | How the React frontend is built, run, tested and verified       |
+| [Frontend rules](apps/frontend/rules.md)                         | Frontend stack, Figma-to-code rules, required states and checks |
 
 ## Design and UX
 
