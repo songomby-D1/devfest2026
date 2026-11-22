@@ -24,6 +24,7 @@ function validEnv(
     MINTER_PRIVATE_KEY: DUMMY_KEY,
     IPFS_DRIVER: 'fake',
     MEDIA_ROOT: mediaRoot,
+    DATABASE_URL: 'postgresql://nft_runtime@localhost:5432/nft',
     ...overrides,
   };
 }
@@ -203,6 +204,7 @@ describe('validateEnv', () => {
         NODE_ENV: 'production',
         IPFS_DRIVER: 'pinata',
         PINATA_JWT: 'jwt',
+        NFT_INBOUND_TOKEN_GATEWAY: 'g'.repeat(32),
       };
       const message =
         'CONTENT_SERVICE_TOKEN must be set in production, with at least 32 characters';
@@ -240,5 +242,43 @@ describe('validateEnv', () => {
     expect(text).toContain('CONTRACT_ADDRESS');
     expect(text).toContain('MINTER_PRIVATE_KEY');
     expect(text).toContain('PINATA_JWT');
+  });
+
+  describe('mint settings (NFT-04)', () => {
+    it('applies the mint defaults', () => {
+      expect(validateEnv(validEnv())).toMatchObject({
+        MINT_MAX_ATTEMPTS: 5,
+        MINT_SWEEP_INTERVAL_MS: 30000,
+      });
+    });
+
+    it('requires a PostgreSQL DATABASE_URL and never echoes it', () => {
+      const secret = 'mysql://user:leaky-pw@host/db';
+      const problems = problemsOf(validEnv({ DATABASE_URL: secret }));
+
+      expect(problems).toContain(
+        'DATABASE_URL must be a postgresql:// connection URL',
+      );
+      expect(problems.join('\n')).not.toContain('leaky-pw');
+    });
+
+    it('accepts only testnet chain IDs', () => {
+      expect(validateEnv(validEnv({ CHAIN_ID: '31337' })).CHAIN_ID).toBe(31337);
+      expect(problemsOf(validEnv({ CHAIN_ID: '43114' }))).toContain(
+        'CHAIN_ID must be a supported testnet: 43113 (Avalanche Fuji) or 31337 (Hardhat)',
+      );
+    });
+
+    it('requires the gateway inbound token in production only', () => {
+      const message =
+        'NFT_INBOUND_TOKEN_GATEWAY must be set in production, with at least 32 characters';
+
+      expect(validateEnv(validEnv()).NFT_INBOUND_TOKEN_GATEWAY).toBeUndefined();
+      expect(
+        problemsOf(
+          validEnv({ NODE_ENV: 'production', NFT_INBOUND_TOKEN_GATEWAY: 'x' }),
+        ),
+      ).toContain(message);
+    });
   });
 });

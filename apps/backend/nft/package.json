@@ -7,29 +7,38 @@
     "node": ">=22 <23"
   },
   "scripts": {
-    "build": "nest build",
+    "prisma:generate": "prisma generate",
+    "build": "prisma generate && nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main.js",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "jest",
-    "test:cov": "jest --coverage",
-    "test:e2e": "jest --testPathPattern=test/http"
+    "typecheck": "prisma generate && tsc --noEmit -p tsconfig.json",
+    "test": "prisma generate && NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects unit",
+    "test:http": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects http",
+    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest --selectProjects integration",
+    "test:cov": "prisma generate && NODE_OPTIONS=--experimental-vm-modules jest --coverage"
   },
   "dependencies": {
     "@nestjs/common": "11.2.11",
     "@nestjs/config": "4.0.4",
     "@nestjs/core": "11.2.11",
     "@nestjs/platform-express": "11.2.11",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
+    "prisma": "7.10.1",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
+    "viem": "2.57.16",
     "zod": "4.6.7"
   },
   "devDependencies": {
     "@nestjs/cli": "11.0.24",
     "@nestjs/testing": "11.2.11",
+    "@testcontainers/postgresql": "12.2.2",
+    "@types/express": "5.0.6",
     "@types/jest": "29.5.14",
     "@types/node": "22.20.5",
     "@types/supertest": "7.2.1",

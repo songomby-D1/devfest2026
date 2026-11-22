@@ -9,12 +9,16 @@
 !apps/backend/nft/nest-cli.json
 !apps/backend/nft/tsconfig.json
 !apps/backend/nft/tsconfig.build.json
+!apps/backend/nft/prisma.config.ts
+!apps/backend/nft/docker-entrypoint.sh
+!apps/backend/nft/prisma/**
 !apps/backend/nft/src/**
 
 # Never send these, even inside allowed folders.
 **/node_modules
 **/dist
 **/coverage
+**/src/generated
 **/.env
 **/.env.*
 **/*.spec.ts
