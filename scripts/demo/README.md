@@ -1,0 +1,20 @@
+# Local demo
+
+Runs the whole LOVA stack locally with real public-domain Malagasy works and a local EVM chain, so the
+NFT and blockchain journey can be tested end to end. Local only: never reuse these settings elsewhere.
+
+```sh
+node scripts/demo/setup.mjs            # .env + apps/backend/nft/.env (random secrets, random gallery key)
+node scripts/demo/fetch-media.mjs      # public-domain / CC0 images into scripts/demo/media (gitignored)
+docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d chain
+node scripts/demo/deploy-contract.mjs  # PreservingArt (feature/nft-l1) on chain 31337, owned by the gallery wallet
+docker compose -f docker-compose.yml -f docker-compose.demo.yml up -d --build
+node scripts/demo/seed.mjs             # submit, review (item and description separately) and publish 5 works
+node scripts/demo/nft-walkthrough.mjs  # NFT + blockchain acceptance checks; add --all to mint every work
+```
+
+- `docker-compose.demo.yml` adds the local chain (Ganache, chain id 31337) and applies the Content and NFT
+  compose fragments that the root file does not include yet.
+- IPFS uses the NFT service's `fake` driver: CIDs are computed but nothing is served online.
+- Works, sources and licenses: [items.json](items.json). Images stay out of Git until cleared under D18.
+- After `deploy-contract.mjs` on a running stack, restart `nft-service` so it reads `CONTRACT_ADDRESS`.
