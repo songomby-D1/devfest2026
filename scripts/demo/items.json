@@ -1,0 +1,142 @@
+[
+  {
+    "file": "shindler-malagasy-woman.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Antonion_Zeno_Shindler_-_Malagasy_Woman_-_1985.66.165,709_-_Smithsonian_American_Art_Museum.jpg",
+    "license": "Public domain (author died 1899; Smithsonian American Art Museum)",
+    "item": {
+      "title": "Malagasy Woman",
+      "kind": "painting",
+      "description": "Portrait of a Malagasy woman wrapped in a lamba, painted around 1893 by Antonio Zeno Shindler. Oil on canvas, 106.8 × 71.1 cm, Smithsonian American Art Museum, 1985.66.165,709.",
+      "creatorName": "Antonio Zeno Shindler (1813–1899)",
+      "creatorCommunity": null,
+      "technique": "Oil on canvas",
+      "origin": "Painted in the United States after a Malagasy sitter",
+      "period": "ca. 1893",
+      "rightsStatement": "Public domain: the author died in 1899. Image from Wikimedia Commons (Smithsonian American Art Museum).",
+      "rightsConfirmed": true
+    },
+    "caption": "Antonio Zeno Shindler, Malagasy Woman, ca. 1893",
+    "review": {
+      "item": [
+        "verified",
+        "Matches the Smithsonian American Art Museum record 1985.66.165,709 (artist, date, medium)."
+      ],
+      "description": [
+        "verified",
+        "Description checked against the museum record."
+      ]
+    }
+  },
+  {
+    "file": "antongona-1875.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Anon-Madagascar_-_Antongona.jpg",
+    "license": "Public domain (work from 1875)",
+    "item": {
+      "title": "Antongona",
+      "kind": "painting",
+      "description": "View of the Antongona hill fortress in central Madagascar, signed with the monogram \"W.J.\", 1875. Ink, watercolour and gouache on paper.",
+      "creatorName": "Anonymous (monogram W.J.)",
+      "creatorCommunity": null,
+      "technique": "Ink, watercolour and gouache on paper",
+      "origin": "Imerina, Madagascar",
+      "period": "1875",
+      "rightsStatement": "Public domain: work from 1875. Image from Wikimedia Commons.",
+      "rightsConfirmed": true
+    },
+    "caption": "Antongona, 1875",
+    "review": {
+      "item": [
+        "verified",
+        "Date and monogram confirmed from the 2020 Abbott and Holder sale record."
+      ],
+      "description": [
+        "uncertain",
+        "The identification of the site as the Antongona fortress is plausible but not confirmed by a second source."
+      ]
+    }
+  },
+  {
+    "file": "ellis-bridge-at-ambaniala.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Bridge_at_Ambaniala_(1838).jpg",
+    "license": "Public domain (author died 1872)",
+    "item": {
+      "title": "Bridge at Ambaniala",
+      "kind": "other",
+      "description": "Lithograph of a bridge at Ambaniala, published in William Ellis's History of Madagascar, volume 2, London, 1838.",
+      "creatorName": "William Ellis (1794–1872)",
+      "creatorCommunity": null,
+      "technique": "Lithograph",
+      "origin": "History of Madagascar, London",
+      "period": "1838",
+      "rightsStatement": "Public domain: the author died in 1872. Image from Wikimedia Commons.",
+      "rightsConfirmed": true
+    },
+    "caption": "William Ellis, Bridge at Ambaniala, 1838",
+    "review": {
+      "item": [
+        "verified",
+        "Plate identified in History of Madagascar, vol. 2 (1838)."
+      ],
+      "description": [
+        "verified",
+        "Publication details checked against the digitised volume."
+      ]
+    }
+  },
+  {
+    "file": "met-couple-2001-408.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Couple_MET_2001.408.jpg",
+    "license": "CC0 (Metropolitan Museum of Art Open Access)",
+    "item": {
+      "title": "Couple figure",
+      "kind": "sculpture",
+      "description": "Carved wooden couple figure from the Sakalava peoples of western Madagascar, 17th to late 18th century. The Metropolitan Museum of Art, 2001.408.",
+      "creatorName": "Sakalava artist",
+      "creatorCommunity": "Sakalava",
+      "technique": "Wood sculpture",
+      "origin": "Western Madagascar",
+      "period": "17th–late 18th century",
+      "rightsStatement": "CC0: photograph released by the Metropolitan Museum of Art under its Open Access policy.",
+      "rightsConfirmed": true
+    },
+    "caption": "Couple figure, Sakalava peoples, The Met 2001.408",
+    "review": {
+      "item": [
+        "verified",
+        "Matches The Met record 2001.408 (Sakalava peoples, wood)."
+      ],
+      "description": [
+        "uncertain",
+        "The date range is the museum's estimate; the function of the figure is not documented."
+      ]
+    }
+  },
+  {
+    "file": "mahafaly-funerary-post.jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Mahafaly_funerary_post_Quai_Branly_71.1965.16.22_n01.jpg",
+    "license": "Public domain (photograph by Marie-Lan Nguyen, released into the public domain)",
+    "item": {
+      "title": "Aloalo funerary post",
+      "kind": "sculpture",
+      "description": "Carved aloalo funerary post of the Mahafaly people of southern Madagascar, set on tombs to honour the dead. Musée du quai Branly – Jacques Chirac, 71.1965.16.22.",
+      "creatorName": "Mahafaly artist",
+      "creatorCommunity": "Mahafaly",
+      "technique": "Carved wood",
+      "origin": "Southern Madagascar",
+      "period": "20th century (before 1965)",
+      "rightsStatement": "Public domain: photograph by Marie-Lan Nguyen, released into the public domain. Image from Wikimedia Commons.",
+      "rightsConfirmed": true
+    },
+    "caption": "Mahafaly aloalo, Musée du quai Branly 71.1965.16.22",
+    "review": {
+      "item": [
+        "verified",
+        "Inventory number 71.1965.16.22 matches the musée du quai Branly catalogue."
+      ],
+      "description": [
+        "verified",
+        "Aloalo function described per the museum notice."
+      ]
+    }
+  }
+]
