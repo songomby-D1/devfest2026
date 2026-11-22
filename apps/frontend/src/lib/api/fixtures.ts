@@ -1,8 +1,8 @@
-import type { Item, Model3d, Provenance } from './contract';
+import type { Item } from './contract';
 
 // Demo fixtures for VITE_API_MODE=mock. Together they cover every value of
-// PublicationStatus, ClaimStatus, the 3D status and the mint status so each
-// screen state can be built without the backend. Media paths point to
+// PublicationStatus and ClaimStatus so each screen state can be built without
+// the backend; provenance-fixtures.ts covers the 3D and mint states. Media paths point to
 // public/demo/, which stays local-only; a missing file exercises the fallbacks.
 
 export const fixtureIds = {
@@ -54,30 +54,4 @@ export const fixtureItems: Item[] = [
     description: 'Panier tressé en fibres végétales.',
     imageUrl: '/demo/sobika/image.webp',
   },
-];
-
-export const fixtureModels: Model3d[] = [
-  {
-    contentId: fixtureIds.sculpture,
-    status: 'ready',
-    variants: {
-      poster: '/demo/sculpture/poster.webp',
-      glb1k: '/demo/sculpture/model-1k.glb',
-      glb2k: '/demo/sculpture/model-2k.glb',
-    },
-  },
-  { contentId: fixtureIds.painting, status: 'missing' },
-  { contentId: fixtureIds.textile, status: 'processing' },
-];
-
-export const fixtureProvenance: Provenance[] = [
-  {
-    contentId: fixtureIds.sculpture,
-    mint: 'confirmed',
-    tokenId: '1',
-    transactionHash:
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-  },
-  { contentId: fixtureIds.painting, mint: 'failed' },
-  { contentId: fixtureIds.textile, mint: null },
 ];

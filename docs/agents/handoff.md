@@ -2,7 +2,14 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: npm cache for Docker builds (rivon0507)
+## Latest session: FE-04 NFT and 3D panels (rivon0507, Agent 3)
+
+- [PROPOSED] FE-04 ([#71](https://github.com/songomby-D1/devfest2026/issues/71)) adds two embeddable panels for the item detail page: `<NftPanel contentId isOwner />` (`apps/frontend/src/features/nft/`) and `<Model3dPanel contentId />` (`apps/frontend/src/features/model3d/`). NftPanel shows provenance to everyone (none, pending, confirmed, failed with its public code, verified/mismatch/unverifiable), and gives the owner a "Certifier sur la blockchain" action. One idempotency key per intent is kept in `sessionStorage` per ContentId and dropped on a final state; 202, 200, 409, 403, 401 and 422 are handled separately; provenance is polled with backoff (1 s doubling to 15 s, 45 attempts) and polling stops on a final state or unmount. Model3dPanel wraps the existing `ArtworkViewer` (poster, 1K, HD on demand), says "en préparation" while processing, and renders nothing when missing.
+- [PROPOSED] `src/lib/api/contract.ts` now follows `packages/shared` for `Model3d` (`variants: … | null`), `MintRecord` and `Provenance` (`mint: MintRecord | null`, `scope`), plus the optional NFT-05 fields. `mintItem` returns `{ created, mint }` (202 vs 200). `model3d-adapter.ts` also accepts LiDAR's `none` / `variants['1k'|'2k']` shape and drops off-origin URLs. Mint, provenance and 3D mocks moved to `mock-provenance.ts` and `provenance-fixtures.ts`.
+- [DECISION REQUIRED: Sesedra] The panels have no Figma frame yet; copy and layout are provisional.
+- [DECISION REQUIRED: salandri-42] Contract need: the NFT service answers `scope` and `failureReason` in English; the panel shows French copy and maps `failureCode` itself. A French (or code-only) scope would avoid the duplication.
+
+## Earlier session: npm cache for Docker builds (rivon0507)
 
 - [PROPOSED] Every `npm ci` in the five backend Dockerfiles now uses `RUN --mount=type=cache,id=npm,target=/root/.npm` and `--prefer-offline`, so packages are downloaded once and reused by every image and rebuild. LiDAR's Dockerfile gains `# syntax=docker/dockerfile:1`. The rule is in [services.md](../architecture/services.md#dockerfile-placement).
 - [DECISION REQUIRED: shidoAdr, papangoo, salandri-42, endy-rkt] Confirm the change to your Dockerfile (Auth and LiDAR, Content, NFT, gateway).

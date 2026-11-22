@@ -1,0 +1,26 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-14);
+  font-family: var(--font-text);
+}
+
+.heading {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: normal;
+}
+
+.still {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  background: var(--color-media-missing);
+}
+
+.message {
+  margin: 0;
+  color: var(--color-ink-60);
+}

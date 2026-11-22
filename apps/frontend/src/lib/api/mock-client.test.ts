@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from './client';
-import { fixtureIds, fixtureItems, fixtureModels } from './fixtures';
+import { fixtureIds, fixtureItems } from './fixtures';
 import { createMockClient } from './mock-client';
 
 describe('mock fixtures', () => {
-  it('cover every publication, claim and 3D status', () => {
+  it('cover every publication and claim status', () => {
     expect(new Set(fixtureItems.map((i) => i.publicationStatus))).toEqual(
       new Set(['draft', 'published', 'unpublished']),
     );
@@ -15,15 +15,6 @@ describe('mock fixtures', () => {
     expect(new Set(claims)).toEqual(
       new Set(['unreviewed', 'verified', 'uncertain']),
     );
-    expect(new Set(fixtureModels.map((m) => m.status))).toEqual(
-      new Set(['ready', 'processing', 'missing']),
-    );
-  });
-
-  it('give variants only to ready models', () => {
-    for (const model of fixtureModels) {
-      expect(model.variants !== undefined).toBe(model.status === 'ready');
-    }
   });
 });
 
@@ -61,21 +52,6 @@ describe('createMockClient', () => {
       description: 'uncertain',
     });
     expect(item.claims).toEqual({ item: 'verified', description: 'uncertain' });
-  });
-
-  it('mints idempotently and confirms on the next provenance read', async () => {
-    const client = createMockClient();
-    const first = await client.mintItem(fixtureIds.textile, 'key-1');
-    const retry = await client.mintItem(fixtureIds.textile, 'key-1');
-    expect(first).toEqual({ contentId: fixtureIds.textile, status: 'pending' });
-    expect(retry).toEqual(first);
-    const provenance = await client.getProvenance(fixtureIds.textile);
-    expect(provenance.mint).toBe('confirmed');
-  });
-
-  it('reports a missing model for an item without a 3D record', async () => {
-    const model = await createMockClient().getModel3d(fixtureIds.draft);
-    expect(model).toEqual({ contentId: fixtureIds.draft, status: 'missing' });
   });
 
   it('isolates state between clients and from returned objects', async () => {
