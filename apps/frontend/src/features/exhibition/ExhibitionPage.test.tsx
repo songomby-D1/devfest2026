@@ -83,6 +83,17 @@ describe('ExhibitionPage', () => {
     expect(currentChapter()).toHaveTextContent('Valiha');
   });
 
+  it('links to the ticket office from the header and the epilogue', () => {
+    window.history.replaceState(null, '', '/expositions/1?chapitre=6');
+    render(<ExhibitionPage id="1" />);
+    expect(
+      screen.getByRole('link', { name: /Billets pour l’exposition sur place/ }),
+    ).toHaveAttribute('href', '/expositions/1/billetterie');
+    expect(
+      screen.getByRole('link', { name: /Voir l’exposition en vrai/ }),
+    ).toHaveAttribute('href', '/expositions/1/billetterie');
+  });
+
   it('labels the AI-generated illustrations', async () => {
     const user = userEvent.setup();
     render(<ExhibitionPage id="1" />);

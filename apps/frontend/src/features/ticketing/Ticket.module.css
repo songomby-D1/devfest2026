@@ -1,0 +1,462 @@
+/*
+ * A printed admission ticket: cream rag paper with a guilloché security
+ * pattern, a wine header band, a gold foil strip, a perforated control stub
+ * held by two die-cut notches, and an inked "Réservé" stamp.
+ */
+.shadow {
+  --t-paper: #f4ecdc;
+  --t-paper-stub: #ece1cc;
+  --t-ink: #1d1712;
+  --t-ink-soft: rgb(29 23 18 / 0.58);
+  --t-wine: #67271f;
+  --t-stub: 196px;
+  --t-notch: 13px;
+
+  width: min(760px, 100%);
+  /* The shadow sits on the parent so it follows the die-cut notches. */
+  filter: drop-shadow(0 22px 28px rgb(0 0 0 / 0.42))
+    drop-shadow(0 2px 2px rgb(0 0 0 / 0.35));
+}
+
+.ticket {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr var(--t-stub);
+  min-height: 312px;
+  overflow: hidden;
+  color: var(--t-ink);
+  background-color: var(--t-paper);
+  background-image:
+    url('../../assets/home/paper-grain.svg'),
+    repeating-radial-gradient(
+      circle at 92% 118%,
+      transparent 0 7px,
+      rgb(103 39 31 / 0.045) 7px 8px
+    ),
+    repeating-radial-gradient(
+      circle at -8% -30%,
+      transparent 0 9px,
+      rgb(103 39 31 / 0.035) 9px 10px
+    ),
+    radial-gradient(
+      120% 140% at 30% 40%,
+      transparent 55%,
+      rgb(120 86 48 / 0.12) 100%
+    );
+  border-radius: 7px;
+  mask:
+    radial-gradient(
+        circle var(--t-notch) at calc(100% - var(--t-stub)) 0,
+        transparent 97%,
+        #000 100%
+      )
+      top / 100% 51% no-repeat,
+    radial-gradient(
+        circle var(--t-notch) at calc(100% - var(--t-stub)) 100%,
+        transparent 97%,
+        #000 100%
+      )
+      bottom / 100% 51% no-repeat;
+}
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0 34px 18px 40px;
+}
+
+.serial {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--t-wine);
+  letter-spacing: 0.28em;
+  white-space: nowrap;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 -34px 0 -40px;
+  padding: 11px 34px 9px 40px;
+  font-family: var(--font-condensed);
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  color: var(--t-paper);
+  background-color: var(--t-wine);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 6px,
+    rgb(255 255 255 / 0.05) 6px 7px
+  );
+}
+
+.bandBrand {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.logo {
+  height: 14px;
+  width: auto;
+}
+
+.body {
+  flex: 1;
+  padding-top: 18px;
+}
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.22em;
+  color: var(--t-wine);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 50px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  font-family: var(--font-serif-italic);
+  font-size: 15px;
+  font-style: italic;
+  color: var(--t-ink-soft);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 0 22px;
+  margin: 16px 0 0;
+}
+
+.fields > div {
+  padding: 7px 0 6px;
+  border-top: 1px dotted rgb(29 23 18 / 0.32);
+}
+
+.fields dt {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.2em;
+  color: var(--t-ink-soft);
+  text-transform: uppercase;
+}
+
+.fields dd {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wide dd {
+  white-space: normal;
+}
+
+.fields dd:first-letter {
+  text-transform: uppercase;
+}
+
+.time {
+  font-family: var(--font-condensed) !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  letter-spacing: 0.04em;
+}
+
+.fine {
+  margin: 10px 0 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--t-ink-soft);
+}
+
+.foil {
+  position: absolute;
+  top: 44px;
+  right: 12px;
+  bottom: 18px;
+  width: 9px;
+  background: linear-gradient(
+    180deg,
+    #a8834f 0%,
+    #f6e3b8 14%,
+    #b18a52 28%,
+    #fbecc8 46%,
+    #9b7442 62%,
+    #f1d9a6 80%,
+    #a37b46 100%
+  );
+  background-size: 100% 220%;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 0.5px rgb(90 62 28 / 0.45);
+  animation: foil 6s ease-in-out infinite alternate;
+}
+
+.stamp {
+  position: absolute;
+  top: 50px;
+  right: 30px;
+  padding: 6px 14px 3px;
+  font-family: var(--font-condensed);
+  font-size: 26px;
+  letter-spacing: 0.14em;
+  color: rgb(140 32 24 / 0.78);
+  text-transform: uppercase;
+  pointer-events: none;
+  border: 3px double rgb(140 32 24 / 0.7);
+  border-radius: 6px;
+  mix-blend-mode: multiply;
+  transform: rotate(-8deg);
+  /* Uneven ink: the stamp never prints perfectly. */
+  mask-image: repeating-linear-gradient(
+    -35deg,
+    #000 0 3px,
+    rgb(0 0 0 / 0.72) 3px 4px,
+    #000 4px 9px
+  );
+  animation: stamp 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.stub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 18px;
+  text-align: center;
+  background: rgb(120 86 48 / 0.06);
+}
+
+/* Perforation between the ticket and its stub. */
+.stub::before {
+  position: absolute;
+  top: var(--t-notch);
+  bottom: var(--t-notch);
+  left: -1px;
+  width: 2px;
+  content: '';
+  background-image: radial-gradient(
+    circle,
+    rgb(29 23 18 / 0.42) 1.1px,
+    transparent 1.5px
+  );
+  background-size: 2px 8px;
+}
+
+.stubKicker {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--t-ink-soft);
+  text-transform: uppercase;
+}
+
+.qr {
+  width: 118px;
+  height: 118px;
+  margin-top: 4px;
+  animation: develop 0.6s ease both;
+}
+
+.qrPlaceholder {
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 118px;
+  margin-top: 4px;
+  padding: 12px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--t-ink-soft);
+  border: 1px dashed rgb(29 23 18 / 0.35);
+}
+
+.code {
+  margin: 4px 0 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.stubMeta {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--t-ink-soft);
+}
+
+.admit {
+  margin: 4px 0 0;
+  font-family: var(--font-condensed);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--t-wine);
+  text-transform: uppercase;
+}
+
+.admit strong {
+  font-size: 24px;
+  font-weight: 400;
+}
+
+/* Narrow screens: the stub tears off at the bottom. */
+@media (max-width: 640px) {
+  .ticket {
+    grid-template-columns: 1fr;
+    mask:
+      radial-gradient(
+          circle var(--t-notch) at 0 calc(100% - var(--t-stub)),
+          transparent 97%,
+          #000 100%
+        )
+        left / 51% 100% no-repeat,
+      radial-gradient(
+          circle var(--t-notch) at 100% calc(100% - var(--t-stub)),
+          transparent 97%,
+          #000 100%
+        )
+        right / 51% 100% no-repeat;
+  }
+
+  .main {
+    padding: 0 22px 16px 30px;
+  }
+
+  .band {
+    margin: 0 -22px 0 -30px;
+    padding: 10px 22px 8px 30px;
+  }
+
+  .serial {
+    left: 8px;
+  }
+
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .foil {
+    display: none;
+  }
+
+  .stamp {
+    top: 54px;
+    right: 14px;
+    font-size: 22px;
+  }
+
+  .stub {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: repeat(4, auto);
+    gap: 4px 16px;
+    align-items: center;
+    height: var(--t-stub);
+    padding: 18px 22px;
+    text-align: left;
+  }
+
+  .stub::before {
+    top: -1px;
+    right: var(--t-notch);
+    bottom: auto;
+    left: var(--t-notch);
+    width: auto;
+    height: 2px;
+    background-size: 8px 2px;
+  }
+
+  .stubKicker {
+    grid-column: 2;
+  }
+
+  .qr,
+  .qrPlaceholder {
+    grid-row: 1 / span 4;
+    grid-column: 1;
+    width: 128px;
+    height: 128px;
+    margin: 0;
+  }
+
+  .code,
+  .stubMeta,
+  .admit {
+    grid-column: 2;
+    margin: 0;
+  }
+}
+
+@keyframes foil {
+  to {
+    background-position: 0 100%;
+  }
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: rotate(-8deg) scale(1.8);
+  }
+}
+
+@keyframes develop {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foil,
+  .stamp,
+  .qr {
+    animation: none;
+  }
+}
+
+@media print {
+  .shadow {
+    filter: none;
+  }
+
+  .ticket {
+    print-color-adjust: exact;
+  }
+
+  .foil,
+  .stamp,
+  .qr {
+    animation: none;
+  }
+}

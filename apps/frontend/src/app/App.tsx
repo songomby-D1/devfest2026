@@ -28,6 +28,13 @@ const ExhibitionPage = lazy(() =>
   })),
 );
 
+// The ticket office has no WebGL: its own small chunk.
+const TicketOffice = lazy(() =>
+  import('../features/ticketing').then((module) => ({
+    default: module.TicketOffice,
+  })),
+);
+
 const MotionLab = lazy(() =>
   import('./MotionLab').then((module) => ({ default: module.MotionLab })),
 );
@@ -77,6 +84,12 @@ function Screen({ pathname }: { pathname: string }) {
       return (
         <Suspense fallback={null}>
           <ExhibitionPage key={route.id} id={route.id} />
+        </Suspense>
+      );
+    case 'tickets':
+      return (
+        <Suspense fallback={null}>
+          <TicketOffice key={route.id} id={route.id} />
         </Suspense>
       );
     case 'gallery':

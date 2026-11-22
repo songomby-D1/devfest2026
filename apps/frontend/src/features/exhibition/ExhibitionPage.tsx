@@ -167,14 +167,24 @@ function ExhibitionView({ exhibition }: { readonly exhibition: Exhibition }) {
           <span className={styles.mastheadCurator}>{exhibition.curator}</span>
         </div>
         <div className={styles.actions}>
+          <Link
+            to={`/expositions/${exhibition.id}/billetterie`}
+            className={styles.ghost}
+            aria-label="Billets pour l’exposition sur place"
+          >
+            <TicketIcon />
+            <span className={styles.actionLabel}>Billets</span>
+          </Link>
           <button
             type="button"
             className={styles.ghost}
+            aria-label={`Livre d’or${book.notes.length > 0 ? `, ${String(book.notes.length)} mots` : ''}`}
             onClick={() => {
               setPanel('guestbook');
             }}
           >
-            Livre d’or
+            <BookIcon />
+            <span className={styles.actionLabel}>Livre d’or</span>
             {book.notes.length > 0 ? (
               <span className={styles.count}>{book.notes.length}</span>
             ) : null}
@@ -277,6 +287,19 @@ function ExhibitionView({ exhibition }: { readonly exhibition: Exhibition }) {
             Examiner en 3D <span aria-hidden="true">→</span>
           </button>
         </div>
+        {index === exhibition.chapters.length - 1 ? (
+          <Link
+            to={`/expositions/${exhibition.id}/billetterie`}
+            className={styles.realVisit}
+          >
+            <span className={styles.realVisitKicker}>
+              {exhibition.visit.venue} · {exhibition.visit.city}
+            </span>
+            <span className={styles.realVisitText}>
+              Voir l’exposition en vrai <span aria-hidden="true">→</span>
+            </span>
+          </Link>
+        ) : null}
         <p className={styles.credit}>{chapter.credit}</p>
       </main>
 
@@ -382,6 +405,40 @@ function ExhibitionView({ exhibition }: { readonly exhibition: Exhibition }) {
         />
       ) : null}
     </div>
+  );
+}
+
+function TicketIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M2 4.5h12v2a1.5 1.5 0 0 0 0 3v2H2v-2a1.5 1.5 0 0 0 0-3z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 5v1.2M10 7.4v1.2M10 9.8V11"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M8 4c-1.6-1-3.6-1.3-5.5-1v9.5c1.9-.3 3.9 0 5.5 1 1.6-1 3.6-1.3 5.5-1V3C11.6 2.7 9.6 3 8 4zM8 4v9.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

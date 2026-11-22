@@ -16,7 +16,14 @@ describe('matchRoute', () => {
       kind: 'exhibition',
       id: '1',
     });
+    expect(matchRoute('/expositions/1/billetterie')).toEqual({
+      kind: 'tickets',
+      id: '1',
+    });
     expect(matchRoute('/expositions/1/extra')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/expositions/1/billetterie/x')).toEqual({
+      kind: 'not-found',
+    });
     expect(matchRoute('/expositions/%E0%A4%A')).toEqual({ kind: 'not-found' });
   });
 
