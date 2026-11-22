@@ -1,0 +1,809 @@
+openapi: 3.1.0
+info:
+  title: LOVA public gateway API
+  version: 1.0.0
+  description: >-
+    Public application API of the LOVA gateway, frozen at Gate 0. Owned by Agent 1 (D06, D14).
+    The prose contract is docs/specs/platform-contract.md and the TypeScript declarations are in
+    packages/shared. Owning services enforce ownership, reviewer rights and business rules; the
+    gateway authenticates the session, builds the caller context and normalizes errors.
+servers:
+  - url: http://localhost:3000
+    description: Gateway published by root Compose
+tags:
+  - name: auth
+  - name: items
+  - name: provenance
+  - name: model3d
+  - name: operations
+paths:
+  /api/health:
+    get:
+      tags: [operations]
+      operationId: getHealth
+      summary: Gateway liveness and upstream reachability
+      security: []
+      responses:
+        '200':
+          description: The gateway answers. `status` is `degraded` when an upstream is down.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GatewayHealth' }
+  /api/auth/register:
+    post:
+      tags: [auth]
+      operationId: register
+      summary: Create an account
+      description: Registration does not open a session. Rate limited per client address.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RegisterResponse' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '403': { $ref: '#/components/responses/ForbiddenOrigin' }
+        '409':
+          description: '`EMAIL_ALREADY_REGISTERED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Open a session
+      description: >-
+        Sets the session cookie. Wrong password and unknown email give the same answer. Rate
+        limited per client address.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Session opened
+          headers:
+            Set-Cookie:
+              description: '`lova_session` (or `__Host-lova_session` over HTTPS), HttpOnly, SameSite=Lax, Path=/'
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401':
+          description: '`INVALID_CREDENTIALS`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '403': { $ref: '#/components/responses/ForbiddenOrigin' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Revoke the session and clear the cookie
+      description: Idempotent. Succeeds without a session.
+      security: [{ session: [] }, {}]
+      responses:
+        '204': { description: Signed out }
+        '403': { $ref: '#/components/responses/ForbiddenOrigin' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/auth/me:
+    get:
+      tags: [auth]
+      operationId: getMe
+      summary: Read the signed-in account
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: The signed-in account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items:
+    get:
+      tags: [items]
+      operationId: listItems
+      summary: List items
+      description: >-
+        `public` lists published items. `mine` lists the caller's submissions and needs a session.
+        `review` lists submissions waiting for review and needs the reviewer permission.
+      security: [{ session: [] }, {}]
+      parameters:
+        - name: scope
+          in: query
+          schema:
+            { type: string, enum: [public, mine, review], default: public }
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/ItemKind' }
+        - name: q
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string, maxLength: 200 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: One page of items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemPage' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    post:
+      tags: [items]
+      operationId: createItem
+      summary: Submit a new item record
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateItemRequest' }
+      responses:
+        '201':
+          description: Item created as a draft in review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/ForbiddenOrigin' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    get:
+      tags: [items]
+      operationId: getItem
+      summary: Read one item
+      description: Guests see published items only. Drafts answer 404 to anyone but the owner and reviewers.
+      security: [{ session: [] }, {}]
+      responses:
+        '200':
+          description: The item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/media:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    post:
+      tags: [items]
+      operationId: uploadMedia
+      summary: Upload one image or video to an owned item
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                caption: { type: string, maxLength: 300 }
+      responses:
+        '201':
+          description: Media stored privately until publication
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MediaRef' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415':
+          description: '`UNSUPPORTED_MEDIA_TYPE`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/media/{mediaId}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - name: mediaId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [items]
+      operationId: getMedia
+      summary: Stream a media file
+      security: [{ session: [] }, {}]
+      parameters:
+        - name: Range
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          description: Whole file
+          content:
+            image/*: { schema: { type: string, format: binary } }
+            video/*: { schema: { type: string, format: binary } }
+        '206':
+          description: Requested range
+          content:
+            video/*: { schema: { type: string, format: binary } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/review:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    post:
+      tags: [items]
+      operationId: reviewItem
+      summary: Record a claim review
+      description: Reviewer only. A reviewer cannot review their own submission.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewRequest' }
+      responses:
+        '201':
+          description: Review recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/decision:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    post:
+      tags: [items]
+      operationId: decideItem
+      summary: Publish, return or reject a submission
+      description: >-
+        Reviewer only. `publish` needs both claims reviewed and the rights confirmed, otherwise
+        Content answers 422 with a rule code.
+      security: [{ session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionRequest' }
+      responses:
+        '200':
+          description: Decision applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/mint:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    post:
+      tags: [provenance]
+      operationId: requestMint
+      summary: Request a mint for a published item
+      description: >-
+        Signed-in users only; NFT decides eligibility. Repeating a request with the same key
+        returns the same mint and never mints twice. Poll the provenance route while pending (D16).
+      security: [{ session: [] }]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' }
+      responses:
+        '200':
+          description: Existing mint for this key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MintRecord' }
+        '202':
+          description: Mint accepted and pending
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MintRecord' }
+        '400':
+          description: '`VALIDATION_FAILED` or `IDEMPOTENCY_KEY_REQUIRED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/provenance:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    get:
+      tags: [provenance]
+      operationId: getProvenance
+      summary: Read the mint status and provenance references
+      security: [{ session: [] }, {}]
+      responses:
+        '200':
+          description: Provenance, with `mint` null when no mint was requested
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Provenance' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/items/{id}/model3d:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+    get:
+      tags: [model3d]
+      operationId: getModel3d
+      summary: Read the 3D descriptor of an item
+      security: [{ session: [] }, {}]
+      responses:
+        '200':
+          description: Descriptor. `missing` when the item has no 3D asset.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Model3dDescriptor' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/lidar/files/{path}:
+    get:
+      tags: [model3d]
+      operationId: getModelFile
+      summary: Stream a 3D variant or poster referenced by a descriptor
+      security: [{ session: [] }, {}]
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+        - name: Range
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          description: File
+          content:
+            model/gltf-binary: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        '206': { description: Requested range }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/nft/{path}:
+    get:
+      tags: [provenance]
+      operationId: getNftRecord
+      summary: Read-only NFT records relayed to the NFT service (NFT spec §10.4)
+      security: [{ session: [] }, {}]
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: NFT service answer
+          content:
+            application/json:
+              schema: { type: object }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/admin/permissions:
+    put:
+      tags: [operations]
+      operationId: grantPermission
+      summary: Grant a permission to an account (operator)
+      security: [{ adminToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PermissionChangeRequest' }
+      responses:
+        '204': { description: Granted, idempotent }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    delete:
+      tags: [operations]
+      operationId: revokePermission
+      summary: Revoke a permission from an account (operator)
+      security: [{ adminToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PermissionChangeRequest' }
+      responses:
+        '204': { description: Revoked, idempotent }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: lova_session
+    adminToken:
+      type: apiKey
+      in: header
+      name: x-admin-token
+  parameters:
+    ItemId:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/ContentId' }
+  responses:
+    ValidationFailed:
+      description: '`VALIDATION_FAILED`, with `details`'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Unauthenticated:
+      description: '`UNAUTHENTICATED`: no valid session or admin token'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Forbidden:
+      description: '`FORBIDDEN` or a service-specific permission code'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    ForbiddenOrigin:
+      description: '`FORBIDDEN_ORIGIN`: the request origin is not allowed'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    NotFound:
+      description: '`NOT_FOUND`'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    PayloadTooLarge:
+      description: '`PAYLOAD_TOO_LARGE`'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Unprocessable:
+      description: '`UNPROCESSABLE` or a service-specific rule code'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    RateLimited:
+      description: '`RATE_LIMITED`'
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Unavailable:
+      description: '`<SERVICE>_UNAVAILABLE`: the owning service did not answer in time'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+  schemas:
+    ContentId:
+      type: string
+      format: uuid
+      description: Opaque item ID created by Content.
+    PublicationStatus:
+      type: string
+      enum: [draft, published, unpublished]
+    SubmissionStatus:
+      type: string
+      enum: [in_review, returned, rejected, accepted]
+    ClaimStatus:
+      type: string
+      enum: [unreviewed, verified, uncertain]
+    ItemKind:
+      type: string
+      enum: [painting, sculpture, photograph, textile, object, other]
+    Permission:
+      type: string
+      enum: [reviewer]
+    PublicError:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string, examples: [VALIDATION_FAILED] }
+        message: { type: string, description: Safe to display }
+        requestId: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, reason]
+            properties:
+              field: { type: string }
+              reason: { type: string }
+    GatewayHealth:
+      type: object
+      required: [status, upstreams]
+      properties:
+        status: { type: string, enum: [ok, degraded] }
+        upstreams:
+          type: object
+          required: [auth, content, nft, lidar]
+          properties:
+            auth: { type: string, enum: [up, down] }
+            content: { type: string, enum: [up, down] }
+            nft: { type: string, enum: [up, down] }
+            lidar: { type: string, enum: [up, down] }
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 12, maxLength: 128 }
+        displayName: { type: [string, 'null'], minLength: 1, maxLength: 60 }
+    RegisterResponse:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: string, format: uuid }
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, maxLength: 254 }
+        password: { type: string, maxLength: 128 }
+    Me:
+      type: object
+      required: [userId, email, displayName, permissions, sessionExpiresAt]
+      properties:
+        userId: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: [string, 'null'] }
+        permissions:
+          type: array
+          items: { $ref: '#/components/schemas/Permission' }
+        sessionExpiresAt: { type: string, format: date-time }
+    PermissionChangeRequest:
+      type: object
+      additionalProperties: false
+      required: [email, permission]
+      properties:
+        email: { type: string, maxLength: 254 }
+        permission: { $ref: '#/components/schemas/Permission' }
+    ClaimStatuses:
+      type: object
+      required: [item, description]
+      properties:
+        item: { $ref: '#/components/schemas/ClaimStatus' }
+        description: { $ref: '#/components/schemas/ClaimStatus' }
+    ItemSummary:
+      type: object
+      required:
+        [
+          id,
+          title,
+          kind,
+          creatorName,
+          origin,
+          period,
+          thumbnailUrl,
+          publicationStatus,
+          submissionStatus,
+          claims,
+          updatedAt,
+        ]
+      properties:
+        id: { $ref: '#/components/schemas/ContentId' }
+        title: { type: string }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        creatorName: { type: [string, 'null'] }
+        origin: { type: [string, 'null'] }
+        period: { type: [string, 'null'] }
+        thumbnailUrl: { type: [string, 'null'] }
+        publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
+        submissionStatus: { $ref: '#/components/schemas/SubmissionStatus' }
+        claims: { $ref: '#/components/schemas/ClaimStatuses' }
+        updatedAt: { type: string, format: date-time }
+    MediaRef:
+      type: object
+      required: [id, kind, mimeType, bytes, url, caption]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [image, video] }
+        mimeType: { type: string }
+        bytes: { type: integer, minimum: 1 }
+        url: { type: string, description: Gateway-relative URL }
+        caption: { type: [string, 'null'] }
+    ClaimReview:
+      type: object
+      required: [target, outcome, rationale, evidence, reviewerId, reviewedAt]
+      properties:
+        target: { type: string, enum: [item, description] }
+        outcome: { type: string, enum: [verified, uncertain] }
+        rationale: { type: string }
+        evidence: { type: array, items: { type: string } }
+        reviewerId: { type: string, format: uuid }
+        reviewedAt: { type: string, format: date-time }
+    AdvisorySignal:
+      type: object
+      description: Advisory only. Never changes a claim status.
+      required: [kind, score, source, note, createdAt]
+      properties:
+        kind: { type: string, enum: [ai_generated, description_mismatch] }
+        score: { type: number, minimum: 0, maximum: 1 }
+        source: { type: string }
+        note: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+    ItemDetail:
+      allOf:
+        - $ref: '#/components/schemas/ItemSummary'
+        - type: object
+          required:
+            [
+              description,
+              creator,
+              rights,
+              media,
+              reviews,
+              isOwner,
+              createdAt,
+              publishedAt,
+            ]
+          properties:
+            description: { type: string }
+            creator:
+              type: object
+              required: [name, community, technique]
+              properties:
+                name: { type: [string, 'null'] }
+                community: { type: [string, 'null'] }
+                technique: { type: [string, 'null'] }
+            rights:
+              type: object
+              required: [statement, confirmed]
+              properties:
+                statement: { type: string }
+                confirmed: { type: boolean }
+            media:
+              type: array
+              items: { $ref: '#/components/schemas/MediaRef' }
+            reviews:
+              type: array
+              items: { $ref: '#/components/schemas/ClaimReview' }
+            isOwner: { type: boolean }
+            advisorySignals:
+              type: array
+              items: { $ref: '#/components/schemas/AdvisorySignal' }
+            createdAt: { type: string, format: date-time }
+            publishedAt: { type: [string, 'null'], format: date-time }
+    ItemPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ItemSummary' }
+        nextCursor: { type: [string, 'null'] }
+    CreateItemRequest:
+      type: object
+      additionalProperties: false
+      required: [title, kind, description, rightsStatement, rightsConfirmed]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 160 }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        description: { type: string, minLength: 1, maxLength: 8000 }
+        creatorName: { type: [string, 'null'], maxLength: 160 }
+        creatorCommunity: { type: [string, 'null'], maxLength: 160 }
+        technique: { type: [string, 'null'], maxLength: 160 }
+        origin: { type: [string, 'null'], maxLength: 160 }
+        period: { type: [string, 'null'], maxLength: 80 }
+        rightsStatement: { type: string, minLength: 1, maxLength: 2000 }
+        rightsConfirmed: { type: boolean }
+    ReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [target, outcome, rationale, evidence]
+      properties:
+        target: { type: string, enum: [item, description] }
+        outcome: { type: string, enum: [verified, uncertain] }
+        rationale: { type: string, minLength: 1, maxLength: 4000 }
+        evidence:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 500 }
+    DecisionRequest:
+      type: object
+      additionalProperties: false
+      required: [decision, note]
+      properties:
+        decision: { type: string, enum: [publish, return, reject] }
+        note: { type: string, maxLength: 4000 }
+    Model3dDescriptor:
+      type: object
+      required: [contentId, status, variants]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { type: string, enum: [ready, processing, missing] }
+        variants:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [poster, glb1k, glb2k]
+              properties:
+                poster: { type: string }
+                glb1k: { type: string }
+                glb2k: { type: string }
+    MintRecord:
+      type: object
+      required:
+        [
+          mintId,
+          contentId,
+          status,
+          network,
+          tokenId,
+          transactionHash,
+          explorerUrl,
+          failureReason,
+          requestedAt,
+          confirmedAt,
+        ]
+      properties:
+        mintId: { type: string, format: uuid }
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { type: string, enum: [pending, confirmed, failed] }
+        network:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [name, chainId, contractAddress]
+              properties:
+                name: { type: string }
+                chainId: { type: integer }
+                contractAddress: { type: string }
+        tokenId: { type: [string, 'null'] }
+        transactionHash: { type: [string, 'null'] }
+        explorerUrl: { type: [string, 'null'] }
+        failureReason: { type: [string, 'null'] }
+        requestedAt: { type: string, format: date-time }
+        confirmedAt: { type: [string, 'null'], format: date-time }
+    Provenance:
+      type: object
+      required: [contentId, mint, scope]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        mint:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/MintRecord'
+        scope: { type: string }

@@ -1,0 +1,289 @@
+openapi: 3.1.0
+info:
+  title: LOVA Auth internal API
+  version: 1.0.0
+  description: >-
+    Internal API of the Auth service, called by the gateway only (D07, D14). Implements the Auth
+    contract in docs/specs/auth-contract.md. Every route under /internal requires the gateway
+    service credentials. Tokens travel in request bodies, never in URLs.
+servers:
+  - url: http://auth:3000
+    description: Service address inside Compose
+security:
+  - serviceName: []
+    serviceToken: []
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness and database connectivity
+      security: []
+      responses:
+        '200':
+          description: The service and its database answer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { const: ok }
+        '503':
+          description: '`DATABASE_UNAVAILABLE`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /internal/v1/accounts:
+    post:
+      operationId: createAccount
+      summary: Register an account (CA1–CA3)
+      description: >-
+        The email is trimmed and lower-cased. The password is NFKC-normalized and must have 12 to
+        128 code points. Registration does not open a session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password]
+              properties:
+                email: { type: string, maxLength: 254 }
+                password: { type: string, minLength: 12, maxLength: 128 }
+                displayName: { type: [string, 'null'], maxLength: 60 }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accountId]
+                properties:
+                  accountId: { type: string, format: uuid }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/ServiceUnauthenticated' }
+        '409':
+          description: '`EMAIL_ALREADY_REGISTERED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/Busy' }
+  /internal/v1/accounts/{accountId}:
+    get:
+      operationId: getAccount
+      summary: Read an account without its credentials
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: The account
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  [accountId, email, displayName, permissions, createdAt]
+                properties:
+                  accountId: { type: string, format: uuid }
+                  email: { type: string }
+                  displayName: { type: [string, 'null'] }
+                  permissions:
+                    type: array
+                    items: { $ref: '#/components/schemas/Permission' }
+                  createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/ServiceUnauthenticated' }
+        '404':
+          description: '`ACCOUNT_NOT_FOUND`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /internal/v1/sessions:
+    post:
+      operationId: openSession
+      summary: Log in (CA4, CA5)
+      description: >-
+        Wrong passwords and unknown emails return the same body and both run one password hash.
+        Only the SHA-256 of the token is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Credentials' }
+      responses:
+        '201':
+          description: Session opened
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accountId, token, expiresAt]
+                properties:
+                  accountId: { type: string, format: uuid }
+                  token: { type: string, pattern: '^[A-Za-z0-9_-]{43}$' }
+                  expiresAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401':
+          description: '`INVALID_CREDENTIALS` or `SERVICE_UNAUTHENTICATED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { $ref: '#/components/responses/Busy' }
+  /internal/v1/sessions/introspect:
+    post:
+      operationId: introspectSession
+      summary: Resolve a session token (CA6–CA8)
+      description: >-
+        Extends the idle deadline, writing at most once per minute. `expiresAt` is the earlier of
+        the 2-hour idle and 7-day absolute limits.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TokenBody' }
+      responses:
+        '200':
+          description: Active session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accountId, permissions, expiresAt]
+                properties:
+                  accountId: { type: string, format: uuid }
+                  permissions:
+                    type: array
+                    items: { $ref: '#/components/schemas/Permission' }
+                  expiresAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401':
+          description: >-
+            `SESSION_INVALID`, identical for unknown, expired and revoked tokens, or
+            `SERVICE_UNAUTHENTICATED`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /internal/v1/sessions/revoke:
+    post:
+      operationId: revokeSession
+      summary: Log out (CA9)
+      description: Idempotent. Unknown or malformed tokens change nothing.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TokenBody' }
+      responses:
+        '204': { description: Revoked }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/ServiceUnauthenticated' }
+  /internal/v1/permissions/grant:
+    post:
+      operationId: grantPermission
+      summary: Grant a permission by email (CA13)
+      description: Idempotent. Also available as the `grant-permission` CLI command.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PermissionChange' }
+      responses:
+        '204': { description: Granted }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/ServiceUnauthenticated' }
+        '404':
+          description: '`ACCOUNT_NOT_FOUND`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /internal/v1/permissions/revoke:
+    post:
+      operationId: revokePermission
+      summary: Revoke a permission by email (CA13)
+      description: Idempotent. Also available as the `revoke-permission` CLI command.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PermissionChange' }
+      responses:
+        '204': { description: Revoked }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/ServiceUnauthenticated' }
+        '404':
+          description: '`ACCOUNT_NOT_FOUND`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+components:
+  securitySchemes:
+    serviceName:
+      type: apiKey
+      in: header
+      name: x-service-name
+      description: Must be `gateway`.
+    serviceToken:
+      type: apiKey
+      in: header
+      name: x-service-token
+      description: Value of `AUTH_INBOUND_TOKEN_GATEWAY`.
+  responses:
+    ValidationFailed:
+      description: '`VALIDATION_FAILED` with `details`, also for bodies over 10 KB or not JSON'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnauthenticated:
+      description: '`SERVICE_UNAUTHENTICATED`'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Busy:
+      description: '`AUTH_BUSY`: too many password hashes are waiting'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Permission:
+      type: string
+      enum: [reviewer]
+    Credentials:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, maxLength: 254 }
+        password: { type: string, maxLength: 128 }
+    TokenBody:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { type: string, maxLength: 256 }
+    PermissionChange:
+      type: object
+      additionalProperties: false
+      required: [email, permission]
+      properties:
+        email: { type: string, maxLength: 254 }
+        permission: { $ref: '#/components/schemas/Permission' }
+    Error:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string }
+        message: { type: string, description: Safe to display }
+        requestId: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, reason]
+            properties:
+              field: { type: string }
+              reason: { type: string }
