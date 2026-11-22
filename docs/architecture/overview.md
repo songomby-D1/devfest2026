@@ -36,7 +36,7 @@ flowchart LR
 
 [CONFIRMED] Start with synchronous HTTP. Kubernetes, Kafka, RabbitMQ, a service mesh and distributed orchestration require demonstrated need.
 
-[CONFIRMED] **D16 Async processing.** Start with synchronous HTTP and gateway status polling. Prefer offline 3D preparation. Validate the baseline against the NFT and LiDAR proposals and reopen the decision if a concrete cross-service need emerges. [D16 decision](../decisions/project-decisions.md#d16-system-wide-async-infrastructure)
+[CONFIRMED] **D16 Async processing.** Start with synchronous HTTP and gateway status polling. Prefer offline 3D preparation. The baseline passed validation under endy-rkt-06 against the NFT and LiDAR proposals: no broker is deployed and status is read over HTTP. Reopen the decision only if a concrete cross-service need emerges. [D16 decision](../decisions/project-decisions.md#d16-system-wide-async-infrastructure)
 
 ## Proposed repository layout
 
