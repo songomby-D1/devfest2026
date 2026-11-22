@@ -12,7 +12,7 @@ ARG NODE_IMAGE=node:22-alpine
 FROM ${NODE_IMAGE} AS deps
 WORKDIR /repo/apps/backend/content
 COPY apps/backend/content/package.json apps/backend/content/package-lock.json apps/backend/content/.npmrc ./
-RUN npm ci --no-audit --no-fund
+RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --prefer-offline --no-audit --no-fund
 
 # Local development: applies migrations, then recompiles on change.
 FROM deps AS development
@@ -36,7 +36,7 @@ RUN npm run build
 FROM ${NODE_IMAGE} AS prod-deps
 WORKDIR /repo/apps/backend/content
 COPY apps/backend/content/package.json apps/backend/content/package-lock.json apps/backend/content/.npmrc ./
-RUN npm ci --omit=dev --no-audit --no-fund
+RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --prefer-offline --omit=dev --no-audit --no-fund
 
 # Runtime image: production dependencies, compiled code, non-root user.
 FROM ${NODE_IMAGE} AS runtime

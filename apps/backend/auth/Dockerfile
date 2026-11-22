@@ -11,12 +11,12 @@ COPY . .
 
 # Development dependencies, Prisma client generation and compilation.
 FROM sources AS build
-RUN npm ci --workspace apps/backend/auth --include-workspace-root=false --no-audit --no-fund
+RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --prefer-offline --workspace apps/backend/auth --include-workspace-root=false --no-audit --no-fund
 RUN npm run build --workspace apps/backend/auth
 
 # Production dependencies only, including the Prisma CLI for migrations at startup.
 FROM sources AS prod-deps
-RUN npm ci --workspace apps/backend/auth --include-workspace-root=false --omit=dev --no-audit --no-fund
+RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --prefer-offline --workspace apps/backend/auth --include-workspace-root=false --omit=dev --no-audit --no-fund
 
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production
