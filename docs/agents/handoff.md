@@ -2,6 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: ownership transfer, CODEOWNERS withdrawn (rivon0507)
+
+- [CONFIRMED] The project ownership transferred, so the owners named in [responsibilities](../team/responsibilities.md) and in settlement S19 no longer own these areas. The CTO-24 CODEOWNERS proposal (PR #134) was closed before merge and its branch deleted; `develop` has no `.github/CODEOWNERS`.
+- [NOT IMPLEMENTED] The team page and settlement S19 still name the previous owners. Correcting them needs the new ownership list and the new owner's approval; do not add CODEOWNERS or code-owner review before that.
+- [IMPLEMENTED] Stale-issue audit retained: 21 already-delivered issues (CTO foundation, Auth, gateway baseline, frontend shell and the FE-03 flows) were verified against `develop` and hosted run 45000699433 and closed with per-issue evidence.
+- [NOT IMPLEMENTED] No branch protection, ruleset or required check was applied, and none should be added on the previous ownership assumptions.
+
 ## Latest session: 3D exhibition and image-to-3D generation (Dylan Mickael, branch `3d-art-generation`)
 
 - [PROPOSED] `/expositions/1` (and `/expositions`, which redirects there) clones the Haj'Aina exhibition page (`DylanMickael/hajaina-fashion-website`, `app/(dashboard)/expositions/[id]`). It keeps the `<model-viewer>` close-up (camera controls, auto-rotate, AR), the narrator (typed text, then French speech synthesis) and the comment panel, renamed "Livre d’or" and stored on the device. The left/right model carousel is replaced by a storyline travelled in depth: chapters stand one behind the other along a WebGL corridor (`features/exhibition/DepthScene.tsx`). Wheel, vertical swipe, ↑/↓, Page Up/Down, Home/End and a depth rail move the camera through gold portals, and a passed chapter sinks into the floor. "Lancer la visite" narrates each chapter, then travels deeper. Deep link: `?chapitre=N`. Without WebGL, the page shows the chapter poster.
