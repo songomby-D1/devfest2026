@@ -1,0 +1,214 @@
+openapi: 3.1.0
+info:
+  title: LOVA NFT internal API
+  version: 0.1.0
+  description: >-
+    Internal API of the NFT service. Only the gateway reaches it on the
+    internal network.
+
+
+    Provenance (NFT-05 #63): read-only provenance display data of a
+    published item. Guests may read it. The body is the frozen contract
+    `Provenance` (`{ contentId, mint, scope }`, gateway OpenAPI and
+    packages/shared) with optional additions on `mint`, which the platform
+    contract allows without a contract change. An unknown, draft or
+    unpublished item answers the same `404 NOT_FOUND`, so drafts never leak.
+    The on-chain verification is best effort: when the chain cannot be read,
+    the record is still returned with `verification.state: unverifiable`.
+
+
+    The gateway's `GET /api/items/{id}/provenance` forwards to
+    `GET /internal/v1/provenance/{contentId}` (platform contract), served by
+    NFT-04. The NFT-05 wiring follow-up makes that route answer with the
+    body below (apps/backend/nft/docs/provenance.md).
+servers:
+  - url: http://nft-service:3005
+paths:
+  /internal/v1/items/{contentId}/provenance:
+    get:
+      tags: [provenance]
+      operationId: getItemProvenance
+      summary: Read the provenance display data of a published item
+      description: >-
+        `mint` is `null` when no mint was ever requested. Otherwise it is the
+        pending or confirmed mint, else the latest failed one. A pending mint
+        shows its transaction once sent; a failed mint shows only its status
+        and a public failure code; a confirmed mint shows every public chain
+        reference and a verification block. Poll while `pending` (D16).
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/ContentId' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: >-
+            Provenance. `Cache-Control` is `public, max-age=60` for a
+            confirmed mint, `public, max-age=15` for a confirmed mint the
+            chain could not check, and `no-store` otherwise.
+          headers:
+            Cache-Control:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Provenance' }
+        '400':
+          description: '`VALIDATION_FAILED`: the ContentId is not a UUID'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '404':
+          description: '`NOT_FOUND`: unknown, draft or unpublished item'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '503':
+          description: >-
+            `CONTENT_UNAVAILABLE` (publication cannot be confirmed) or
+            `NFT_UNAVAILABLE` (mint records cannot be read). The gateway maps
+            both to `NFT_UNAVAILABLE`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+components:
+  parameters:
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[A-Za-z0-9._:-]{1,128}$' }
+  schemas:
+    ContentId:
+      type: string
+      format: uuid
+      description: Opaque ContentId created by Content (D01).
+    PublicError:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, reason]
+            properties:
+              field: { type: string }
+              reason: { type: string }
+    Provenance:
+      type: object
+      required: [contentId, mint, scope]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        mint:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ProvenanceMint'
+        scope:
+          type: string
+          description: What the record establishes and what it does not.
+    ProvenanceMint:
+      type: object
+      description: >-
+        The frozen `MintRecord`, plus optional NFT-05 fields. Chain fields
+        are `null` until known.
+      required:
+        [
+          mintId,
+          contentId,
+          status,
+          network,
+          tokenId,
+          transactionHash,
+          explorerUrl,
+          failureReason,
+          requestedAt,
+          confirmedAt,
+        ]
+      properties:
+        mintId: { type: string, format: uuid }
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { type: string, enum: [pending, confirmed, failed] }
+        network:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [name, chainId, contractAddress]
+              properties:
+                name: { type: string, examples: [Avalanche Fuji] }
+                chainId: { type: integer, examples: [43113] }
+                contractAddress: { type: string }
+        tokenId:
+          type: [string, 'null']
+          description: uint256 as a decimal string, when confirmed.
+        transactionHash: { type: [string, 'null'] }
+        explorerUrl:
+          type: [string, 'null']
+          description: Transaction link, else token link.
+        failureReason:
+          type: [string, 'null']
+          description: Safe sentence when `failed`.
+        requestedAt: { type: string, format: date-time }
+        confirmedAt: { type: [string, 'null'], format: date-time }
+        failureCode:
+          type: [string, 'null']
+          description: Public failure code when `failed`.
+          enum:
+            [
+              CONTRACT_REVERTED,
+              INSUFFICIENT_FUNDS,
+              CHAIN_UNAVAILABLE,
+              METADATA_UNAVAILABLE,
+              INVALID_METADATA,
+              UNKNOWN,
+              null,
+            ]
+        explorer:
+          type: object
+          description: Present when pending or confirmed.
+          required: [transaction, token]
+          properties:
+            transaction: { type: [string, 'null'] }
+            token: { type: [string, 'null'] }
+        tokenUri:
+          type: [string, 'null']
+          description: '`ipfs://<metadata CID>`, when confirmed.'
+        metadataUrl:
+          type: [string, 'null']
+          description: Public IPFS gateway URL of the metadata, when confirmed.
+        metadataCid: { type: [string, 'null'] }
+        masterHash:
+          type: [string, 'null']
+          description: '`0x` + sha256 of the master file, when confirmed.'
+        mintedAt: { type: [string, 'null'], format: date-time }
+        verification: { $ref: '#/components/schemas/Verification' }
+    Verification:
+      type: object
+      description: Present when confirmed.
+      required: [state, fixity, onChain, checkedAt]
+      properties:
+        state:
+          type: string
+          enum: [verified, mismatch, unverifiable]
+          description: >-
+            `verified`: the token exists and its master hash and token URI
+            match the record. `mismatch`: the chain answered and disagrees.
+            `unverifiable`: the chain could not be read.
+        fixity:
+          type: [boolean, 'null']
+          description: '`verifyFixity(tokenId, masterHash)`.'
+        onChain:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [title, category, mintedAt, masterHash, tokenUri]
+              properties:
+                title: { type: string }
+                category: { type: string, enum: [Painting, Sculpture, Craft] }
+                mintedAt: { type: string, format: date-time }
+                masterHash: { type: string }
+                tokenUri: { type: [string, 'null'] }
+        checkedAt: { type: string, format: date-time }
