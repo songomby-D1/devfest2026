@@ -1,0 +1,125 @@
+// Content & Verification data (CONTENT-01, CONTENT-02). The service owns
+// this database and its migration and runtime roles (D04).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Frozen contract: only `published` items are visible to guests.
+enum PublicationStatus {
+  draft
+  published
+  unpublished
+}
+
+/// Tells the contributor what happened to the submission (platform contract).
+enum SubmissionStatus {
+  in_review
+  returned
+  rejected
+  accepted
+}
+
+/// Tracked separately for the item claims and the description claims (D18).
+enum ClaimStatus {
+  unreviewed
+  verified
+  uncertain
+}
+
+/// Publication changes kept in the publication history (CONTENT-02).
+enum PublicationAction {
+  publish
+  unpublish
+}
+
+enum ItemKind {
+  painting
+  sculpture
+  photograph
+  textile
+  object
+  other
+}
+
+/// Free-text author information entered at submission (S7). Covers
+/// traditional or late artisans without an account. Never an Auth account.
+model Author {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  community String?
+  technique String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  item      Item?
+
+  @@map("authors")
+}
+
+/// The item ID is the opaque ContentId shared with NFT and LiDAR (D01).
+model Item {
+  id                String             @id @default(uuid()) @db.Uuid
+  /// Auth account ID of the submitter, from the caller context.
+  ownerId           String             @db.Uuid
+  title             String
+  kind              ItemKind
+  origin            String?
+  period            String?
+  rightsStatement   String
+  rightsConfirmed   Boolean
+  publicationStatus PublicationStatus  @default(draft)
+  submissionStatus  SubmissionStatus   @default(in_review)
+  /// Status of the identity or source claims about the item.
+  claimStatus       ClaimStatus        @default(unreviewed)
+  authorId          String             @unique @db.Uuid
+  author            Author             @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  description       Description?
+  publicationEvents PublicationEvent[]
+  /// Latest publication; kept when the item is unpublished.
+  publishedAt       DateTime?          @db.Timestamptz(3)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
+
+  // Keyset pagination of the listing scopes on (createdAt, id).
+  @@index([publicationStatus, createdAt, id])
+  @@index([ownerId, createdAt, id])
+  @@index([submissionStatus, createdAt, id])
+  @@map("items")
+}
+
+/// One description per item, with its own claim status (D18).
+model Description {
+  id          String      @id @default(uuid()) @db.Uuid
+  itemId      String      @unique @db.Uuid
+  item        Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  text        String
+  /// Status of the claims made in the description text.
+  claimStatus ClaimStatus @default(unreviewed)
+  createdAt   DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
+
+  @@map("descriptions")
+}
+
+/// Who published or unpublished an item, when, and the reviewer's note
+/// (D18: record the reviewer). Written with the status change.
+model PublicationEvent {
+  id        String            @id @default(uuid()) @db.Uuid
+  itemId    String            @db.Uuid
+  item      Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  action    PublicationAction
+  /// Auth account ID of the reviewer.
+  actorId   String            @db.Uuid
+  note      String
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
+
+  @@index([itemId, createdAt])
+  @@map("publication_events")
+}
