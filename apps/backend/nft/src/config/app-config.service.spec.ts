@@ -7,6 +7,8 @@ import { validateEnv } from './env.schema';
 const SECRET_KEY = `0x${'22'.repeat(32)}`;
 const SECRET_JWT = 'jwt-value-for-tests';
 const SECRET_CONTENT_TOKEN = 'content-token-for-tests';
+const SECRET_DATABASE_URL = 'postgresql://nft_runtime:db-pw@localhost/nft';
+const SECRET_GATEWAY_TOKEN = 'gateway-token-for-tests';
 
 function configFor(overrides: Record<string, string> = {}): AppConfigService {
   const env = validateEnv({
@@ -15,6 +17,8 @@ function configFor(overrides: Record<string, string> = {}): AppConfigService {
     PINATA_JWT: SECRET_JWT,
     MEDIA_ROOT: tmpdir(),
     CONTENT_SERVICE_TOKEN: SECRET_CONTENT_TOKEN,
+    DATABASE_URL: SECRET_DATABASE_URL,
+    NFT_INBOUND_TOKEN_GATEWAY: SECRET_GATEWAY_TOKEN,
     ...overrides,
   });
   return new AppConfigService(new ConfigService<EnvSchema, true>(env));
@@ -51,6 +55,10 @@ describe('AppConfigService', () => {
     expect(groups).not.toContain(SECRET_KEY);
     expect(groups).not.toContain(SECRET_JWT);
     expect(groups).not.toContain(SECRET_CONTENT_TOKEN);
+    expect(groups).not.toContain(SECRET_DATABASE_URL);
+    expect(groups).not.toContain(SECRET_GATEWAY_TOKEN);
+    expect(config.databaseUrl).toBe(SECRET_DATABASE_URL);
+    expect(config.gatewayInboundToken).toBe(SECRET_GATEWAY_TOKEN);
     expect(config.minterPrivateKey).toBe(SECRET_KEY);
     expect(config.pinataJwt).toBe(SECRET_JWT);
     expect(config.contentServiceToken).toBe(SECRET_CONTENT_TOKEN);

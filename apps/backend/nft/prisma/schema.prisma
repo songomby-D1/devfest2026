@@ -1,0 +1,64 @@
+// NFT service data (NFT-04). The service owns this database and its
+// migration and runtime roles (D04). It maps a ContentId to its mint request
+// and transaction state only: no price, buyer or private data (deferred
+// scope, guardrails 4 and 5).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Frozen contract `MintStatus`.
+enum MintStatus {
+  pending
+  confirmed
+  failed
+}
+
+/// One mint request of an item by its owner (S1). The idempotency key is
+/// unique per requester. At most one request per item is `pending` or
+/// `confirmed` at a time: a partial unique index in the migration enforces
+/// it, which Prisma cannot declare in this schema.
+model MintRequest {
+  id              String     @id @default(uuid()) @db.Uuid
+  /// Content `ContentId` (D01), stored in lowercase.
+  contentId       String     @db.Uuid
+  /// Auth account ID of the owner who requested the mint. Never on-chain.
+  requesterId     String     @db.Uuid
+  idempotencyKey  String
+  status          MintStatus @default(pending)
+  /// Processing attempts, bounded by MINT_MAX_ATTEMPTS.
+  attempts        Int        @default(0)
+  /// Network the request targets, fixed at creation.
+  chainId         Int
+  contractAddress String
+  /// Prepared metadata, saved before the transaction is sent.
+  tokenUri        String?
+  metadataCid     String?
+  /// `0x` + sha256 of the master file.
+  masterHash      String?
+  /// Saved as soon as the transaction is sent, before its receipt.
+  txHash          String?
+  /// uint256 as a decimal string.
+  tokenId         String?
+  /// Internal failure code (see src/mint/mint-failure.ts).
+  failureCode     String?
+  /// Correlation ID of the request that created the mint.
+  requestId       String
+  createdAt       DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @db.Timestamptz(3)
+  submittedAt     DateTime?  @db.Timestamptz(3)
+  confirmedAt     DateTime?  @db.Timestamptz(3)
+  failedAt        DateTime?  @db.Timestamptz(3)
+
+  @@unique([requesterId, idempotencyKey])
+  @@index([contentId, createdAt])
+  @@index([status, createdAt])
+  @@map("mint_requests")
+}

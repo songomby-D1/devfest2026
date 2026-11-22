@@ -6,6 +6,8 @@ import { REQUEST_ID_HEADER } from '../common/public-error';
 export const SERVICE_NAME_HEADER = 'x-service-name';
 export const SERVICE_TOKEN_HEADER = 'x-service-token';
 export const NFT_SERVICE_NAME = 'nft';
+export const CALLER_USER_ID_HEADER = 'x-caller-user-id';
+export const CALLER_PERMISSIONS_HEADER = 'x-caller-permissions';
 
 /**
  * `GET /internal/v1/items/{id}/publication` answer (docs/api/content.yaml,
@@ -57,9 +59,46 @@ const DEFAULT_RETRIES = 1;
 const DEFAULT_RETRY_DELAY_MS = 100;
 const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 503, 504]);
 
-type Attempt =
-  | { readonly done: true; readonly result: PublicationLookupResult }
+/**
+ * `GET /internal/v1/items/{id}` answer, reduced to what the ownership check
+ * needs (docs/api/content.yaml, `ItemDetail`). Content computes `isOwner`
+ * from the caller headers NFT relays (platform contract).
+ */
+const itemOwnershipSchema = z.object({
+  id: z.uuid(),
+  isOwner: z.boolean(),
+});
+
+/** Caller headers relayed unchanged to Content for a user's request. */
+export interface RelayedCaller {
+  readonly userId: string;
+  readonly permissions: readonly string[];
+}
+
+/** Outcome of an ownership check (S1), independent of HTTP. */
+export type ItemOwnershipResult =
+  | { readonly kind: 'owner' }
+  | { readonly kind: 'not_owner' }
+  | { readonly kind: 'not_found' }
+  | {
+      readonly kind: 'content_unavailable';
+      readonly reason: ContentUnavailableReason;
+    };
+
+type Attempt<T> =
+  | { readonly done: true; readonly result: T }
   | { readonly done: false; readonly reason: ContentUnavailableReason };
+
+/** One GET on Content, mapped to a domain result. */
+interface Lookup<T> {
+  /** Used in log lines, e.g. "publication lookup". */
+  readonly label: string;
+  readonly path: string;
+  readonly headers: Readonly<Record<string, string>>;
+  readonly parse: (body: unknown) => T | undefined;
+  readonly notFound: T;
+  readonly unavailable: (reason: ContentUnavailableReason) => T;
+}
 
 function unavailable(
   reason: ContentUnavailableReason,
@@ -87,7 +126,8 @@ function delay(ms: number): Promise<void> {
 }
 
 /**
- * Typed client for Content's publication lookup (NFT-02, D01, D16).
+ * Typed client for Content's publication lookup (NFT-02, D01, D16) and
+ * ownership lookup (NFT-04, S1).
  *
  * - Synchronous HTTP with a timeout per attempt.
  * - No retry on a 4xx or a timeout. One short retry on a connection failure
@@ -109,43 +149,102 @@ export class ContentClient {
   }
 
   /** `contentId` must already be a UUID; the caller validates it. */
-  async getPublication(
+  getPublication(
     contentId: string,
     requestId: string,
   ): Promise<PublicationLookupResult> {
+    return this.lookup<PublicationLookupResult>(requestId, {
+      label: 'publication lookup',
+      path: `/internal/v1/items/${encodeURIComponent(contentId)}/publication`,
+      headers: {},
+      parse: (body) => {
+        const parsed = publicationLookupSchema.safeParse(body);
+        if (
+          !parsed.success ||
+          parsed.data.contentId.toLowerCase() !== contentId.toLowerCase()
+        ) {
+          return undefined;
+        }
+        const { publicationStatus } = parsed.data;
+        return publicationStatus === 'published'
+          ? { kind: 'published', contentId: parsed.data.contentId }
+          : {
+              kind: 'not_published',
+              contentId: parsed.data.contentId,
+              publicationStatus,
+            };
+      },
+      notFound: { kind: 'not_found' },
+      unavailable,
+    });
+  }
+
+  /**
+   * Asks Content whether the caller owns the item (S1, NFT-04), by reading
+   * the item detail with the caller headers relayed unchanged. Content is the
+   * only owner of `ownerId`; NFT never stores or compares it.
+   */
+  getItemOwnership(
+    contentId: string,
+    caller: RelayedCaller,
+    requestId: string,
+  ): Promise<ItemOwnershipResult> {
+    return this.lookup<ItemOwnershipResult>(requestId, {
+      label: 'ownership lookup',
+      path: `/internal/v1/items/${encodeURIComponent(contentId)}`,
+      headers: {
+        [CALLER_USER_ID_HEADER]: caller.userId,
+        [CALLER_PERMISSIONS_HEADER]: caller.permissions.join(','),
+      },
+      parse: (body) => {
+        const parsed = itemOwnershipSchema.safeParse(body);
+        if (
+          !parsed.success ||
+          parsed.data.id.toLowerCase() !== contentId.toLowerCase()
+        ) {
+          return undefined;
+        }
+        return parsed.data.isOwner ? { kind: 'owner' } : { kind: 'not_owner' };
+      },
+      notFound: { kind: 'not_found' },
+      unavailable: (reason) => ({ kind: 'content_unavailable', reason }),
+    });
+  }
+
+  private async lookup<T>(requestId: string, spec: Lookup<T>): Promise<T> {
     const token = this.options.token;
     if (token === undefined || token === '') {
       this.logger.error(
-        `Content lookup skipped: CONTENT_SERVICE_TOKEN is not set (request ${requestId})`,
+        `Content ${spec.label} skipped: CONTENT_SERVICE_TOKEN is not set (request ${requestId})`,
       );
-      return unavailable('not_configured');
+      return spec.unavailable('not_configured');
     }
 
     let reason: ContentUnavailableReason = 'network';
     for (let attempt = 0; attempt <= this.retries; attempt += 1) {
       if (attempt > 0) await delay(this.retryDelayMs * attempt);
-      const outcome = await this.attempt(contentId, requestId, token);
+      const outcome = await this.attempt(spec, requestId, token);
       if (outcome.done) return outcome.result;
       reason = outcome.reason;
     }
     this.logger.warn(
-      `Content lookup failed after ${String(this.retries + 1)} attempt(s): ${reason} (request ${requestId})`,
+      `Content ${spec.label} failed after ${String(this.retries + 1)} attempt(s): ${reason} (request ${requestId})`,
     );
-    return unavailable(reason);
+    return spec.unavailable(reason);
   }
 
-  private async attempt(
-    contentId: string,
+  private async attempt<T>(
+    spec: Lookup<T>,
     requestId: string,
     token: string,
-  ): Promise<Attempt> {
-    const url = `${this.baseUrl}/internal/v1/items/${encodeURIComponent(contentId)}/publication`;
+  ): Promise<Attempt<T>> {
     let response: Response;
     try {
-      response = await fetch(url, {
+      response = await fetch(`${this.baseUrl}${spec.path}`, {
         method: 'GET',
         headers: {
           accept: 'application/json',
+          ...spec.headers,
           [SERVICE_NAME_HEADER]: NFT_SERVICE_NAME,
           [SERVICE_TOKEN_HEADER]: token,
           [REQUEST_ID_HEADER]: requestId,
@@ -156,90 +255,80 @@ export class ContentClient {
     } catch (error) {
       if (isTimeout(error)) {
         this.logger.warn(
-          `Content lookup timed out after ${String(this.options.timeoutMs)} ms (request ${requestId})`,
+          `Content ${spec.label} timed out after ${String(this.options.timeoutMs)} ms (request ${requestId})`,
         );
-        return { done: true, result: unavailable('timeout') };
+        return { done: true, result: spec.unavailable('timeout') };
       }
       this.logger.warn(
-        `Content lookup could not reach Content: ${errorName(error)} (request ${requestId})`,
+        `Content ${spec.label} could not reach Content: ${errorName(error)} (request ${requestId})`,
       );
       return { done: false, reason: 'network' };
     }
 
-    return this.interpret(response, contentId, requestId);
+    return this.interpret(response, spec, requestId);
   }
 
-  private async interpret(
+  private async interpret<T>(
     response: Response,
-    contentId: string,
+    spec: Lookup<T>,
     requestId: string,
-  ): Promise<Attempt> {
+  ): Promise<Attempt<T>> {
     const { status } = response;
     if (status === 200) {
       return {
         done: true,
-        result: await this.parse(response, contentId, requestId),
+        result: await this.parse(response, spec, requestId),
       };
     }
     // The body is not needed: release the connection.
     await response.body?.cancel().catch(() => undefined);
 
-    if (status === 404) return { done: true, result: { kind: 'not_found' } };
+    if (status === 404) return { done: true, result: spec.notFound };
     if (status === 401 || status === 403) {
       this.logger.error(
         `Content refused the NFT service credentials (HTTP ${String(status)}): ` +
           `check that CONTENT_SERVICE_TOKEN matches Content's CONTENT_INBOUND_TOKEN_NFT (request ${requestId})`,
       );
-      return { done: true, result: unavailable('unauthenticated') };
+      return { done: true, result: spec.unavailable('unauthenticated') };
     }
     if (status >= 400 && status < 500) {
       this.logger.error(
-        `Content rejected the publication lookup (HTTP ${String(status)}) (request ${requestId})`,
+        `Content rejected the ${spec.label} (HTTP ${String(status)}) (request ${requestId})`,
       );
-      return { done: true, result: unavailable('rejected') };
+      return { done: true, result: spec.unavailable('rejected') };
     }
     this.logger.warn(
-      `Content answered HTTP ${String(status)} to the publication lookup (request ${requestId})`,
+      `Content answered HTTP ${String(status)} to the ${spec.label} (request ${requestId})`,
     );
     return RETRYABLE_STATUSES.has(status)
       ? { done: false, reason: 'upstream_error' }
-      : { done: true, result: unavailable('upstream_error') };
+      : { done: true, result: spec.unavailable('upstream_error') };
   }
 
-  private async parse(
+  private async parse<T>(
     response: Response,
-    contentId: string,
+    spec: Lookup<T>,
     requestId: string,
-  ): Promise<PublicationLookupResult> {
+  ): Promise<T> {
     let body: unknown;
     try {
       body = await response.json();
     } catch (error) {
       if (isTimeout(error)) {
         this.logger.warn(
-          `Content lookup timed out while reading the body (request ${requestId})`,
+          `Content ${spec.label} timed out while reading the body (request ${requestId})`,
         );
-        return unavailable('timeout');
+        return spec.unavailable('timeout');
       }
       body = undefined;
     }
-    const parsed = publicationLookupSchema.safeParse(body);
-    if (
-      !parsed.success ||
-      parsed.data.contentId.toLowerCase() !== contentId.toLowerCase()
-    ) {
+    const result = spec.parse(body);
+    if (result === undefined) {
       this.logger.error(
-        `Content answered an invalid publication lookup body (request ${requestId})`,
+        `Content answered an invalid ${spec.label} body (request ${requestId})`,
       );
-      return unavailable('invalid_response');
+      return spec.unavailable('invalid_response');
     }
-    const { publicationStatus } = parsed.data;
-    return publicationStatus === 'published'
-      ? { kind: 'published', contentId: parsed.data.contentId }
-      : {
-          kind: 'not_published',
-          contentId: parsed.data.contentId,
-          publicationStatus,
-        };
+    return result;
   }
 }

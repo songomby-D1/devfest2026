@@ -167,7 +167,38 @@ export class EnvSchema {
   @Min(1)
   @Max(60_000)
   CONTENT_TIMEOUT_MS = 3_000;
+
+  /** Runtime role of the NFT database (D04, NFT-04). Never logged. */
+  @Matches(/^postgres(ql)?:\/\/\S+$/, {
+    message: 'DATABASE_URL must be a postgresql:// connection URL',
+  })
+  DATABASE_URL!: string;
+
+  /**
+   * Secret of the gateway -> NFT pair (root .env SERVICE_TOKEN_GATEWAY_TO_NFT).
+   * Optional outside production; without it every internal route answers
+   * `401 SERVICE_UNAUTHENTICATED`.
+   */
+  @IsOptional()
+  @IsString()
+  NFT_INBOUND_TOKEN_GATEWAY?: string;
+
+  /** Processing attempts of a mint request before it fails (NFT-04). */
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  MINT_MAX_ATTEMPTS = 5;
+
+  /** Period of the sweep that resumes pending mints. `0` disables it. */
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  MINT_SWEEP_INTERVAL_MS = 30_000;
 }
+
+/** Testnets only (deferred scope, guardrail 7): Avalanche Fuji, local Hardhat. */
+export const TESTNET_CHAIN_IDS: readonly number[] = [43_113, 31_337];
 
 /** Thrown when the environment is invalid. Never contains variable values. */
 export class EnvValidationError extends Error {
@@ -193,6 +224,11 @@ function crossFieldProblems(env: EnvSchema): string[] {
       'MEDIA_ROOT must be an absolute path to an existing directory',
     );
   }
+  if (!TESTNET_CHAIN_IDS.includes(env.CHAIN_ID)) {
+    problems.push(
+      'CHAIN_ID must be a supported testnet: 43113 (Avalanche Fuji) or 31337 (Hardhat)',
+    );
+  }
   if (env.NODE_ENV === 'production') {
     if (env.IPFS_DRIVER === 'fake') {
       problems.push('IPFS_DRIVER must not be "fake" in production');
@@ -206,6 +242,14 @@ function crossFieldProblems(env: EnvSchema): string[] {
     ) {
       problems.push(
         `CONTENT_SERVICE_TOKEN must be set in production, with at least ${String(MIN_SERVICE_TOKEN_LENGTH)} characters`,
+      );
+    }
+    if (
+      env.NFT_INBOUND_TOKEN_GATEWAY === undefined ||
+      env.NFT_INBOUND_TOKEN_GATEWAY.length < MIN_SERVICE_TOKEN_LENGTH
+    ) {
+      problems.push(
+        `NFT_INBOUND_TOKEN_GATEWAY must be set in production, with at least ${String(MIN_SERVICE_TOKEN_LENGTH)} characters`,
       );
     }
   }

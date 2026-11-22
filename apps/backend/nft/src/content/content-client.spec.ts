@@ -329,3 +329,72 @@ describe('ContentClient.getPublication', () => {
     ).resolves.toMatchObject({ kind: 'published' });
   });
 });
+
+describe('ContentClient.getItemOwnership (NFT-04, S1)', () => {
+  const caller = {
+    userId: '6f1c2d3e-4b5a-4c6d-8e7f-9a0b1c2d3e4f',
+    permissions: ['reviewer'],
+  };
+
+  function detail(isOwner: unknown, id: string = CONTENT_ID): Handler {
+    return json(200, { id, title: 'Lamba mena', isOwner, media: [] });
+  }
+
+  it('reads the item detail with the caller headers relayed unchanged', async () => {
+    fake.reply(detail(true));
+
+    await expect(
+      client().getItemOwnership(CONTENT_ID, caller, REQUEST_ID),
+    ).resolves.toEqual({ kind: 'owner' });
+    const [request] = fake.requests;
+    expect(request?.url).toBe(`/internal/v1/items/${CONTENT_ID}`);
+    expect(request?.headers).toMatchObject({
+      'x-service-name': 'nft',
+      'x-service-token': TOKEN,
+      'x-request-id': REQUEST_ID,
+      'x-caller-user-id': caller.userId,
+      'x-caller-permissions': 'reviewer',
+    });
+  });
+
+  it('maps isOwner false to "not_owner" and 404 to "not_found"', async () => {
+    fake.reply(detail(false), json(404, { code: 'NOT_FOUND' }));
+
+    await expect(
+      client().getItemOwnership(CONTENT_ID, caller, REQUEST_ID),
+    ).resolves.toEqual({ kind: 'not_owner' });
+    await expect(
+      client().getItemOwnership(CONTENT_ID, caller, REQUEST_ID),
+    ).resolves.toEqual({ kind: 'not_found' });
+  });
+
+  it.each([
+    ['a missing isOwner', json(200, { id: CONTENT_ID })],
+    ['a non-boolean isOwner', detail('yes')],
+    ['another item', detail(true, 'a1b2c3d4-0000-4000-8000-000000000000')],
+  ])('fails closed on %s', async (_label, handler) => {
+    fake.reply(handler);
+
+    await expect(
+      client().getItemOwnership(CONTENT_ID, caller, REQUEST_ID),
+    ).resolves.toEqual({
+      kind: 'content_unavailable',
+      reason: 'invalid_response',
+    });
+    expect(logs.join('\n')).toContain('ownership lookup');
+  });
+
+  it('makes no call without a token', async () => {
+    await expect(
+      client({ token: undefined }).getItemOwnership(
+        CONTENT_ID,
+        caller,
+        REQUEST_ID,
+      ),
+    ).resolves.toEqual({
+      kind: 'content_unavailable',
+      reason: 'not_configured',
+    });
+    expect(fake.requests).toHaveLength(0);
+  });
+});

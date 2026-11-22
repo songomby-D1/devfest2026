@@ -1,17 +1,44 @@
 import type { Config } from 'jest';
 
-const config: Config = {
+const transform: Config['transform'] = {
+  '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
+};
+
+const shared = {
   rootDir: '.',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src', '<rootDir>/test'],
-  testRegex: '.*\\.spec\\.ts$',
-  setupFiles: ['<rootDir>/test/setup-env.ts'],
-  transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
-  },
+  transform,
   moduleFileExtensions: ['ts', 'js', 'json'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/main.ts'],
+  setupFiles: ['<rootDir>/test/setup-env.ts'],
+  // The generated Prisma client imports its TypeScript files with `.js`.
+  moduleNameMapper: { '^(\\.{1,2}/.*)\\.js$': '$1' },
+};
+
+/**
+ * Three projects: unit tests next to the code, HTTP tests with fakes for the
+ * database, the chain and Content, and PostgreSQL integration tests
+ * (Testcontainers).
+ */
+const config: Config = {
+  collectCoverageFrom: ['src/**/*.ts', '!src/main.ts', '!src/generated/**'],
   coverageDirectory: 'coverage',
+  projects: [
+    {
+      ...shared,
+      displayName: 'unit',
+      testMatch: ['<rootDir>/src/**/*.spec.ts'],
+    },
+    {
+      ...shared,
+      displayName: 'http',
+      testMatch: ['<rootDir>/test/http/**/*.spec.ts'],
+    },
+    {
+      ...shared,
+      displayName: 'integration',
+      testMatch: ['<rootDir>/test/integration/**/*.spec.ts'],
+    },
+  ],
 };
 
 export default config;
