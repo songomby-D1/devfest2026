@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { setApiClient } from '../lib/api';
+import { createMockClient } from '../lib/api/mock-client';
 import { ambience } from '../lib/audio/ambience';
+import { resetCollection } from '../lib/collection/published-items';
+import { resetSession } from '../lib/session/session';
 
 /*
  * jsdom lacks the browser APIs that the pages touch. These stubs make them
@@ -45,10 +49,16 @@ beforeEach(() => {
   );
 
   window.history.replaceState(null, '', '/');
+
+  // Every test talks to a fresh in-memory gateway, signed out.
+  setApiClient(createMockClient());
+  resetSession();
+  resetCollection();
 });
 
 afterEach(() => {
   cleanup();
   ambience.reset();
   vi.restoreAllMocks();
+  setApiClient(null);
 });

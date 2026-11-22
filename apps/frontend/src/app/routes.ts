@@ -1,50 +1,80 @@
 import type { Room } from '../features/gallery/data/rooms';
-import { findRoom, roomPath, rooms } from '../features/gallery/data/rooms';
+import { findRoom, rooms } from '../features/gallery/data/rooms';
 
 export type Route =
   | { kind: 'home' }
+  | { kind: 'sign-in' }
+  | { kind: 'register' }
   | { kind: 'contribute' }
+  | { kind: 'submission'; id: string }
+  | { kind: 'my-submissions' }
+  | { kind: 'item'; id: string }
+  | { kind: 'review-queue' }
+  | { kind: 'review'; id: string }
   | { kind: 'visit' }
-  | { kind: 'gallery'; room: Room; artworkIndex: number | null }
+  /** `room` is the room template; its artworks load from the API in GalleryRoute. */
+  | { kind: 'gallery'; room: Room; artworkNumber: string | null }
   | { kind: 'redirect'; to: string }
   | { kind: 'not-found' };
 
-/** Maps a pathname to a screen. `/musee` and `/musee/:room` redirect to the first artwork. */
+function decode(segment: string): string | null {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return null;
+  }
+}
+
+/** Single-segment pages. */
+const PAGES: Record<string, Route> = {
+  connexion: { kind: 'sign-in' },
+  inscription: { kind: 'register' },
+  contribuer: { kind: 'contribute' },
+  'mes-depots': { kind: 'my-submissions' },
+  revue: { kind: 'review-queue' },
+  // The WebGL room reads its own deep links from the query string.
+  visite: { kind: 'visit' },
+};
+
+/** Pages of one item: `/oeuvre/:id`, `/contribuer/:id`, `/revue/:id`. */
+const ITEM_PAGES = {
+  oeuvre: 'item',
+  contribuer: 'submission',
+  revue: 'review',
+} as const;
+
+/**
+ * Maps a pathname to a screen. `/musee` redirects to the first room; a room
+ * and its artwork number are resolved against the API by GalleryRoute.
+ */
 export function matchRoute(pathname: string): Route {
   const segments = pathname.split('/').filter((segment) => segment !== '');
-  const [first, roomSlug, artworkNumber] = segments;
+  const [first, second, third] = segments;
 
   if (first === undefined) {
     return { kind: 'home' };
   }
-  if (first === 'contribuer' && segments.length === 1) {
-    return { kind: 'contribute' };
+  if (segments.length === 1 && Object.hasOwn(PAGES, first)) {
+    return PAGES[first] ?? { kind: 'not-found' };
   }
-  // The WebGL room reads its own deep links from the query string.
-  if (first === 'visite' && segments.length === 1) {
-    return { kind: 'visit' };
+  if (segments.length === 2 && second !== undefined && Object.hasOwn(ITEM_PAGES, first)) {
+    const id = decode(second);
+    if (id === null || id === '') return { kind: 'not-found' };
+    return { kind: ITEM_PAGES[first as keyof typeof ITEM_PAGES], id };
   }
   if (first !== 'musee' || segments.length > 3) {
     return { kind: 'not-found' };
   }
 
-  const room = roomSlug === undefined ? rooms[0] : findRoom(roomSlug);
+  if (second === undefined) {
+    const firstRoom = rooms[0];
+    return firstRoom === undefined
+      ? { kind: 'not-found' }
+      : { kind: 'redirect', to: `/musee/${firstRoom.slug}` };
+  }
+  const room = findRoom(second);
   if (room === undefined) {
     return { kind: 'not-found' };
   }
-
-  if (artworkNumber === undefined) {
-    const target = roomPath(room);
-    return target === pathname
-      ? { kind: 'gallery', room, artworkIndex: null }
-      : { kind: 'redirect', to: target };
-  }
-
-  const artworkIndex = room.artworks.findIndex(
-    (artwork) => artwork.number === artworkNumber,
-  );
-  if (artworkIndex === -1) {
-    return { kind: 'redirect', to: roomPath(room) };
-  }
-  return { kind: 'gallery', room, artworkIndex };
+  return { kind: 'gallery', room, artworkNumber: third ?? null };
 }

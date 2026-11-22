@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AccountMenu } from '../../components/account-menu/AccountMenu';
 import { ButtonLink } from '../../components/button-link/ButtonLink';
 import { Logo } from '../../components/logo/Logo';
 import { NavLink } from '../../components/nav-link/NavLink';
@@ -9,10 +10,8 @@ import type { SplitText } from '../../lib/motion/gsap';
 import { useMotionPrefs } from '../../lib/motion/motion-prefs';
 import { useReducedMotion } from '../../lib/motion/reduced-motion';
 import { Link } from '../../lib/router/Link';
-import { findRoom, roomPath, rooms } from '../gallery/data/rooms';
 import { Exhibit } from './Exhibit';
-import type { HomeExhibitId } from './home-content';
-import { homeExhibits } from './home-content';
+import type { HomeExhibit, HomeExhibitId } from './home-content';
 import styles from './HomePage.module.css';
 import { useHomeExit } from './useHomeExit';
 import { useHomeIntro } from './useHomeIntro';
@@ -34,14 +33,17 @@ const POSITION_CLASS: Record<HomeExhibitId, string | undefined> = {
 };
 
 function navPath(slug: string): string {
-  const room = findRoom(slug);
-  return room === undefined ? '/musee' : roomPath(room);
+  return `/musee/${slug}`;
 }
 
-const firstRoom = rooms[0];
-const MUSEUM_ENTRY = firstRoom === undefined ? '/musee' : roomPath(firstRoom);
+const MUSEUM_ENTRY = '/musee';
 
-export function HomePage() {
+export interface HomePageProps {
+  /** The hanging, from the published collection. */
+  exhibits: readonly HomeExhibit[];
+}
+
+export function HomePage({ exhibits }: HomePageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const splitRef = useRef<SplitText | null>(null);
   const reducedMotion = useReducedMotion();
@@ -98,12 +100,13 @@ export function HomePage() {
               ))}
             </ul>
           </nav>
+          <AccountMenu theme="light" />
           <SoundToggle theme="light" />
         </div>
       </header>
 
       <main className={styles.stage}>
-        {homeExhibits.map((exhibit) => (
+        {exhibits.map((exhibit) => (
           <Exhibit
             key={exhibit.id}
             exhibit={exhibit}

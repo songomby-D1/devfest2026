@@ -1,6 +1,6 @@
+import { objectImages } from '../../lib/media/media';
 import type { ImageSource } from '../../lib/media/media';
-import { artworkImages, objectImages } from '../../lib/media/media';
-import { artworkPath, findRoom, roomPath } from '../gallery/data/rooms';
+import { artworkPath, roomPath } from '../gallery/data/rooms';
 import type { Room } from '../gallery/data/rooms';
 
 export type HomeExhibitId =
@@ -26,84 +26,69 @@ type HomeExhibitDraft = Omit<HomeExhibit, 'image'> & {
   image: ImageSource | null;
 };
 
-function requireRoom(slug: string): Room {
-  const room = findRoom(slug);
-  if (room === undefined) {
-    throw new Error(`Unknown room: ${slug}`);
-  }
-  return room;
-}
+/** The two frame slots of the Figma hanging, filled with the first published paintings. */
+const FRAME_SLOTS = [
+  { id: 'women-in-lamba', side: 'left', depth: 0.7 },
+  { id: 'highlands-landscape', side: 'right', depth: 0.45 },
+] as const;
 
-const painting = requireRoom('peinture');
-const crafts = requireRoom('savoir-faire');
-
-function paintingPath(number: string): string {
-  const artwork = painting.artworks.find(
-    (candidate) => candidate.number === number,
-  );
-  return artwork === undefined
-    ? roomPath(painting)
-    : artworkPath(painting, artwork);
-}
-
-/*
- * The Figma frame slots were "Femmes au lamba" and "Allée des Baobabs". They
- * now hold real public-domain works: Shindler's "Malagasy Woman" on the left
- * and the 1875 "Antongona" watercolour on the right. Objects without a
- * rights-cleared photograph are left out until one exists.
+/**
+ * The home hanging: the first two published works of the painting room in the
+ * two frames, and the objects once a rights-cleared photograph exists. A slot
+ * without a work is left out, as an object without a photograph is.
  */
-const drafts: readonly HomeExhibitDraft[] = [
-  {
-    id: 'women-in-lamba',
-    kind: 'frame',
-    side: 'left',
-    title: 'Femme malgache',
-    region: 'A. Z. Shindler, vers 1893',
-    image: artworkImages.malagasyWoman,
-    alt: 'Tableau : une femme malgache debout, drapée dans un lamba rayé, devant des maisons.',
-    roomName: painting.name,
-    to: paintingPath('01'),
-    depth: 0.7,
-  },
-  {
-    id: 'vilany-tany',
-    kind: 'object',
-    side: 'left',
-    title: 'Vilany tany',
-    region: 'Hautes Terres',
-    image: objectImages.vilanyTany,
-    alt: 'Vilany tany, pot de cuisson en terre cuite à large panse.',
-    roomName: crafts.name,
-    to: roomPath(crafts),
-    depth: 1,
-  },
-  {
-    id: 'highlands-landscape',
-    kind: 'frame',
-    side: 'right',
-    title: 'Antongona',
-    region: 'Imerina, 1875',
-    image: artworkImages.antongona,
-    alt: 'Aquarelle : une colline rocheuse de l’Imerina avec des maisons, de la terre rouge et des terrasses.',
-    focalPoint: '50% 45%',
-    roomName: painting.name,
-    to: paintingPath('02'),
-    depth: 0.45,
-  },
-  {
-    id: 'sinibe',
-    kind: 'object',
-    side: 'right',
-    title: 'Sinibe',
-    region: 'Hautes Terres',
-    image: objectImages.sinibe,
-    alt: 'Sinibe, grande jarre à eau en terre cuite des Hautes Terres.',
-    roomName: crafts.name,
-    to: roomPath(crafts),
-    depth: 0.85,
-  },
-];
+export function buildHomeExhibits(rooms: readonly Room[]): HomeExhibit[] {
+  const painting = rooms.find((room) => room.slug === 'peinture');
+  const crafts = rooms.find((room) => room.slug === 'savoir-faire');
+  const drafts: HomeExhibitDraft[] = [];
 
-export const homeExhibits: readonly HomeExhibit[] = drafts.filter(
-  (draft): draft is HomeExhibit => draft.image !== null,
-);
+  if (painting !== undefined) {
+    const framed = painting.artworks.filter((artwork) => artwork.image.src !== '');
+    FRAME_SLOTS.forEach((slot, index) => {
+      const artwork = framed[index];
+      if (artwork === undefined) return;
+      drafts.push({
+        ...slot,
+        kind: 'frame',
+        title: artwork.title,
+        region: [artwork.artist, artwork.year].filter((part) => part !== '').join(', '),
+        image: artwork.image,
+        alt: artwork.alt,
+        focalPoint: artwork.focalPoint,
+        roomName: painting.name,
+        to: artworkPath(painting, artwork),
+      });
+    });
+  }
+
+  if (crafts !== undefined) {
+    drafts.push(
+      {
+        id: 'vilany-tany',
+        kind: 'object',
+        side: 'left',
+        title: 'Vilany tany',
+        region: 'Hautes Terres',
+        image: objectImages.vilanyTany,
+        alt: 'Vilany tany, pot de cuisson en terre cuite à large panse.',
+        roomName: crafts.name,
+        to: roomPath(crafts),
+        depth: 1,
+      },
+      {
+        id: 'sinibe',
+        kind: 'object',
+        side: 'right',
+        title: 'Sinibe',
+        region: 'Hautes Terres',
+        image: objectImages.sinibe,
+        alt: 'Sinibe, grande jarre à eau en terre cuite des Hautes Terres.',
+        roomName: crafts.name,
+        to: roomPath(crafts),
+        depth: 0.85,
+      },
+    );
+  }
+
+  return drafts.filter((draft): draft is HomeExhibit => draft.image !== null);
+}

@@ -1,11 +1,7 @@
-import type { Artwork, Room, VerificationStatus } from './data/rooms';
+import { ClaimStatuses } from '../../components/claim-statuses/ClaimStatuses';
+import { Link } from '../../lib/router/Link';
+import type { Artwork, Room } from './data/rooms';
 import styles from './ArtworkNotice.module.css';
-
-const VERIFICATION_LABEL: Record<VerificationStatus, string> = {
-  verified: 'Informations vérifiées',
-  unreviewed: 'Informations non relues',
-  uncertain: 'Informations incertaines',
-};
 
 export interface ArtworkNoticeProps {
   room: Room;
@@ -21,14 +17,6 @@ export function ArtworkNotice({
   titleId,
   onClose,
 }: ArtworkNoticeProps) {
-  const details: readonly [string, string][] = [
-    ['Artiste', artwork.artist],
-    ['Technique', artwork.technique],
-    ['Dimensions', artwork.dimensions],
-    ['Région', artwork.region],
-    ['Provenance', artwork.provenance],
-  ];
-
   return (
     <article className={styles.notice}>
       <header className={styles.header}>
@@ -48,15 +36,8 @@ export function ArtworkNotice({
         </button>
       </header>
 
-      {artwork.isDemo && (
-        <p className={styles.demo} role="note">
-          Œuvre de démonstration. Elle illustre le parcours et ne fait pas
-          partie de la collection.
-        </p>
-      )}
-
       <dl className={styles.details}>
-        {details.map(([label, value]) => (
+        {artwork.details.map(([label, value]) => (
           <div key={label} className={styles.row}>
             <dt>{label}</dt>
             <dd>{value}</dd>
@@ -70,10 +51,11 @@ export function ArtworkNotice({
         ))}
       </section>
 
-      <p className={styles.verification} data-status={artwork.verification}>
-        {VERIFICATION_LABEL[artwork.verification]}
-      </p>
+      <ClaimStatuses claims={artwork.claims} reviews={artwork.reviews} headingLevel={3} />
       <p className={styles.rights}>{artwork.rights}</p>
+      <Link to={`/oeuvre/${encodeURIComponent(artwork.id)}`} className={styles.more}>
+        Voir la fiche complète de l’œuvre
+      </Link>
     </article>
   );
 }

@@ -17,6 +17,14 @@
   --color-wine: #67271f;
   --color-accent: #7e2a20;
   --spacing-sm: 12px;
+
+  /* Status colors for forms and review labels (pending Figma variables) */
+  --color-status-verified: #2f5d3a;
+  --color-status-uncertain: #85520f;
+  --color-status-unreviewed: rgb(14 17 22 / 0.7);
+  --color-danger: #8f1d14;
+  --color-danger-08: rgb(143 29 20 / 0.08);
+  --color-field-border: rgb(14 17 22 / 0.35);
   --radius-button: 2px;
 
   /* Surfaces */

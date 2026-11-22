@@ -1,0 +1,38 @@
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-14) var(--space-16);
+  color: var(--color-danger);
+  background: var(--color-danger-08);
+  border-left: 3px solid var(--color-danger);
+}
+
+.title {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+.message {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.reference {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-ink-60);
+}
+
+.retry {
+  align-self: flex-start;
+  padding: var(--space-6) var(--space-14);
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-button);
+}

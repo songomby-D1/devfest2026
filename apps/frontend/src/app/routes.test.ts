@@ -11,41 +11,42 @@ describe('matchRoute', () => {
     expect(matchRoute('/')).toEqual({ kind: 'home' });
   });
 
-  it('resolves an artwork URL to its room and index', () => {
+  it('maps the account, contribution and review pages', () => {
+    expect(matchRoute('/connexion')).toEqual({ kind: 'sign-in' });
+    expect(matchRoute('/inscription')).toEqual({ kind: 'register' });
+    expect(matchRoute('/contribuer')).toEqual({ kind: 'contribute' });
+    expect(matchRoute('/mes-depots')).toEqual({ kind: 'my-submissions' });
+    expect(matchRoute('/revue')).toEqual({ kind: 'review-queue' });
+  });
+
+  it('maps the item pages with their decoded id', () => {
+    expect(matchRoute('/oeuvre/abc-123')).toEqual({ kind: 'item', id: 'abc-123' });
+    expect(matchRoute('/contribuer/abc')).toEqual({ kind: 'submission', id: 'abc' });
+    expect(matchRoute('/revue/abc')).toEqual({ kind: 'review', id: 'abc' });
+    expect(matchRoute('/oeuvre/a%20b')).toEqual({ kind: 'item', id: 'a b' });
+    expect(matchRoute('/oeuvre/%E0%A4%A')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/oeuvre/a/b')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/oeuvre')).toEqual({ kind: 'not-found' });
+  });
+
+  it('redirects /musee to the first room', () => {
+    expect(matchRoute('/musee')).toEqual({ kind: 'redirect', to: '/musee/peinture' });
+  });
+
+  it('resolves a room and keeps the artwork number for the API data', () => {
     const route = matchRoute('/musee/peinture/03');
     expect(route.kind).toBe('gallery');
     if (route.kind === 'gallery') {
       expect(route.room.slug).toBe('peinture');
-      expect(route.artworkIndex).toBe(2);
+      expect(route.artworkNumber).toBe('03');
     }
+    const bare = matchRoute('/musee/sculpture');
+    expect(bare.kind === 'gallery' && bare.artworkNumber).toBeNull();
   });
 
-  it('redirects a bare room with artworks to its first artwork', () => {
-    expect(matchRoute('/musee/peinture')).toEqual({
-      kind: 'redirect',
-      to: '/musee/peinture/01',
-    });
-  });
-
-  it('shows a room without artworks as in preparation', () => {
-    const route = matchRoute('/musee/sculpture');
-    expect(route.kind).toBe('gallery');
-    if (route.kind === 'gallery') {
-      expect(route.artworkIndex).toBeNull();
-    }
-  });
-
-  it('redirects an unknown artwork number back to the room', () => {
-    expect(matchRoute('/musee/peinture/99')).toEqual({
-      kind: 'redirect',
-      to: '/musee/peinture/01',
-    });
-  });
-
-  it('rejects unknown rooms and extra segments', () => {
+  it('rejects unknown rooms, unknown pages and extra segments', () => {
     expect(matchRoute('/musee/cuisine')).toEqual({ kind: 'not-found' });
-    expect(matchRoute('/musee/peinture/01/extra')).toEqual({
-      kind: 'not-found',
-    });
+    expect(matchRoute('/musee/peinture/01/extra')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/toString')).toEqual({ kind: 'not-found' });
   });
 });

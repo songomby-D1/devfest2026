@@ -43,7 +43,10 @@ apps/frontend/
     app/                  App, route matching and the development motion lab
     features/home/        Home page: hanging, intro, parallax and exit
     features/gallery/     Rooms, artworks, notice, close-up viewer and data/rooms.ts
-    features/contribute/  Placeholder until the contribution flow (FE-03)
+    features/account/     Sign-in and registration
+    features/contribute/  Submission form, media upload and my submissions
+    features/item/        Item detail page
+    features/review/      Review queue and review screen
     components/<name>/    Reusable UI components that mirror the Figma components
     lib/router/           History-based router and Link
     lib/motion/           GSAP setup, reduced motion, font waiting, motion variants
