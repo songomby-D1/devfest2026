@@ -158,6 +158,48 @@ services:
       - media:/data/media:ro
     networks: [internal_net, egress_net]
 
+  # LiDAR (owner: Agent 3): 3D asset records and variant delivery (3D-07, 3D-04b, 3D-04c).
+  # Not published: the gateway relays GET /assets/by-content/{contentId} and GET /files/{path}.
+  lidar:
+    build:
+      context: .
+      dockerfile: apps/backend/lidar/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: '3000'
+      DATABASE_URL: postgresql://${LIDAR_RUNTIME_DB_USER:-lidar_runtime}:${LIDAR_RUNTIME_DB_PASSWORD:?Set LIDAR_RUNTIME_DB_PASSWORD}@postgres:5432/${LIDAR_DB_NAME:?Set LIDAR_DB_NAME}
+      MIGRATION_DATABASE_URL: postgresql://${LIDAR_MIGRATION_DB_USER:-lidar_migrator}:${LIDAR_MIGRATION_DB_PASSWORD:?Set LIDAR_MIGRATION_DB_PASSWORD}@postgres:5432/${LIDAR_DB_NAME:?Set LIDAR_DB_NAME}
+      CONTENT_SERVICE_URL: ${LIDAR_CONTENT_SERVICE_URL:-http://content:3000}
+      PUBLIC_ASSET_BASE_PATH: ${LIDAR_PUBLIC_ASSET_BASE_PATH:-/api/lidar/files}
+      LIDAR_ADMIN_TOKEN: ${LIDAR_ADMIN_TOKEN:?Set LIDAR_ADMIN_TOKEN}
+      # SeaweedFS identity scoped to the models bucket (apps/backend/lidar/compose.fragment.yml).
+      STORAGE_ENDPOINT: http://seaweedfs:8333
+      STORAGE_REGION: us-east-1
+      STORAGE_BUCKET: ${S3_MODELS_BUCKET:-lova-models}
+      STORAGE_PREFIX: ${LIDAR_STORAGE_PREFIX:-}
+      STORAGE_FORCE_PATH_STYLE: 'true'
+      STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_LIDAR_ACCESS_KEY:?Set SEAWEEDFS_LIDAR_ACCESS_KEY}
+      STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_LIDAR_SECRET_KEY:?Set SEAWEEDFS_LIDAR_SECRET_KEY}
+    expose: ['3000']
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seaweedfs-buckets:
+        condition: service_completed_successfully
+    networks: [internal_net]
+
 networks:
   # Service listeners stay unreachable from outside Compose.
   internal_net:

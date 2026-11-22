@@ -9,5 +9,8 @@
 !**/.env.example
 package-lock.json
 
+# Draco decoder copied from three before the frontend dev and build.
+apps/frontend/public/draco/
+
 # Owned by Agent 2 (NFT-07). Formatting waits for the owner's next pull request.
 apps/backend/nft/nft_context.md

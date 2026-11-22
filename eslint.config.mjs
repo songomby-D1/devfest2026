@@ -81,6 +81,8 @@ export default defineConfig([
     // Standalone tool with its own lockfile and TypeScript 7 toolchain, outside the app scope of
     // the code policy. Its owner runs its typecheck and tests in scripts/3d.
     'scripts/3d/',
+    // Draco decoder copied from three by apps/frontend/scripts/copy-draco.mjs before dev and build.
+    'apps/frontend/public/draco/',
   ]),
   {
     name: 'quality/base',

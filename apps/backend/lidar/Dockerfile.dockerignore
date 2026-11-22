@@ -1,0 +1,14 @@
+# Build context is the repository root (D14): tsconfig.json extends the root tsconfig.base.json.
+*
+!tsconfig.base.json
+!apps/backend/lidar/
+apps/backend/lidar/node_modules
+apps/backend/lidar/dist
+apps/backend/lidar/coverage
+apps/backend/lidar/src/generated
+apps/backend/lidar/test
+apps/backend/lidar/**/*.spec.ts
+apps/backend/lidar/vitest.config.ts
+apps/backend/lidar/.env
+apps/backend/lidar/.env.*
+apps/backend/lidar/Dockerfile*
