@@ -32,7 +32,10 @@ export interface MetadataContext {
 
 /** Prepares and pins the public metadata of a published item. Idempotent per content snapshot. */
 export interface MetadataPublisher {
-  prepare(contentId: string, context: MetadataContext): Promise<PreparedMetadata>;
+  prepare(
+    contentId: string,
+    context: MetadataContext,
+  ): Promise<PreparedMetadata>;
 }
 
 /** Nest injection token for the MetadataPublisher implementation. */
