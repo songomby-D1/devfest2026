@@ -9,6 +9,21 @@
 - [NOT IMPLEMENTED] FE-04 (#71) panels: `ItemPage` has empty `data-slot="nft"` and `data-slot="model3d"` sections with TODO(#71); the branch merged second mounts `NftPanel` and `Model3dPanel` there.
 - Contract needs (no change made): decision notes (`return`/`reject`) are not in `ItemDetail`, so a contributor cannot read why an item was returned; the owner edit route (`PATCH`) has no gateway route, so a returned item cannot be corrected from the UI; `ItemSummary` lacks the technique and description, so the gallery reads each item's detail (N+1, fine for the demo); `MediaRef` has no width or height; music has no `ItemKind`.
 
+## Earlier session: npm cache for Docker builds (rivon0507)
+
+- [PROPOSED] Every `npm ci` in the five backend Dockerfiles now uses `RUN --mount=type=cache,id=npm,target=/root/.npm` and `--prefer-offline`, so packages are downloaded once and reused by every image and rebuild. LiDAR's Dockerfile gains `# syntax=docker/dockerfile:1`. The rule is in [services.md](../architecture/services.md#dockerfile-placement).
+- [DECISION REQUIRED: shidoAdr, papangoo, salandri-42, endy-rkt] Confirm the change to your Dockerfile (Auth and LiDAR, Content, NFT, gateway).
+- [NOT IMPLEMENTED] Image builds were not run because the npm registry was unreachable. Only `docker buildx build --check` ran.
+
+## Earlier session: issue triage and develop review (rivon0507)
+
+- [CONFIRMED] Closed #8, #9, #14, #22 and #23 as done, each with an evidence comment.
+- [DECISION REQUIRED: rivon0507] Work merged on `develop` covers these issues, but the backlog still marks them `Review` or the PR used `Refs`: AUTH-01 to AUTH-07 (#46–#51, #97, via #110), FE-01 (#68, via #80), CTO-07 (#28), CTO-09 (#30), and CTO-13/14/17/18/19/20 (#34, #35, #38, #39, #40, #41). Decide whether to close them.
+- [CONFIRMED] The findings are recorded in [develop-functional-review-2026-11-22.md](../testing/develop-functional-review-2026-11-22.md), with the affected owners' approval. Fixes are follow-up work for each owner.
+- [CONFIRMED] The review found that LiDAR's `HttpContentDirectory` calls `GET {CONTENT}/contents/:id` without service headers. Content only serves `GET /internal/v1/items/:id/publication` behind `ServiceTokenGuard`, so asset registration always answers 422 and file delivery always answers 404. #12 stays open.
+- [CONFIRMED] Root `docker-compose.yml` still lacks the Content and NFT fragments. Content needs `STORAGE_*` to boot, and NFT needs `MIGRATION_DATABASE_URL`, `DATABASE_URL`, `NFT_INBOUND_TOKEN_GATEWAY` and `CONTENT_SERVICE_TOKEN`. Without them both services fail at startup or reject every call.
+- [NOT IMPLEMENTED] Checks were not run: `npm ci` failed without network access.
+
 ## Earlier session: NFT-05 provenance display data (rivon0507, Agent 2)
 
 - [PROPOSED] NFT-05 ([#63](https://github.com/songomby-D1/devfest2026/issues/63)) enriches the frozen `GET /internal/v1/provenance/{contentId}` that NFT-04 serves. `ProvenanceService` (`src/provenance/`) first checks publication. Unknown, draft and unpublished items all answer `404 NOT_FOUND`, and the route fails closed with `503` when Content is down. The body keeps every `MintRecord` field unchanged and adds optional fields: explorer links, `tokenUri` and its IPFS gateway URL, `metadataCid`, `masterHash`, `mintedAt`, a public `failureCode`, and an on-chain `verification` block. Verification is `verified`, `mismatch` or `unverifiable` and reads `getArtwork`, `verifyFixity`, `tokenURI` and `ownerOf` within 3 s. A chain read failure never fails the response. `Cache-Control` is `public, max-age=60` for confirmed, `15` when unverifiable, and `no-store` otherwise. `BlockchainPort` and `ViemBlockchain` gain these four reads. Details are in [apps/backend/nft/docs/provenance.md](../../apps/backend/nft/docs/provenance.md), and the contract is `getProvenance` in [nft.yaml](../api/nft.yaml) 0.2.0.

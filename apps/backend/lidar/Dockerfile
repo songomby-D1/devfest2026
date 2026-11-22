@@ -1,10 +1,11 @@
+# syntax=docker/dockerfile:1
 # Build from the repository root (D14): docker build -f apps/backend/lidar/Dockerfile .
 # Node 22 patch pinned under D15.
 FROM node:22.23.5-slim AS build
 WORKDIR /app/apps/backend/lidar
 COPY tsconfig.base.json /app/
 COPY apps/backend/lidar/package.json apps/backend/lidar/package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --prefer-offline
 COPY apps/backend/lidar/ ./
 RUN npx prisma generate && npm run build && npm prune --omit=dev
 
