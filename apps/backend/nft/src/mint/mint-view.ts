@@ -20,13 +20,6 @@ export interface MintView {
   readonly confirmedAt: string | null;
 }
 
-/** Frozen contract `Provenance`. */
-export interface ProvenanceView {
-  readonly contentId: string;
-  readonly mint: MintView | null;
-  readonly scope: string;
-}
-
 /** What a record establishes and what it does not (MVP section C). */
 export const PROVENANCE_SCOPE =
   'This certificate records that the LOVA gallery registered this published ' +
@@ -73,17 +66,5 @@ export function toMintView(
       record.status === 'failed' ? failureReasonOf(record.failureCode) : null,
     requestedAt: record.createdAt.toISOString(),
     confirmedAt: record.confirmedAt?.toISOString() ?? null,
-  };
-}
-
-export function toProvenanceView(
-  contentId: string,
-  record: MintRequestRecord | null,
-  explorerBaseUrl: string,
-): ProvenanceView {
-  return {
-    contentId,
-    mint: record === null ? null : toMintView(record, explorerBaseUrl),
-    scope: record === null ? NO_MINT_SCOPE : PROVENANCE_SCOPE,
   };
 }

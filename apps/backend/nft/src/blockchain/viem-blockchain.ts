@@ -14,6 +14,7 @@ import {
   ChainError,
   type ChainNetwork,
   type MintParams,
+  type OnChainArtwork,
   type SubmitOutcome,
   type TxOutcome,
 } from './blockchain.port';
@@ -99,6 +100,22 @@ function alreadyMintedTokenId(error: unknown): string | undefined {
   if (revert?.data?.errorName !== 'ArtworkAlreadyMinted') return undefined;
   const tokenId = revert.data.args?.[1];
   return typeof tokenId === 'bigint' ? tokenId.toString() : undefined;
+}
+
+/** True when a read reverted because the token does not exist. */
+function isNonexistentToken(error: unknown): boolean {
+  return (
+    walk(error, ContractFunctionRevertedError)?.data?.errorName ===
+    'ERC721NonexistentToken'
+  );
+}
+
+/** A read error as a `ChainError`: never a revert, so always unavailable. */
+function readError(error: unknown): ChainError {
+  return new ChainError(
+    'CHAIN_UNAVAILABLE',
+    `The chain RPC failed (${nameOf(error)})`,
+  );
 }
 
 /** `PreservingArt` on an EVM testnet through viem, signed by the gallery wallet. */
@@ -230,6 +247,75 @@ export class ViemBlockchain implements BlockchainPort {
     return event === undefined
       ? { kind: 'reverted' }
       : { kind: 'confirmed', tokenId: event.args.tokenId.toString() };
+  }
+
+  async getArtwork(tokenId: string): Promise<OnChainArtwork | null> {
+    const artwork = await this.orNull(() =>
+      this.publicClient.readContract({
+        address: this.contract,
+        abi: PRESERVING_ART_ABI,
+        functionName: 'getArtwork',
+        args: [BigInt(tokenId)],
+      }),
+    );
+    if (artwork === null) return null;
+    const category = CONTRACT_CATEGORIES[artwork.category];
+    if (category === undefined) {
+      throw new ChainError(
+        'CHAIN_UNAVAILABLE',
+        'getArtwork returned an unknown category',
+      );
+    }
+    return {
+      mintedAt: new Date(Number(artwork.mintedAt) * 1000),
+      category,
+      masterHash: artwork.masterHash.toLowerCase(),
+      title: artwork.title,
+    };
+  }
+
+  async verifyFixity(tokenId: string, masterHash: string): Promise<boolean> {
+    const fixity = await this.orNull(() =>
+      this.publicClient.readContract({
+        address: this.contract,
+        abi: PRESERVING_ART_ABI,
+        functionName: 'verifyFixity',
+        args: [BigInt(tokenId), masterHash as Hex],
+      }),
+    );
+    return fixity ?? false;
+  }
+
+  tokenUri(tokenId: string): Promise<string | null> {
+    return this.orNull(() =>
+      this.publicClient.readContract({
+        address: this.contract,
+        abi: PRESERVING_ART_ABI,
+        functionName: 'tokenURI',
+        args: [BigInt(tokenId)],
+      }),
+    );
+  }
+
+  ownerOf(tokenId: string): Promise<string | null> {
+    return this.orNull(() =>
+      this.publicClient.readContract({
+        address: this.contract,
+        abi: PRESERVING_ART_ABI,
+        functionName: 'ownerOf',
+        args: [BigInt(tokenId)],
+      }),
+    );
+  }
+
+  /** Runs a token read; `null` when the token does not exist. */
+  private async orNull<T>(read: () => Promise<T>): Promise<T | null> {
+    try {
+      return await read();
+    } catch (error) {
+      if (isNonexistentToken(error)) return null;
+      throw readError(error);
+    }
   }
 
   private async pendingOrDropped(hash: Hex): Promise<TxOutcome> {

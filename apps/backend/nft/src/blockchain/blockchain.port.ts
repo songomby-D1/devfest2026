@@ -19,6 +19,16 @@ export interface MintParams {
   readonly masterHash: string;
 }
 
+/** `PreservingArt.Artwork` of a minted token, decoded (NFT-05). */
+export interface OnChainArtwork {
+  /** `block.timestamp` of the mint. */
+  readonly mintedAt: Date;
+  readonly category: ContractCategory;
+  /** `0x` + 64 lowercase hex chars. */
+  readonly masterHash: string;
+  readonly title: string;
+}
+
 /** Outcome of a mint submission. */
 export type SubmitOutcome =
   | { readonly kind: 'submitted'; readonly txHash: string }
@@ -74,6 +84,18 @@ export interface BlockchainPort {
   submitMint(params: MintParams): Promise<SubmitOutcome>;
   /** Waits for the receipt of a mint transaction, up to `timeoutMs`. */
   waitForMint(txHash: string, timeoutMs: number): Promise<TxOutcome>;
+
+  // Public reads for the provenance display (NFT-05). Each rejects with
+  // `CHAIN_UNAVAILABLE` when the chain cannot be read.
+
+  /** `getArtwork(tokenId)`, or `null` when the token does not exist. */
+  getArtwork(tokenId: string): Promise<OnChainArtwork | null>;
+  /** `verifyFixity(tokenId, hash)`; `false` when the token does not exist. */
+  verifyFixity(tokenId: string, masterHash: string): Promise<boolean>;
+  /** `tokenURI(tokenId)`, or `null` when the token does not exist. */
+  tokenUri(tokenId: string): Promise<string | null>;
+  /** `ownerOf(tokenId)`, or `null` when the token does not exist. */
+  ownerOf(tokenId: string): Promise<string | null>;
 }
 
 /** Nest injection token for the BlockchainPort implementation. */

@@ -2,6 +2,7 @@ import type {
   BlockchainPort,
   ChainNetwork,
   MintParams,
+  OnChainArtwork,
   SubmitOutcome,
   TxOutcome,
 } from '../../src/blockchain/blockchain.port';
@@ -38,6 +39,16 @@ export class FakeBlockchain implements BlockchainPort {
     submit: ChainError[];
     wait: ChainError[];
   } = { find: [], submit: [], wait: [] };
+  /** Token data by token ID, as `getArtwork` and `tokenURI` return it. */
+  readonly artworks = new Map<
+    string,
+    { artwork: OnChainArtwork; tokenUri: string }
+  >();
+  /** Every public read rejects with `CHAIN_UNAVAILABLE` (RPC down). */
+  readsDown = false;
+  /** Every public read never answers (RPC hangs). */
+  readsHang = false;
+  reads = 0;
   private nextToken = 1;
   private nextTx = 1;
 
@@ -81,6 +92,15 @@ export class FakeBlockchain implements BlockchainPort {
       } else {
         tx.state = 'confirmed';
         tx.tokenId = this.mintExisting(key);
+        this.artworks.set(tx.tokenId, {
+          artwork: {
+            mintedAt: new Date('2026-11-22T10:00:05.000Z'),
+            category: tx.params.category,
+            masterHash: tx.params.masterHash.toLowerCase(),
+            title: tx.params.title,
+          },
+          tokenUri: tx.params.tokenUri,
+        });
       }
     }
     return Promise.resolve(
@@ -88,6 +108,35 @@ export class FakeBlockchain implements BlockchainPort {
         ? { kind: 'confirmed', tokenId: tx.tokenId }
         : { kind: 'reverted' },
     );
+  }
+
+  getArtwork(tokenId: string): Promise<OnChainArtwork | null> {
+    return this.read(() => this.artworks.get(tokenId)?.artwork ?? null);
+  }
+
+  verifyFixity(tokenId: string, masterHash: string): Promise<boolean> {
+    return this.read(
+      () =>
+        this.artworks.get(tokenId)?.artwork.masterHash ===
+        masterHash.toLowerCase(),
+    );
+  }
+
+  tokenUri(tokenId: string): Promise<string | null> {
+    return this.read(() => this.artworks.get(tokenId)?.tokenUri ?? null);
+  }
+
+  ownerOf(tokenId: string): Promise<string | null> {
+    return this.read(() =>
+      this.artworks.has(tokenId) ? this.galleryAddress : null,
+    );
+  }
+
+  private read<T>(answer: () => T): Promise<T> {
+    this.reads += 1;
+    if (this.readsHang) return new Promise<T>(() => undefined);
+    if (this.readsDown) return Promise.reject(chainDown());
+    return Promise.resolve(answer());
   }
 }
 
