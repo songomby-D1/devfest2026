@@ -92,6 +92,6 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## Decisions already delegated
 
-- **D08–D11:** salandri-42 owns the NFT choices. The [service proposal](../../apps/backend/nft/nft_context.md) documents candidate chain, standard, wallet and metadata choices. Reconcile its queue, mint trigger, data ownership and storage assumptions with D01, D05, D13 and D16 through NFT-01 and endy-rkt-06.
+- **D08–D11:** salandri-42 owns the NFT choices. [ADR 0003](0003-d08-d11-nft-choices.md) records Avalanche Fuji C-Chain, ERC-721 with one token per item, a custodial gallery wallet, and the minimal `PreservingArt` contract with content-addressed metadata, as proposed under NFT-01 ([#59](https://github.com/songomby-D1/devfest2026/issues/59)). It is not binding until salandri-42 confirms it and the Fuji signing, confirmation and metadata run is recorded. Reconcile the [service proposal](../../apps/backend/nft/nft_context.md) with D01, D05, D13 and D16 through endy-rkt-06.
 - **D12:** [ADR 0001](0001-d12-3d-demo-experience.md) is accepted. Use an offline-prepared GLB at 1K by default and 2K on demand with a poster and still-image fallback. Viewer and asset contracts and real-device verification remain with the affected owners.
 - **Service-local work:** Owners can proceed with approved work on their own API, schema, tests and packaging while the team resolves unrelated shared decisions. A shared dependency only blocks work that needs it.

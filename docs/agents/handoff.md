@@ -2,6 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: NFT-01 chain, standard, wallet and contract record (rivon0507)
+
+- [PROPOSED] NFT-01 ([#59](https://github.com/songomby-D1/devfest2026/issues/59)) on `rivon0507/nft-01-chain-decisions`: [ADR 0003](../decisions/0003-d08-d11-nft-choices.md) records the set the code already follows and compares the alternatives: Avalanche Fuji C-Chain `43113` (local Ganache `31337`), ERC-721 with one token per item, a custodial gallery wallet that signs and pays gas, and the minimal `PreservingArt` contract (Solidity 0.8.28, OpenZeppelin 5.x) with immutable tokens and IPFS metadata through Pinata. The master file is never published; only its SHA-256 goes on-chain.
+- [CONFIRMED] Evidence in `develop`: the chain-ID guard allows only 43113 and 31337, `artworkKey = keccak256(lowercase ContentId)`, the committed ABI, the metadata allowlist and provenance verification, and the demo deployment on local Ganache.
+- [DECISION REQUIRED: salandri-42] Confirm or amend D08–D11. Blocker for "selected": the MVP asks for a signing, confirmation and metadata-resolution run on the candidate stack, and only the local chain has run. The Fuji rehearsal, the `feature/nft-l1` Solidity source (absent from `develop`) and the Pinata free-tier limits are recorded in the ADR as follow-ups.
+- [NOT IMPLEMENTED] No code changed. NFT-01 stays in review until the Fuji run is recorded under DEMO-03.
+
 ## Latest session: CTO-10 Compose integration for Content and NFT (rivon0507)
 
 - [IMPLEMENTED] CTO-10 ([#31](https://github.com/songomby-D1/devfest2026/issues/31)) on `rivon0507/cto-10-compose-integration`: the root [Compose file](../../docker-compose.yml) now carries the Content media-storage settings (`STORAGE_*`, `MEDIA_MAX_*`, waiting for `seaweedfs-buckets`) and the NFT cross-service settings (`CONTENT_SERVICE_URL`, `CONTENT_SERVICE_TOKEN`, `CONTENT_TIMEOUT_MS`, the runtime and migration database URLs, `NFT_INBOUND_TOKEN_GATEWAY`, waiting for `content` and `postgres`). Both fragments are merged and now say so; they stay as the owners' record.
