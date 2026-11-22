@@ -84,7 +84,7 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## DEMO-01 Demo host
 
-[CONFIRMED] Plan for the presenter laptop running local Compose, with a second device for mobile QA. Confirm device reachability, testnet access, wallet and test funds, and public metadata resolution before integrated sign-off. Follow the D01 rehearsal policy if either demo gate is unavailable. [Demo evidence](#demo-script-and-evidence-checklist)
+[CONFIRMED] The demo host is the staging VPS at <https://lova.forastech.duckdns.org>, verified on 2026-11-22: `/api/health` reports Auth, Content, NFT and LiDAR up, `/api/items` lists the five reviewed demo works, `/api/auth/me` rejects guests with 401, and TLS uses a Let's Encrypt certificate behind Caddy in front of nginx. The presenter-laptop Compose setup stays as the offline fallback and follows the D01 rehearsal policy if either environment is unavailable. Confirm reachability from a second mobile device and public metadata resolution before integrated sign-off. [Demo evidence](#demo-script-and-evidence-checklist)
 
 ## GitHub rollout settings
 

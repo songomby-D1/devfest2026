@@ -2,6 +2,14 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: DEMO-01 demo host is the staging VPS (rivon0507)
+
+- [CONFIRMED] DEMO-01 ([#72](https://github.com/songomby-D1/devfest2026/issues/72)) on `rivon0507/demo-01-host-validation`: the demo host is the staging VPS at <https://lova.forastech.duckdns.org>, reached over HTTPS with a Let's Encrypt certificate behind Caddy in front of nginx. Probed on 2026-11-22: `/api/health` reports `auth`, `content`, `nft` and `lidar` up, `/api/items` returns the five reviewed demo works, and `/api/auth/me` answers 401 for a guest. The [decision register](../decisions/project-decisions.md#demo-01-demo-host) and [demo runbook](../../scripts/demo/README.md) now record this host; the presenter-laptop Compose setup stays the offline fallback under D01.
+- [IMPLEMENTED] Fixed the local chain crash loop: `docker-compose.demo.yml` pinned `trufflesuite/ganache:v7.9.2`, whose Node binary died on the arm64 host with `exec format error`, restarting forever (exit 255). The chain now runs Ganache 7.9.2 from the multi-arch `node:20-bookworm-slim` image, answers `eth_chainId` `0x7a69` (31337), and `deploy-contract.mjs` deployed `PreservingArt` at `0x674a828daec02058968c5e87b6a0134742159a5d` with the gallery wallet as owner.
+- [IMPLEMENTED] `fetch-media.mjs` now sends a Wikimedia-compliant User-Agent and retries 429/5xx with backoff; the first run failed with HTTP 429 before the change, and all five images downloaded after it.
+- [NOT IMPLEMENTED] Hosting mechanics are not recorded: this repository has no deployment document describing the VPS Compose file, deploy command, backups or the free-disk requirement. DEMO-01 stays in review until that is documented and a second mobile device is checked, and DEMO-03 depends on it.
+- [NOT RUN] The full local stack was not rebuilt past the chain and contract steps after the host changed to the VPS; the armored local build was stopped once the hosted environment answered.
+
 ## Latest session: ownership transfer, CODEOWNERS withdrawn (rivon0507)
 
 - [CONFIRMED] The project ownership transferred, so the owners named in [responsibilities](../team/responsibilities.md) and in settlement S19 no longer own these areas. The CTO-24 CODEOWNERS proposal (PR #134) was closed before merge and its branch deleted; `develop` has no `.github/CODEOWNERS`.
