@@ -1,0 +1,357 @@
+openapi: 3.1.0
+info:
+  title: LOVA Content & Verification internal API
+  version: 0.1.0
+  description: >-
+    Internal API of the Content service (CONTENT-01, #52). Only the gateway, and
+    NFT and LiDAR for service calls, reach it on the internal network. The
+    gateway forwards `/api/items...` to `/internal/v1/items...` with the same
+    method, path rest, query and body (platform contract). Request and
+    response bodies match the gateway's `CreateItemRequest` and `ItemDetail`.
+
+
+    Every `/internal` request is authenticated by the (`x-service-name`,
+    `x-service-token`) pair, with one secret per caller. Caller context comes
+    from `x-caller-user-id` (or the older `x-caller-account-id`),
+    `x-caller-permissions` and `x-request-id`.
+
+
+    Not yet available: listing (`GET /internal/v1/items`, CONTENT-02),
+    publication and the publication lookup used by NFT and LiDAR (CONTENT-02),
+    media (CONTENT-03) and reviews (CONTENT-04). `media`, `reviews` and
+    `advisorySignals` are always empty arrays until those tasks land.
+servers:
+  - url: http://content:3000
+    description: Internal Compose network
+security:
+  - serviceName: []
+    serviceToken: []
+tags:
+  - name: items
+  - name: health
+paths:
+  /health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Liveness check
+      security: []
+      responses:
+        '200':
+          description: The service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+  /internal/v1/items:
+    post:
+      tags: [items]
+      operationId: createItem
+      summary: Submit an item with its author information and description
+      description: >-
+        Any signed-in caller can submit (D13). The author, item and
+        description are created in one transaction, so invalid input stores
+        nothing. The item starts as `draft`, `in_review`, with both claim
+        statuses `unreviewed`. Its `id` is the ContentId used by NFT and LiDAR.
+      parameters:
+        - $ref: '#/components/parameters/CallerUserId'
+        - $ref: '#/components/parameters/CallerPermissions'
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateItemRequest' }
+      responses:
+        '201':
+          description: The created item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    get:
+      tags: [items]
+      operationId: getItem
+      summary: Read one item
+      description: >-
+        A `published` item is visible to everyone, guests included. A `draft`
+        or `unpublished` item is visible only to its owner and to callers with
+        the `reviewer` permission; anyone else gets `404`, so its existence is
+        not disclosed. `advisorySignals` is present only for the owner and
+        reviewers.
+      responses:
+        '200':
+          description: The item
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    patch:
+      tags: [items]
+      operationId: updateItem
+      summary: Edit an own item that is not published
+      description: >-
+        Only the owner can edit, and only while the item is `draft` or
+        `unpublished` (D13). Fields left out are unchanged; optional text
+        fields accept `null` to clear them. A change to the item metadata or
+        author information resets the item claim status to `unreviewed`, and a
+        change to the description text resets the description claim status
+        (D18 re-review). Rights changes reset neither. Values identical to the
+        current ones are not changes. Not routed by the gateway yet: see the
+        contract need in the CONTENT-01 pull request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateItemRequest' }
+      responses:
+        '200':
+          description: The item after the edit
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: '`ITEM_PUBLISHED`: a published item cannot be edited.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+components:
+  securitySchemes:
+    serviceName:
+      type: apiKey
+      in: header
+      name: x-service-name
+      description: '`gateway`, `nft` or `lidar`.'
+    serviceToken:
+      type: apiKey
+      in: header
+      name: x-service-token
+      description: >-
+        Secret of the caller–Content pair (`CONTENT_INBOUND_TOKEN_<CALLER>`).
+        A missing or wrong pair answers `401 SERVICE_UNAUTHENTICATED`.
+  parameters:
+    ItemId:
+      name: id
+      in: path
+      required: true
+      description: ContentId, an opaque UUID.
+      schema: { type: string, format: uuid }
+    CallerUserId:
+      name: x-caller-user-id
+      in: header
+      required: false
+      description: >-
+        Auth account ID of the signed-in user, absent for a guest. The older
+        `x-caller-account-id` name is also accepted. A value that is not a
+        UUID answers `401 SERVICE_UNAUTHENTICATED`.
+      schema: { type: string, format: uuid }
+    CallerPermissions:
+      name: x-caller-permissions
+      in: header
+      required: false
+      description: Comma-separated permissions. Only `reviewer` is recognized.
+      schema: { type: string, example: reviewer }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      description: Correlation ID echoed in error bodies. Generated when absent or unsafe.
+      schema: { type: string, pattern: '^[A-Za-z0-9._:-]{1,128}$' }
+  responses:
+    ValidationFailed:
+      description: '`VALIDATION_FAILED`, with one entry per invalid field.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Unauthenticated:
+      description: >-
+        `UNAUTHENTICATED` when a write has no caller user, or
+        `SERVICE_UNAUTHENTICATED` when the service pair is missing or wrong.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    Forbidden:
+      description: '`FORBIDDEN`: the caller can see the item but is not its owner.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    NotFound:
+      description: '`NOT_FOUND`: the item does not exist or is not visible to the caller.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    InternalError:
+      description: '`INTERNAL_ERROR`, without internal details.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+  schemas:
+    ContentId:
+      type: string
+      format: uuid
+      description: Opaque identifier created by Content. Other services never parse it.
+    ItemKind:
+      type: string
+      enum: [painting, sculpture, photograph, textile, object, other]
+    PublicationStatus:
+      type: string
+      enum: [draft, published, unpublished]
+    SubmissionStatus:
+      type: string
+      enum: [in_review, returned, rejected, accepted]
+    ClaimStatus:
+      type: string
+      enum: [unreviewed, verified, uncertain]
+    CreateItemRequest:
+      type: object
+      additionalProperties: false
+      required: [title, kind, description, rightsStatement, rightsConfirmed]
+      description: >-
+        Text is trimmed. Optional text that is empty after trimming is stored
+        as `null`.
+      properties:
+        title: { type: string, minLength: 1, maxLength: 160 }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        description: { type: string, minLength: 1, maxLength: 8000 }
+        creatorName: { type: [string, 'null'], maxLength: 160 }
+        creatorCommunity: { type: [string, 'null'], maxLength: 160 }
+        technique: { type: [string, 'null'], maxLength: 160 }
+        origin: { type: [string, 'null'], maxLength: 160 }
+        period: { type: [string, 'null'], maxLength: 80 }
+        rightsStatement: { type: string, minLength: 1, maxLength: 2000 }
+        rightsConfirmed: { type: boolean }
+    UpdateItemRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 1, maxLength: 160 }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        description: { type: string, minLength: 1, maxLength: 8000 }
+        creatorName: { type: [string, 'null'], maxLength: 160 }
+        creatorCommunity: { type: [string, 'null'], maxLength: 160 }
+        technique: { type: [string, 'null'], maxLength: 160 }
+        origin: { type: [string, 'null'], maxLength: 160 }
+        period: { type: [string, 'null'], maxLength: 80 }
+        rightsStatement: { type: string, minLength: 1, maxLength: 2000 }
+        rightsConfirmed: { type: boolean }
+    ClaimStatuses:
+      type: object
+      required: [item, description]
+      properties:
+        item: { $ref: '#/components/schemas/ClaimStatus' }
+        description: { $ref: '#/components/schemas/ClaimStatus' }
+    ItemDetail:
+      type: object
+      required:
+        [
+          id,
+          title,
+          kind,
+          creatorName,
+          origin,
+          period,
+          thumbnailUrl,
+          publicationStatus,
+          submissionStatus,
+          claims,
+          updatedAt,
+          description,
+          creator,
+          rights,
+          media,
+          reviews,
+          isOwner,
+          createdAt,
+          publishedAt,
+        ]
+      properties:
+        id: { $ref: '#/components/schemas/ContentId' }
+        title: { type: string }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        creatorName: { type: [string, 'null'] }
+        origin: { type: [string, 'null'] }
+        period: { type: [string, 'null'] }
+        thumbnailUrl:
+          type: [string, 'null']
+          description: Always `null` until media lands (CONTENT-03).
+        publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
+        submissionStatus: { $ref: '#/components/schemas/SubmissionStatus' }
+        claims: { $ref: '#/components/schemas/ClaimStatuses' }
+        updatedAt: { type: string, format: date-time }
+        description: { type: string }
+        creator:
+          type: object
+          description: Free-text author information (S7), never an account.
+          required: [name, community, technique]
+          properties:
+            name: { type: [string, 'null'] }
+            community: { type: [string, 'null'] }
+            technique: { type: [string, 'null'] }
+        rights:
+          type: object
+          required: [statement, confirmed]
+          properties:
+            statement: { type: string }
+            confirmed: { type: boolean }
+        media:
+          type: array
+          description: Empty until CONTENT-03.
+          items: { type: object }
+        reviews:
+          type: array
+          description: Empty until CONTENT-04.
+          items: { type: object }
+        isOwner: { type: boolean }
+        advisorySignals:
+          type: array
+          description: Present for the owner and reviewers only. Empty until CONTENT-05c.
+          items: { type: object }
+        createdAt: { type: string, format: date-time }
+        publishedAt: { type: [string, 'null'], format: date-time }
+    ValidationIssue:
+      type: object
+      required: [field, reason]
+      properties:
+        field: { type: string }
+        reason: { type: string }
+    PublicError:
+      type: object
+      description: Safe to forward. Never carries stack traces, SQL or secrets.
+      required: [code, message, requestId]
+      properties:
+        code:
+          type: string
+          examples:
+            - VALIDATION_FAILED
+            - UNAUTHENTICATED
+            - SERVICE_UNAUTHENTICATED
+            - FORBIDDEN
+            - NOT_FOUND
+            - ITEM_PUBLISHED
+            - INTERNAL_ERROR
+        message: { type: string }
+        requestId: { type: string }
+        details:
+          type: array
+          description: Only with `VALIDATION_FAILED`.
+          items: { $ref: '#/components/schemas/ValidationIssue' }
