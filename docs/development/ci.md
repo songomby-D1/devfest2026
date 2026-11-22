@@ -1,6 +1,6 @@
 # Continuous integration
 
-This page is the reference for CI, Dependabot and manual GitHub settings. CI validates PRs and pushes to `develop` and `main`, and supports manual dispatch. Stale PR runs are cancelled. The workflow uses read-only repository access, standard GitHub-hosted Ubuntu runners and no repository secrets. [CONFIRMED] Standard runner usage is free for public repositories. Billable-job minute rounding does not apply to these jobs. [GitHub Actions billing](https://docs.github.com/en/actions/concepts/billing-and-usage) · [Job execution time](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
+This page is the reference for CI, Dependabot and manual GitHub settings. CI validates PRs and pushes to `main` and supports manual dispatch. PRs and pushes to `develop` skip CI to speed up development, so run the local checks (or dispatch the workflow on your branch) before merging into `develop`; problems surface at the latest on the `develop` → `main` PR. Stale PR runs are cancelled. The workflow uses read-only repository access, standard GitHub-hosted Ubuntu runners and no repository secrets. [CONFIRMED] Standard runner usage is free for public repositories. Billable-job minute rounding does not apply to these jobs. [GitHub Actions billing](https://docs.github.com/en/actions/concepts/billing-and-usage) · [Job execution time](https://docs.github.com/en/actions/how-tos/monitor-workflows/view-job-execution-time)
 
 ## Jobs
 
