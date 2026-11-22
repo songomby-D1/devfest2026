@@ -1,0 +1,322 @@
+openapi: 3.1.0
+info:
+  title: LOVA NFT internal API
+  version: 0.1.0
+  description: >-
+    Internal API of the NFT service (NFT-04 #62). Only the gateway reaches it
+    on the internal network (platform contract, service-to-service rules):
+    `POST /api/items/{id}/mint` becomes `POST /internal/v1/mints` with
+    `{ contentId }` and the `Idempotency-Key` header, and
+    `GET /api/items/{id}/provenance` becomes
+    `GET /internal/v1/provenance/{contentId}`. Bodies match the gateway's
+    `MintRecord` and `Provenance`.
+
+
+    Every `/internal` request is authenticated by the (`x-service-name`,
+    `x-service-token`) pair. Only `gateway` is accepted, with
+    `NFT_INBOUND_TOKEN_GATEWAY`. Caller context comes from
+    `x-caller-user-id` (or the older `x-caller-account-id`),
+    `x-caller-permissions` and `x-request-id`.
+
+
+    Mint journey (S1, S2, D16): the owner of a published item requests a
+    mint. NFT checks the publication with Content's publication lookup and
+    the ownership with Content's item detail, relaying the caller headers;
+    any doubt refuses the mint. The request is stored as `pending` and
+    answered at once with `202`. A worker inside the service prepares the
+    metadata, sends `safeMint` from the custodial gallery wallet (which signs,
+    pays the gas and keeps every token) on Avalanche Fuji, saves the
+    transaction hash, then waits for the receipt. The client polls the
+    provenance route until `confirmed` (token ID read from the
+    `ArtworkMinted` event) or `failed` (with a safe `failureReason`).
+    Pending requests resume after a restart.
+
+
+    Idempotency: the key is unique per requester. Repeating a request with
+    the same key returns the same mint (`200`) and never sends twice; the
+    same key for another item is `422 IDEMPOTENCY_KEY_REUSED`. An item has
+    at most one `pending` or `confirmed` mint: another key then gets
+    `409 MINT_ALREADY_REQUESTED`. After a `failed` mint, a new key may try
+    again. The contract itself allows one token per item; if one already
+    exists, the request is confirmed with it instead of failing.
+
+
+    Nothing personal goes on-chain or into a response: no account ID, email
+    or private media. `artworkKey` is keccak256 of the lowercase ContentId.
+servers:
+  - url: http://nft-service:3005
+    description: Internal Compose network
+security:
+  - serviceName: []
+    serviceToken: []
+tags:
+  - name: mint
+  - name: health
+paths:
+  /health:
+    get:
+      tags: [health]
+      operationId: health
+      summary: Liveness
+      security: []
+      responses:
+        '200':
+          description: The service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+  /internal/v1/mints:
+    post:
+      tags: [mint]
+      operationId: startMint
+      summary: Request the mint of a published item (owner only)
+      parameters:
+        - $ref: '#/components/parameters/CallerUserId'
+        - $ref: '#/components/parameters/CallerPermissions'
+        - $ref: '#/components/parameters/RequestId'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{16,128}$' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contentId]
+              properties:
+                contentId: { $ref: '#/components/schemas/ContentId' }
+      responses:
+        '200':
+          description: Existing mint for this key (replay, no new side effect)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MintRecord' }
+        '202':
+          description: Mint accepted and pending. Poll the provenance route.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MintRecord' }
+        '400':
+          description: '`IDEMPOTENCY_KEY_REQUIRED` or `VALIDATION_FAILED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '401':
+          description: '`SERVICE_UNAUTHENTICATED` (gateway credentials) or `UNAUTHENTICATED` (guest)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '403':
+          description: '`FORBIDDEN`: the caller does not own the item (S1)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '404':
+          description: '`CONTENT_NOT_FOUND`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '409':
+          description: >-
+            `CONTENT_NOT_PUBLISHED` (draft or unpublished item) or
+            `MINT_ALREADY_REQUESTED` (another key while a mint is pending or
+            confirmed)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '422':
+          description: '`IDEMPOTENCY_KEY_REUSED`: the key was used for another item'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '503':
+          description: '`CONTENT_UNAVAILABLE`: Content could not confirm publication or ownership'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+  /internal/v1/mints/{mintId}:
+    get:
+      tags: [mint]
+      operationId: getMint
+      summary: Read one of the caller's mints
+      parameters:
+        - name: mintId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/CallerUserId'
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: The mint
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MintRecord' }
+        '401':
+          description: '`SERVICE_UNAUTHENTICATED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '404':
+          description: "`NOT_FOUND`, also for another user's mint"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+  /internal/v1/provenance/{contentId}:
+    get:
+      tags: [mint]
+      operationId: getProvenance
+      summary: Read the mint status and provenance of an item
+      description: >-
+        Guests may call it. Returns the pending or confirmed mint, otherwise
+        the latest failed one, otherwise `mint: null`. Poll while `pending`
+        (D16).
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/ContentId' }
+        - $ref: '#/components/parameters/RequestId'
+      responses:
+        '200':
+          description: Provenance
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Provenance' }
+        '400':
+          description: '`VALIDATION_FAILED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '401':
+          description: '`SERVICE_UNAUTHENTICATED`'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+components:
+  securitySchemes:
+    serviceName:
+      type: apiKey
+      in: header
+      name: x-service-name
+      description: Must be `gateway`.
+    serviceToken:
+      type: apiKey
+      in: header
+      name: x-service-token
+      description: Secret of the gateway → NFT pair (`SERVICE_TOKEN_GATEWAY_TO_NFT`).
+  parameters:
+    CallerUserId:
+      name: x-caller-user-id
+      in: header
+      required: false
+      description: Auth account ID of the signed-in user. Absent for a guest.
+      schema: { type: string, format: uuid }
+    CallerPermissions:
+      name: x-caller-permissions
+      in: header
+      required: false
+      description: Comma-separated permissions, relayed unchanged to Content.
+      schema: { type: string }
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      schema: { type: string, pattern: '^[A-Za-z0-9._:-]{1,128}$' }
+  schemas:
+    ContentId:
+      type: string
+      format: uuid
+      description: Opaque ContentId created by Content (D01).
+    MintRecord:
+      type: object
+      required:
+        [
+          mintId,
+          contentId,
+          status,
+          network,
+          tokenId,
+          transactionHash,
+          explorerUrl,
+          failureReason,
+          requestedAt,
+          confirmedAt,
+        ]
+      properties:
+        mintId: { type: string, format: uuid }
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        status: { type: string, enum: [pending, confirmed, failed] }
+        network:
+          description: Always set by this service, from the request's chain and contract.
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [name, chainId, contractAddress]
+              properties:
+                name: { type: string, examples: [Avalanche Fuji] }
+                chainId: { type: integer, examples: [43113] }
+                contractAddress: { type: string }
+        tokenId:
+          type: [string, 'null']
+          description: uint256 as a decimal string, set once `confirmed`.
+        transactionHash:
+          type: [string, 'null']
+          description: >-
+            Set once the transaction is sent. `null` on a confirmed mint that
+            was reconciled with an existing token.
+        explorerUrl:
+          type: [string, 'null']
+          description: Transaction page, or token page when there is no transaction.
+        failureReason:
+          type: [string, 'null']
+          description: Safe, displayable sentence when `failed`.
+        requestedAt: { type: string, format: date-time }
+        confirmedAt: { type: [string, 'null'], format: date-time }
+    Provenance:
+      type: object
+      required: [contentId, mint, scope]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        mint:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/MintRecord'
+        scope:
+          type: string
+          description: What the record establishes and what it does not.
+    PublicError:
+      type: object
+      description: Safe to forward. Never carries stack traces, RPC bodies or secrets.
+      required: [code, message, requestId]
+      properties:
+        code:
+          type: string
+          examples:
+            - VALIDATION_FAILED
+            - IDEMPOTENCY_KEY_REQUIRED
+            - SERVICE_UNAUTHENTICATED
+            - UNAUTHENTICATED
+            - FORBIDDEN
+            - NOT_FOUND
+            - CONTENT_NOT_FOUND
+            - CONTENT_NOT_PUBLISHED
+            - MINT_ALREADY_REQUESTED
+            - IDEMPOTENCY_KEY_REUSED
+            - CONTENT_UNAVAILABLE
+        message: { type: string }
+        requestId: { type: string }
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, reason]
+            properties:
+              field: { type: string }
+              reason: { type: string }

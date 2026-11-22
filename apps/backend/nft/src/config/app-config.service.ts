@@ -35,6 +35,8 @@ export interface LimitsConfig {
 
 export interface MintConfig {
   readonly maxStalledCount: number;
+  readonly maxAttempts: number;
+  readonly sweepIntervalMs: number;
 }
 
 export interface ContentServiceConfig {
@@ -110,6 +112,10 @@ export class AppConfigService {
       maxStalledCount: this.config.get('MINT_MAX_STALLED_COUNT', {
         infer: true,
       }),
+      maxAttempts: this.config.get('MINT_MAX_ATTEMPTS', { infer: true }),
+      sweepIntervalMs: this.config.get('MINT_SWEEP_INTERVAL_MS', {
+        infer: true,
+      }),
     };
   }
 
@@ -123,6 +129,16 @@ export class AppConfigService {
   /** Secret of the NFT → Content pair. Never log it. */
   get contentServiceToken(): string | undefined {
     return this.config.get('CONTENT_SERVICE_TOKEN', { infer: true });
+  }
+
+  /** Runtime database URL, with its password. Never log it. */
+  get databaseUrl(): string {
+    return this.config.get('DATABASE_URL', { infer: true });
+  }
+
+  /** Secret of the gateway -> NFT pair. Never log it. */
+  get gatewayInboundToken(): string | undefined {
+    return this.config.get('NFT_INBOUND_TOKEN_GATEWAY', { infer: true });
   }
 
   /** `faultInject` is ignored outside `NODE_ENV=test` (nft_context.md §9.3). */

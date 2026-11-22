@@ -1,6 +1,6 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { PublicError, safeRequestId } from '../common/public-error';
-import { ContentClient } from './content-client';
+import { ContentClient, type RelayedCaller } from './content-client';
 
 /** Public error codes of the publication check (NFT-02). */
 export const CONTENT_ERRORS = {
@@ -8,6 +8,7 @@ export const CONTENT_ERRORS = {
   CONTENT_NOT_FOUND: 'CONTENT_NOT_FOUND',
   CONTENT_NOT_PUBLISHED: 'CONTENT_NOT_PUBLISHED',
   CONTENT_UNAVAILABLE: 'CONTENT_UNAVAILABLE',
+  FORBIDDEN: 'FORBIDDEN',
 } as const;
 
 /** Any UUID version, case-insensitive, like Content's `ParseUUIDPipe`. */
@@ -65,6 +66,52 @@ export class ContentReferenceService {
           CONTENT_ERRORS.CONTENT_NOT_PUBLISHED,
           'Only a published item can be certified',
           HttpStatus.CONFLICT,
+          requestId,
+        );
+      case 'not_found':
+        throw new PublicError(
+          CONTENT_ERRORS.CONTENT_NOT_FOUND,
+          'The item does not exist',
+          HttpStatus.NOT_FOUND,
+          requestId,
+        );
+      case 'content_unavailable':
+        throw new PublicError(
+          CONTENT_ERRORS.CONTENT_UNAVAILABLE,
+          'The item service is unavailable, try again later',
+          HttpStatus.SERVICE_UNAVAILABLE,
+          requestId,
+        );
+    }
+  }
+
+  /**
+   * Resolves when the caller owns the item (S1: only the owner of a
+   * published item may request its mint). Content decides from the relayed
+   * caller headers. Throws `403 FORBIDDEN` for another user, `404
+   * CONTENT_NOT_FOUND`, and `503 CONTENT_UNAVAILABLE` when Content cannot
+   * answer or answers something unexpected: the check fails closed and
+   * never allows a mint it could not confirm.
+   */
+  async assertOwner(
+    contentId: string,
+    caller: RelayedCaller,
+    context: RequestContext = {},
+  ): Promise<void> {
+    const requestId = safeRequestId(context.requestId);
+    const result = await this.client.getItemOwnership(
+      contentId,
+      caller,
+      requestId,
+    );
+    switch (result.kind) {
+      case 'owner':
+        return;
+      case 'not_owner':
+        throw new PublicError(
+          CONTENT_ERRORS.FORBIDDEN,
+          'Only the owner of the item can request its certificate',
+          HttpStatus.FORBIDDEN,
           requestId,
         );
       case 'not_found':

@@ -13,6 +13,22 @@ services:
       CONTENT_SERVICE_URL: ${NFT_CONTENT_SERVICE_URL:-http://content:3000}
       CONTENT_SERVICE_TOKEN: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
       CONTENT_TIMEOUT_MS: ${NFT_CONTENT_TIMEOUT_MS:-3000}
+      # NFT-04 (#62): see the note at the end of this file.
+      DATABASE_URL: postgresql://${NFT_RUNTIME_DB_USER:-nft_runtime}:${NFT_RUNTIME_DB_PASSWORD:?Set NFT_RUNTIME_DB_PASSWORD}@postgres:5432/${NFT_DB_NAME:?Set NFT_DB_NAME}
+      MIGRATION_DATABASE_URL: postgresql://${NFT_MIGRATION_DB_USER:-nft_migrator}:${NFT_MIGRATION_DB_PASSWORD:?Set NFT_MIGRATION_DB_PASSWORD}@postgres:5432/${NFT_DB_NAME:?Set NFT_DB_NAME}
+      NFT_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_NFT:?Set SERVICE_TOKEN_GATEWAY_TO_NFT}
     depends_on:
       content:
         condition: service_started
+      postgres:
+        condition: service_healthy
+# NFT-04 (#62): the mint journey needs the NFT database and the gateway
+# secret. INFRA-01's postgres init script already provisions the `nft`
+# database with its migration and runtime roles (D04; root .env NFT_DB_NAME
+# and NFT_*_DB_*). docker-entrypoint.sh applies migrations with the
+# migration role, then starts the service without that role's credentials.
+# NFT_INBOUND_TOKEN_GATEWAY is the secret the gateway already sends as
+# NFT_SERVICE_TOKEN. Chain settings (CHAIN_RPC_URL, CONTRACT_ADDRESS,
+# MINTER_PRIVATE_KEY) still come from apps/backend/nft/.env, never from this
+# file. Run one replica: the mint worker is in-process and the gallery
+# wallet signs serially.

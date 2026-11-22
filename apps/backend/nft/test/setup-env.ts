@@ -9,4 +9,9 @@ Object.assign(process.env, {
   MINTER_PRIVATE_KEY: `0x${'11'.repeat(32)}`,
   IPFS_DRIVER: 'fake',
   MEDIA_ROOT: tmpdir(),
+  // Nothing listens here: tests that need a database start their own or
+  // replace the repository.
+  DATABASE_URL: 'postgresql://nft_runtime:test@127.0.0.1:1/nft',
+  NFT_INBOUND_TOKEN_GATEWAY: 'gateway-to-nft-test',
+  MINT_SWEEP_INTERVAL_MS: '0',
 });
