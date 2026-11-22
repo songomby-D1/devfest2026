@@ -4,6 +4,9 @@ import type {
   ItemListFilter,
   ItemPosition,
   ItemRecord,
+  MediaChange,
+  MediaChangeResult,
+  MediaRecord,
   NewItem,
   PublicationTransition,
 } from '../../src/items/item';
@@ -40,6 +43,7 @@ export class InMemoryItemRepository implements ItemRepository {
       publishedAt: null,
       createdAt: now,
       updatedAt: now,
+      media: [],
     };
     this.items.set(record.id, record);
     return Promise.resolve(record);
@@ -137,6 +141,51 @@ export class InMemoryItemRepository implements ItemRepository {
     };
     this.items.set(id, updated);
     return Promise.resolve(updated);
+  }
+
+  changeMedia(
+    id: string,
+    decide: (current: ItemRecord) => MediaChange,
+  ): Promise<MediaChangeResult | null> {
+    // An error thrown by `decide` becomes a rejection, as in a transaction.
+    return new Promise((resolve) => {
+      resolve(this.applyMedia(id, decide));
+    });
+  }
+
+  private applyMedia(
+    id: string,
+    decide: (current: ItemRecord) => MediaChange,
+  ): MediaChangeResult | null {
+    const current = this.items.get(id);
+    if (current === undefined) return null;
+    const change = decide(current);
+    const removed =
+      current.media.find((media) => media.id === change.removeId) ?? null;
+    const added: MediaRecord | null =
+      change.add === undefined
+        ? null
+        : {
+            ...change.add,
+            position:
+              removed?.position ?? (current.media.at(-1)?.position ?? -1) + 1,
+            createdAt: this.now(),
+          };
+    if (removed === null && added === null) {
+      return { item: current, added, removed };
+    }
+    const media = current.media
+      .filter((existing) => existing.id !== removed?.id)
+      .concat(added === null ? [] : [added])
+      .sort((a, b) => a.position - b.position);
+    const updated: ItemRecord = {
+      ...current,
+      media,
+      claimStatus: 'unreviewed',
+      updatedAt: this.now(),
+    };
+    this.items.set(id, updated);
+    return { item: updated, added, removed };
   }
 
   /** Test helper standing in for the review and publication tasks. */

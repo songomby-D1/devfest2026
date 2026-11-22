@@ -1,5 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
-import { InboundTokens } from '../config/app-config';
+import { type AppConfig, InboundTokens } from '../config/app-config';
 import type { PublicError } from './public-error';
 import { ServiceTokenGuard } from './service-token.guard';
 
@@ -16,7 +16,7 @@ describe('ServiceTokenGuard', () => {
     port: 0,
     databaseUrl: 'postgresql://unused',
     inboundTokens: new InboundTokens({ gateway: GATEWAY_TOKEN }),
-  });
+  } as AppConfig);
 
   it('accepts the gateway with its own token', () => {
     expect(

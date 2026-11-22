@@ -1,9 +1,10 @@
 openapi: 3.1.0
 info:
   title: LOVA Content & Verification internal API
-  version: 0.2.0
+  version: 0.3.0
   description: >-
-    Internal API of the Content service (CONTENT-01 #52, CONTENT-02 #53). Only the gateway, and
+    Internal API of the Content service (CONTENT-01 #52, CONTENT-02 #53,
+    CONTENT-03 #54). Only the gateway, and
     NFT and LiDAR for service calls, reach it on the internal network. The
     gateway forwards `/api/items...` to `/internal/v1/items...` with the same
     method, path rest, query and body (platform contract). Request and
@@ -23,9 +24,17 @@ info:
     with the reviewer and note in the publication history.
 
 
-    Not yet available: media (CONTENT-03), reviews and the `return` and
-    `reject` decisions (CONTENT-04). `media`, `reviews` and `advisorySignals`
-    are always empty arrays until those tasks land.
+    Media (CONTENT-03): the owner of an item that is not published uploads,
+    replaces and removes JPEG, PNG or WebP images and MP4 or WebM videos.
+    Files are checked against their declared type and file signature,
+    stored in private S3-compatible storage under generated keys (D05), and
+    streamed back with byte ranges. A media change resets the item claim to
+    `unreviewed` (D18 re-review).
+
+
+    Not yet available: reviews and the `return` and `reject` decisions
+    (CONTENT-04). `reviews` and `advisorySignals` are always empty arrays
+    until those tasks land.
 servers:
   - url: http://content:3000
     description: Internal Compose network
@@ -191,6 +200,152 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PublicError' }
         '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}/media:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags: [items]
+      operationId: uploadMedia
+      summary: Upload one image or video to an own item that is not published
+      description: >-
+        Gate 0 `POST /api/items/{id}/media`. Only the owner, and only while the
+        item is `draft` or `unpublished` (D13). The `file` part must declare
+        `image/jpeg`, `image/png`, `image/webp`, `video/mp4` or `video/webm`
+        and its first bytes must match that type's signature; anything else
+        is `415`. Size limits are set by `MEDIA_MAX_IMAGE_BYTES` (default
+        12 MiB) and `MEDIA_MAX_VIDEO_BYTES` (default 50 MiB), and an item holds
+        at most `MEDIA_MAX_PER_ITEM` files (default 10). The client filename
+        is ignored. The new media is appended and the item claim resets to
+        `unreviewed`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/MediaUpload' }
+      responses:
+        '201':
+          description: The stored media, private until the item is published
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MediaRef' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/MediaConflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/StorageUnavailable' }
+  /internal/v1/items/{id}/media/{mediaId}:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/MediaId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    get:
+      tags: [items]
+      operationId: getMedia
+      summary: Stream a media file
+      description: >-
+        Gate 0 `GET /api/items/{id}/media/{mediaId}`. Visible under the same
+        rule as the item: everyone for a `published` item, otherwise only the
+        owner and reviewers; anyone else gets `404`. One byte range is
+        honored (`206`); a range outside the file is `416`, and other range
+        forms are served whole. The `ETag` is the quoted SHA-256 of the file
+        and `If-None-Match` and `If-Range` use it. A published item's media
+        is `public, max-age=3600, immutable`; otherwise `private, no-store`.
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          schema: { type: string, examples: ['bytes=0-1048575'] }
+        - name: If-Range
+          in: header
+          required: false
+          schema: { type: string }
+        - name: If-None-Match
+          in: header
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Whole file
+          headers:
+            ETag: { schema: { type: string } }
+            Cache-Control: { schema: { type: string } }
+            Accept-Ranges: { schema: { type: string, const: bytes } }
+          content:
+            image/*: { schema: { type: string, format: binary } }
+            video/*: { schema: { type: string, format: binary } }
+        '206':
+          description: Requested range
+          headers:
+            Content-Range: { schema: { type: string } }
+          content:
+            image/*: { schema: { type: string, format: binary } }
+            video/*: { schema: { type: string, format: binary } }
+        '304':
+          description: The `If-None-Match` validator matches.
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '404': { $ref: '#/components/responses/MediaNotFound' }
+        '416':
+          description: '`RANGE_NOT_SATISFIABLE`, with `Content-Range: bytes */<size>`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/StorageUnavailable' }
+    put:
+      tags: [items]
+      operationId: replaceMedia
+      summary: Replace a media file of an own item that is not published
+      description: >-
+        Same body, rules and checks as `uploadMedia`. The new file takes the
+        replaced one's position with a new media ID (URLs stay immutable),
+        keeps its caption unless a new one is sent, and the old object is
+        deleted. The item claim resets to `unreviewed`. Not routed by the
+        gateway yet (contract need).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/MediaUpload' }
+      responses:
+        '200':
+          description: The new media
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MediaRef' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/MediaNotFound' }
+        '409': { $ref: '#/components/responses/MediaConflict' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/StorageUnavailable' }
+    delete:
+      tags: [items]
+      operationId: deleteMedia
+      summary: Remove a media file of an own item that is not published
+      description: >-
+        Removes the record and its object and resets the item claim to
+        `unreviewed`. Not routed by the gateway yet (contract need).
+      responses:
+        '204':
+          description: Removed
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/MediaNotFound' }
+        '409': { $ref: '#/components/responses/MediaConflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
   /internal/v1/items/{id}/decision:
     parameters:
       - $ref: '#/components/parameters/ItemId'
@@ -321,6 +476,11 @@ components:
       required: true
       description: ContentId, an opaque UUID.
       schema: { type: string, format: uuid }
+    MediaId:
+      name: mediaId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     CallerUserId:
       name: x-caller-user-id
       in: header
@@ -369,6 +529,38 @@ components:
           schema: { $ref: '#/components/schemas/PublicError' }
     NotFound:
       description: '`NOT_FOUND`: the item does not exist or is not visible to the caller.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    MediaNotFound:
+      description: >-
+        `NOT_FOUND`: the item or the media does not exist or is not visible
+        to the caller.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    MediaConflict:
+      description: >-
+        `ITEM_PUBLISHED`: the media of a published item cannot be changed, or
+        `MEDIA_LIMIT_REACHED`: the item already holds the maximum number of
+        media files.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    PayloadTooLarge:
+      description: '`PAYLOAD_TOO_LARGE`: the file exceeds the limit for its kind.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    UnsupportedMediaType:
+      description: >-
+        `UNSUPPORTED_MEDIA_TYPE`: the body is not multipart, the declared type
+        is not accepted, or the file content does not match it.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    StorageUnavailable:
+      description: '`STORAGE_UNAVAILABLE`: object storage cannot be reached.'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/PublicError' }
@@ -466,7 +658,9 @@ components:
         period: { type: [string, 'null'] }
         thumbnailUrl:
           type: [string, 'null']
-          description: Always `null` until media lands (CONTENT-03).
+          description: >-
+            Gateway-relative URL of the first image in display order, or
+            `null` when the item has no image.
         publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
         submissionStatus: { $ref: '#/components/schemas/SubmissionStatus' }
         claims: { $ref: '#/components/schemas/ClaimStatuses' }
@@ -488,8 +682,8 @@ components:
             confirmed: { type: boolean }
         media:
           type: array
-          description: Empty until CONTENT-03.
-          items: { type: object }
+          description: In display order.
+          items: { $ref: '#/components/schemas/MediaRef' }
         reviews:
           type: array
           description: Empty until CONTENT-04.
@@ -526,7 +720,9 @@ components:
         period: { type: [string, 'null'] }
         thumbnailUrl:
           type: [string, 'null']
-          description: Always `null` until media lands (CONTENT-03).
+          description: >-
+            Gateway-relative URL of the first image in display order, or
+            `null` when the item has no image.
         publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
         submissionStatus: { $ref: '#/components/schemas/SubmissionStatus' }
         claims: { $ref: '#/components/schemas/ClaimStatuses' }
@@ -567,6 +763,34 @@ components:
       properties:
         contentId: { $ref: '#/components/schemas/ContentId' }
         publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
+    MediaUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: >-
+            One file whose part Content-Type is `image/jpeg`, `image/png`,
+            `image/webp`, `video/mp4` or `video/webm`. The filename is ignored.
+        caption:
+          type: string
+          maxLength: 300
+          description: Trimmed; empty means no caption.
+    MediaRef:
+      type: object
+      required: [id, kind, mimeType, bytes, url, caption]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [image, video] }
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, video/mp4, video/webm]
+        bytes: { type: integer, minimum: 1 }
+        url:
+          type: string
+          description: Gateway-relative, `/api/items/{id}/media/{mediaId}`.
+        caption: { type: [string, 'null'] }
     ValidationIssue:
       type: object
       required: [field, reason]
@@ -592,6 +816,11 @@ components:
             - CLAIMS_UNREVIEWED
             - RIGHTS_NOT_CONFIRMED
             - DECISION_NOT_AVAILABLE
+            - MEDIA_LIMIT_REACHED
+            - PAYLOAD_TOO_LARGE
+            - UNSUPPORTED_MEDIA_TYPE
+            - RANGE_NOT_SATISFIABLE
+            - STORAGE_UNAVAILABLE
             - INTERNAL_ERROR
         message: { type: string }
         requestId: { type: string }

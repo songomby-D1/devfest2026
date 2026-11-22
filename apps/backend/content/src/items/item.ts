@@ -1,5 +1,7 @@
 /** Persistence-independent item types (CONTENT-01). */
 
+import type { MediaKind, MediaType } from '../media/media-format';
+
 export const ITEM_KINDS = [
   'painting',
   'sculpture',
@@ -52,6 +54,43 @@ export interface ItemRecord extends ItemMetadata {
   readonly publishedAt: Date | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  /** Media in display order (CONTENT-03). */
+  readonly media: readonly MediaRecord[];
+}
+
+/** A stored image or video of an item (CONTENT-03). */
+export interface MediaRecord {
+  readonly id: string;
+  readonly kind: MediaKind;
+  readonly contentType: MediaType;
+  readonly bytes: number;
+  /** Lowercase hex SHA-256 of the stored bytes. */
+  readonly sha256: string;
+  /** Relative to the Content bucket and prefix. Never exposed to clients. */
+  readonly storageKey: string;
+  readonly caption: string | null;
+  readonly position: number;
+  readonly createdAt: Date;
+}
+
+/** A media file already written to object storage, ready to be recorded. */
+export type NewMedia = Omit<MediaRecord, 'position' | 'createdAt'>;
+
+/**
+ * A media change decided by the service on the locked current record. With
+ * both fields, the new media replaces the removed one at its position;
+ * `add` alone appends. Any change resets the item claim (D18).
+ */
+export interface MediaChange {
+  readonly add?: NewMedia;
+  /** ID of a media of the item to remove. */
+  readonly removeId?: string;
+}
+
+export interface MediaChangeResult {
+  readonly item: ItemRecord;
+  readonly added: MediaRecord | null;
+  readonly removed: MediaRecord | null;
 }
 
 /** Data needed to create an item; statuses take their defaults. */

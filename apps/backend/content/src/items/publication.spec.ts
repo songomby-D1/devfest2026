@@ -22,6 +22,7 @@ function record(overrides: Partial<ItemRecord> = {}): ItemRecord {
     publishedAt: null,
     createdAt: new Date('2026-11-22T08:00:00.000Z'),
     updatedAt: new Date('2026-11-22T08:00:00.000Z'),
+    media: [],
     ...overrides,
   };
 }

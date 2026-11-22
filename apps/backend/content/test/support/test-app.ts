@@ -8,19 +8,28 @@ import {
   type ItemRepository,
 } from '../../src/items/item-repository';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import {
+  OBJECT_STORAGE,
+  type ObjectStorage,
+} from '../../src/storage/object-storage';
 import { GATEWAY_TOKEN } from './fixtures';
+import { InMemoryObjectStorage } from './in-memory-object-storage';
 
 /**
  * Boots the real application. With a repository the database is replaced by
  * it; without one the Prisma repository talks to `config.databaseUrl`.
+ * Object storage is always the in-memory fake (no S3 server in tests).
  */
 export async function createTestApp(
   config: AppConfig,
   repository?: ItemRepository,
+  storage: ObjectStorage = new InMemoryObjectStorage(),
 ): Promise<NestExpressApplication> {
   let builder = Test.createTestingModule({
     imports: [AppModule.register(config)],
-  });
+  })
+    .overrideProvider(OBJECT_STORAGE)
+    .useValue(storage);
   if (repository !== undefined) {
     builder = builder
       .overrideProvider(ITEM_REPOSITORY)

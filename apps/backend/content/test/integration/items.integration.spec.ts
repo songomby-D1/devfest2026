@@ -17,6 +17,8 @@ import {
   createBody,
   testConfig,
 } from '../support/fixtures';
+import { InMemoryObjectStorage } from '../support/in-memory-object-storage';
+import { mp4Bytes, pngBytes } from '../support/media-bytes';
 import { createTestApp, gatewayHeaders } from '../support/test-app';
 
 const POSTGRES_IMAGE = 'postgres:18.6';
@@ -81,6 +83,8 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
   let container: StartedPostgreSqlContainer;
   let app: NestExpressApplication;
   let prisma: PrismaService;
+  // S3 is replaced by the in-memory fake; PostgreSQL is real.
+  const storage = new InMemoryObjectStorage();
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer(POSTGRES_IMAGE).start();
@@ -105,6 +109,8 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
 
     app = await createTestApp(
       testConfig(urlFor(container, 'content_runtime', 'runtime-pw')),
+      undefined,
+      storage,
     );
     prisma = app.get(PrismaService);
   });
@@ -428,6 +434,128 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
       .get('/internal/v1/items?scope=review')
       .set(gatewayHeaders(OTHER_ID));
     expect(refused.status).toBe(403);
+  });
+
+  describe('media (CONTENT-03)', () => {
+    const attachPng = (id: string, ownerId = OWNER_ID) =>
+      http()
+        .post(`/internal/v1/items/${id}/media`)
+        .set(gatewayHeaders(ownerId))
+        .attach('file', pngBytes(), {
+          filename: 'photo.png',
+          contentType: 'image/png',
+        });
+
+    it('records media in order, resets the item claim and serves them', async () => {
+      const id = await submitAs(OWNER_ID);
+      await markReviewed(id);
+
+      const image = await attachPng(id);
+      expect(image.status).toBe(201);
+      const video = await http()
+        .post(`/internal/v1/items/${id}/media`)
+        .set(gatewayHeaders(OWNER_ID))
+        .field('caption', 'Weaving')
+        .attach('file', mp4Bytes(2000), {
+          filename: 'clip.mp4',
+          contentType: 'video/mp4',
+        });
+      expect(video.status).toBe(201);
+      const videoId = (video.body as { id: string }).id;
+
+      const rows = await prisma.media.findMany({
+        where: { itemId: id },
+        orderBy: { position: 'asc' },
+      });
+      expect(rows.map((row) => [row.kind, row.position, row.caption])).toEqual([
+        ['image', 0, null],
+        ['video', 1, 'Weaving'],
+      ]);
+      expect(rows[1]).toMatchObject({
+        id: videoId,
+        contentType: 'video/mp4',
+        bytes: 2000,
+        storageKey: `items/${id}/${videoId}`,
+      });
+      expect(rows[1]?.sha256).toMatch(/^[0-9a-f]{64}$/);
+      const item = await prisma.item.findUniqueOrThrow({
+        where: { id },
+        include: { description: true },
+      });
+      expect(item.claimStatus).toBe('unreviewed');
+      expect(item.description?.claimStatus).toBe('uncertain');
+
+      const detail = await http()
+        .get(`/internal/v1/items/${id}`)
+        .set(gatewayHeaders(OWNER_ID));
+      expect(
+        (detail.body as { media: { id: string }[] }).media.map((m) => m.id),
+      ).toEqual([(image.body as { id: string }).id, videoId]);
+
+      const range = await http()
+        .get(`/internal/v1/items/${id}/media/${videoId}`)
+        .set({ ...gatewayHeaders(OWNER_ID), range: 'bytes=0-15' });
+      expect(range.status).toBe(206);
+      expect(range.headers['content-range']).toBe('bytes 0-15/2000');
+    });
+
+    it('replaces at the same position and removes', async () => {
+      const id = await submitAs(OWNER_ID);
+      const first = (await attachPng(id)).body as { id: string };
+      const second = (await attachPng(id)).body as { id: string };
+
+      const replaced = await http()
+        .put(`/internal/v1/items/${id}/media/${first.id}`)
+        .set(gatewayHeaders(OWNER_ID))
+        .attach('file', mp4Bytes(), {
+          filename: 'clip.mp4',
+          contentType: 'video/mp4',
+        });
+      expect(replaced.status).toBe(200);
+      const rows = await prisma.media.findMany({
+        where: { itemId: id },
+        orderBy: { position: 'asc' },
+      });
+      expect(rows.map((row) => [row.id, row.position])).toEqual([
+        [(replaced.body as { id: string }).id, 0],
+        [second.id, 1],
+      ]);
+
+      await http()
+        .delete(`/internal/v1/items/${id}/media/${second.id}`)
+        .set(gatewayHeaders(OWNER_ID))
+        .expect(204);
+      expect(await prisma.media.count({ where: { itemId: id } })).toBe(1);
+    });
+
+    it('refuses media changes on a published item', async () => {
+      const id = await submitAs(OWNER_ID);
+      await prisma.item.update({
+        where: { id },
+        data: { publicationStatus: 'published' },
+      });
+      const response = await attachPng(id);
+      expect(response.status).toBe(409);
+      expect(response.body).toMatchObject({ code: 'ITEM_PUBLISHED' });
+      expect(await prisma.media.count({ where: { itemId: id } })).toBe(0);
+    });
+
+    it('keeps the per-item limit under concurrent uploads', async () => {
+      const id = await submitAs(OWNER_ID);
+      // testConfig allows 3 media per item.
+      const responses = await Promise.all(
+        [1, 2, 3, 4, 5].map(() => attachPng(id)),
+      );
+      const statuses = responses.map((response) => response.status).sort();
+      expect(statuses).toEqual([201, 201, 201, 409, 409]);
+      const rows = await prisma.media.findMany({ where: { itemId: id } });
+      expect(rows.map((row) => row.position).sort()).toEqual([0, 1, 2]);
+      const keys = new Set(rows.map((row) => row.storageKey));
+      const stored = [...storage.objects.keys()].filter((key) =>
+        key.startsWith(`items/${id}/`),
+      );
+      expect(new Set(stored)).toEqual(keys);
+    });
   });
 
   it('runs with a runtime role that cannot change the schema (D04)', async () => {

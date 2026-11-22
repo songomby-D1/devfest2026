@@ -2,7 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: Agent 1 merged, Agent 3 brought up to date (Claude, agent N3)
+## Latest session: CONTENT-03 media uploads and delivery (rivon0507, Agent 2)
+
+- [PROPOSED] CONTENT-03 ([#54](https://github.com/songomby-D1/devfest2026/issues/54)) on the Content service: `POST /internal/v1/items/{id}/media` (Gate 0 `uploadMedia`, multipart `file` and `caption`), `GET .../media/{mediaId}` (Gate 0 `getMedia`, single byte range `206`/`416`, SHA-256 `ETag`, `public, max-age=3600, immutable` when published, `private, no-store` otherwise), and `PUT`/`DELETE .../media/{mediaId}` to replace or remove. Owner only, while not published (CONTENT-01 rules). JPEG, PNG, WebP, MP4 and WebM, checked on declared type and file signature; 12 MiB per image, 50 MiB per video and 10 files per item by default (`MEDIA_MAX_*`). Files are spooled to a temporary file, hashed, then written to private S3-compatible storage under `items/{itemId}/{mediaId}` (storage code adapted from LiDAR, D14). Migration `20261122180000_media` adds `media`. A media change resets the item claim to `unreviewed` in the same locked transaction, with a no-op hook for advisory-signal staleness (CONTENT-06). `ItemDetail.media` and `thumbnailUrl` (first image) are filled. Contract: [content.yaml](../api/content.yaml) 0.3.0. Storage settings: `apps/backend/content/compose.fragment.yml` for Agent 1.
+- [DECISION REQUIRED: papangoo] Confirm the formats, limits, cache lifetime and acceptance criteria in the PR (D18). EXIF and other embedded metadata are not stripped: no doc requires it for storage, but published images may carry a location.
+- [DECISION REQUIRED: endy-rkt] Gateway routes for `PUT` and `DELETE /api/items/{id}/media/{mediaId}`, the root Compose storage settings from the fragment, and approval of the additive root `package-lock.json` change for the new Content dependencies.
+
+## Earlier session: Agent 1 merged, Agent 3 brought up to date (Claude, agent N3)
 
 - [IMPLEMENTED] #109 (Gate 0) and #110 (Agent 1 foundations, with LiDAR and Content in root Compose) are merged into `develop`. Merged `develop` into `agent3-ux-fe-3d` for #104; Content's integration test takes the `develop` version, which already carries the workspace fix.
 
