@@ -3,9 +3,24 @@
  * ticket stands out like a printed object on a dark counter.
  */
 .page {
-  --o-night: #0b0806;
-  --o-panel: #15100d;
-  --o-line: rgb(240 236 228 / 0.14);
+  /* LOVA light theme, as the exhibition: sky, paper, ink, lime fills and
+     indigo accents. Layout, type and motion are unchanged. */
+  --o-night: #cce6f6;
+  --o-panel: #fbfaf4;
+  --o-line: rgb(0 0 0 / 0.14);
+  --o-accent: #1f2a5c;
+  --color-paper: #000;
+  --color-paper-95: rgb(0 0 0 / 0.92);
+  --color-paper-70: rgb(0 0 0 / 0.66);
+  --color-paper-40: rgb(0 0 0 / 0.4);
+  --color-gold: #c0fe04;
+  --color-ink: #000;
+  --focus: #000;
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-serif-italic: 'Instrument Serif', 'Times New Roman', serif;
+  --font-condensed: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-ui: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-text: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
   --o-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --o-gutter: clamp(16px, 3.4vw, 48px);
 
@@ -14,9 +29,17 @@
   overflow-y: auto;
   color: var(--color-paper);
   background:
-    radial-gradient(70% 60% at 78% 18%, rgb(103 39 31 / 0.28), transparent 70%),
+    radial-gradient(
+      70% 60% at 78% 18%,
+      rgb(255 236 200 / 0.6),
+      transparent 70%
+    ),
     var(--o-night);
   font-family: var(--font-ui);
+}
+
+.page :where(h1, h2) {
+  font-stretch: normal;
 }
 
 .top {
@@ -53,7 +76,7 @@
   justify-self: end;
   font-size: 11px;
   letter-spacing: 0.2em;
-  color: var(--color-gold);
+  color: var(--o-accent);
   text-transform: uppercase;
 }
 
@@ -72,7 +95,7 @@
   font-size: 11px;
   font-weight: var(--font-weight-medium);
   letter-spacing: 0.2em;
-  color: var(--color-gold);
+  color: var(--o-accent);
   text-transform: uppercase;
 }
 
@@ -87,7 +110,7 @@
 
 .title em {
   font-family: var(--font-serif-italic);
-  color: var(--color-gold);
+  color: var(--o-accent);
 }
 
 .lead {
@@ -230,7 +253,7 @@
 
 .day:has(input:checked),
 .slot:has(input:checked) {
-  color: var(--color-ink);
+  color: #fbfaf4;
   background: var(--color-paper);
   border-color: var(--color-paper);
 }
@@ -316,7 +339,7 @@
   font-family: var(--font-condensed);
   font-size: 19px;
   letter-spacing: 0.03em;
-  color: var(--color-gold);
+  color: var(--o-accent);
 }
 
 .stepper {
@@ -375,7 +398,7 @@
 }
 
 .field input:focus-visible {
-  border-bottom-color: var(--color-gold);
+  border-bottom-color: var(--o-accent);
   outline: none;
   box-shadow: none;
 }
@@ -384,8 +407,8 @@
   padding: var(--space-10) var(--space-14);
   margin: var(--space-8) 0 0;
   font-size: 13px;
-  color: #f2c4bd;
-  background: rgb(143 29 20 / 0.25);
+  color: #a3301a;
+  background: rgb(163 48 26 / 0.08);
   border-left: 2px solid #c4473a;
 }
 
@@ -415,7 +438,7 @@
 }
 
 .submit:hover {
-  background: #d8b487;
+  background: #b2ec00;
 }
 
 .submitTotal {
@@ -477,7 +500,7 @@
 }
 
 .primary {
-  color: var(--color-ink);
+  color: #fbfaf4;
   background: var(--color-paper);
   border: 1px solid var(--color-paper);
 }
@@ -541,7 +564,7 @@
 
 .historyCode {
   font-family: var(--font-mono);
-  color: var(--color-gold);
+  color: var(--o-accent);
 }
 
 .historyCount {

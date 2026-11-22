@@ -31,9 +31,9 @@
   right: 0;
   bottom: 0;
   width: min(460px, 100%);
-  color: var(--color-ink);
-  background: var(--color-paper);
-  box-shadow: var(--shadow-label-raised);
+  color: var(--l1);
+  background: var(--brand-paper);
+  border-left: 1px solid var(--line);
 }
 
 /* Mobile wall text and room menu: a bottom sheet */
@@ -42,9 +42,9 @@
   bottom: 0;
   left: 0;
   max-height: 80dvh;
-  color: var(--color-ink);
-  background: var(--color-paper);
-  border-radius: 12px 12px 0 0;
+  color: var(--l1);
+  background: var(--brand-paper);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
 }
 
 /* Close-up viewer: full screen on black */

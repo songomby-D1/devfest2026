@@ -76,7 +76,7 @@ export const rooms: readonly Room[] = [
     medium: 'painting',
     ambience: {
       wallTone: 'red',
-      usesRedRoomScene: true,
+      usesRedRoomScene: false,
       track: audioTracks.valiha,
     },
     artworks: [],

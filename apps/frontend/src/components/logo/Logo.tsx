@@ -1,23 +1,22 @@
+import { cx } from '../../lib/cx';
+import styles from './Logo.module.css';
+
 export interface LogoProps {
   className?: string | undefined;
 }
 
-/** LOVA wordmark from the Figma "Logo LOVA" layer, drawn in the current text color. */
+/**
+ * The LOVA mark: the baobab wearing the lamba (public/brand/lova.svg, one
+ * cached sprite) and the wide uppercase name, in the current text color.
+ * Decorative: the surrounding link carries the accessible name.
+ */
 export function Logo({ className }: LogoProps) {
   return (
-    <svg
-      className={className}
-      width={59}
-      height={22}
-      viewBox="0 0 59 22"
-      fill="currentColor"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M3.73173 21.1723H7.76753C10.2001 21.1723 10.3383 14.1772 10.3383 14.1772H10.8082L10.3659 21.7063H0V21.1723C0 21.1723 2.54311 21.2791 2.54311 19.9175V2.10922C2.54311 0.720874 0 0.827669 0 0.827669V0.320387H6.30248V0.827669C6.30248 0.827669 3.75937 0.720874 3.75937 2.10922L3.73173 21.1723Z" />
-      <path d="M18.2939 1.60194C12.9313 4.16505 11.4386 10.1189 14.1199 15.2985C16.0549 19.0898 19.6484 21.4393 23.546 21.4393C24.9834 21.4393 26.4761 21.1189 27.9411 20.4248C33.3314 17.835 34.7964 11.9078 32.1428 6.70146C30.1802 2.91019 26.6143 0.560679 22.7167 0.560679C21.2516 0.560679 19.759 0.907767 18.2939 1.60194ZM28.1623 20.8519C26.5314 21.6262 24.8175 22 23.1037 22C18.9297 22 14.9215 19.7573 12.9313 15.8859C10.1394 10.4393 12.4337 3.84466 18.0728 1.14806C19.7037 0.373786 21.4175 0 23.1037 0C27.3053 0 31.3411 2.26942 33.3314 6.14078C36.1233 11.5874 33.8013 18.1553 28.1623 20.8519Z" />
-      <path d="M43.2535 0.80097V0.26699H48.6162V0.80097C46.847 0.80097 46.3218 1.70874 46.1836 2.13592L41.1251 21.7063H40.7381L35.7348 2.37621C35.6795 2.13592 35.2096 0.80097 33.247 0.80097V0.26699H39.2177V0.80097C36.4811 0.80097 36.9234 2.21602 36.9787 2.42961L41.2356 18.983L45.4926 2.40291C45.5755 2.08252 45.8519 0.80097 43.2535 0.80097Z" />
-      <path d="M53.665 13.2961L51.0113 2.99029L48.3577 13.2961H53.665ZM51.1219 0.26699H51.5089L56.5122 19.5971C56.5675 19.8374 57.0374 21.1723 59 21.1723V21.7063H53.0292V21.1723C55.7382 21.1723 55.3236 19.7573 55.2683 19.5437L53.8032 13.8034H48.2194L46.7544 19.5704C46.6715 19.8908 46.395 21.1723 48.9934 21.1723V21.7063H43.6308V21.1723C43.7414 21.1723 45.6763 21.2791 46.1186 19.6238L51.1219 0.26699Z" />
-    </svg>
+    <span className={cx(styles.logo, className)} aria-hidden="true">
+      <svg className={styles.mark} viewBox="36 78 356 304" focusable="false">
+        <use href="/brand/lova.svg#lova" />
+      </svg>
+      <span className={styles.word}>Lova</span>
+    </span>
   );
 }

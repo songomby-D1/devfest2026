@@ -1,7 +1,4 @@
 import { Fragment, useEffect, useId, useMemo, useRef, useState } from 'react';
-import frameGilded1200 from '../../assets/gallery/frame-gilded-1200.webp';
-import frameGilded600 from '../../assets/gallery/frame-gilded-600.webp';
-import frameGilded800 from '../../assets/gallery/frame-gilded-800.webp';
 import sceneRedRoom1280 from '../../assets/gallery/scene-red-room-1280.webp';
 import sceneRedRoom1920 from '../../assets/gallery/scene-red-room-1920.webp';
 import sceneRedRoom2880 from '../../assets/gallery/scene-red-room-2880.webp';
@@ -275,9 +272,18 @@ export function GalleryPage({ room, rooms, artworkIndex }: GalleryPageProps) {
       </header>
 
       <main className={styles.room} aria-labelledby="room-title">
-        <section className={styles.wallText} aria-label="Texte mural">
+        {/*
+          Keyed by room: SplitText rewraps the wall text in its own line
+          elements, so a room change must replace the whole block (its parent
+          is untouched) instead of letting React remove nodes inside it.
+        */}
+        <section
+          key={shownRoom.slug}
+          className={styles.wallText}
+          aria-label="Texte mural"
+        >
           <p className={styles.wallLabel} data-g="wall-label">
-            Salle {shownRoom.number} · {shownRoom.name} —{' '}
+            Salle {shownRoom.number} · {shownRoom.name} ·{' '}
             {shownRoom.malagasyLabel}
           </p>
           <h1 id="room-title" className={styles.wallTitle} data-g="wall-title">
@@ -326,17 +332,6 @@ export function GalleryPage({ room, rooms, artworkIndex }: GalleryPageProps) {
                 priority
               />
             </div>
-            <img
-              className={styles.gildedFrame}
-              src={frameGilded1200}
-              srcSet={`${frameGilded600} 600w, ${frameGilded800} 800w, ${frameGilded1200} 1200w`}
-              sizes="(max-width: 767px) min(84vw, 330px), 38vw"
-              width={1200}
-              height={1200}
-              alt=""
-              fetchPriority="high"
-              decoding="async"
-            />
             <figcaption className="visually-hidden">
               {artwork.title}, {artwork.artist}, {artwork.technique}.
             </figcaption>

@@ -3,27 +3,55 @@
   position: fixed;
   inset: 0;
   overflow-y: auto;
-  color: var(--color-ink);
-  background: var(--color-wall-ivory);
+  color: var(--l1);
+  background: var(--brand-paper);
+  scrollbar-gutter: stable;
+
+  /* Clear space between the grid line and the text, on the 8px grid. */
+  --inset: var(--space-32);
+}
+
+@media (max-width: 760px) {
+  .page {
+    --inset: var(--space-16);
+  }
+}
+
+/* The landing's outer grid guides; inner lines stay off reading pages. */
+.page::before {
+  position: fixed;
+  inset: 0 var(--m);
+  pointer-events: none;
+  content: '';
+  background:
+    linear-gradient(var(--line), var(--line)) 0 0 / 1px 100% no-repeat,
+    linear-gradient(var(--line), var(--line)) 100% 0 / 1px 100% no-repeat;
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-16) var(--space-32);
+  gap: var(--space-12) var(--space-32);
   align-items: center;
-  padding: var(--space-20) max(var(--space-20), calc(56 * var(--u)));
-  border-bottom: 1px solid var(--color-ink-08);
+  padding: var(--space-20) calc(var(--m) + var(--inset));
+  background: rgb(251 250 244 / 0.94);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(var(--blur-glass));
 }
 
 .logo {
   display: inline-flex;
+  color: var(--l1);
+  text-decoration: none;
 }
 
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-8) var(--space-24);
+  gap: var(--space-8) var(--space-32);
 }
 
 .account {
@@ -32,17 +60,49 @@
 
 .wide,
 .narrow {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-24);
-  margin: 0 auto;
-  padding: var(--space-32) var(--space-20) var(--space-56);
+  gap: var(--space-32);
+  padding: var(--space-56) calc(var(--m) + var(--inset)) var(--space-72);
+  animation: page-in var(--duration-slow) var(--ease-out) both;
 }
 
 .wide {
-  max-width: 1120px;
+  max-width: calc(1200px + 2 * var(--m));
+  margin: 0 auto;
 }
 
+/* Forms sit on the first two columns of the grid, like the landing's text blocks. */
 .narrow {
-  max-width: 680px;
+  max-width: calc(760px + 2 * var(--m));
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (max-width: 760px) {
+  .page::before {
+    display: none;
+  }
+
+  .header {
+    padding-block: var(--space-14);
+  }
+
+  .nav {
+    order: 3;
+    width: 100%;
+    gap: var(--space-8) var(--space-20);
+  }
+
+  .wide,
+  .narrow {
+    gap: var(--space-24);
+    padding-top: var(--space-32);
+  }
 }

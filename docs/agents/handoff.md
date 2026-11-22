@@ -2,6 +2,18 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: production deployment of main (Randriatseheno)
+
+- [PROPOSED] Continuous deployment of `main` to the shared production VPS: [deploy-prod.yml](../../.github/workflows/deploy-prod.yml) builds six images after a green CI run on `main`, pushes them to GHCR under the commit SHA and deploys them through a restricted SSH key. The procedure, the GitHub settings, rollback and the server bootstrap are in [infrastructure/deploy/README.md](../../infrastructure/deploy/README.md).
+- [PROPOSED] New files: `apps/frontend/Dockerfile`, `apps/frontend/Dockerfile.dockerignore`, `apps/frontend/nginx.conf` (the `web` image: bundle plus `/api` relay), `infrastructure/deploy/compose.prod.yml`, `deploy.sh`, `ssh-gate.sh`.
+- [DECISION REQUIRED: endy-rkt] Approve the new workflow and the deployment files, as AGENTS.md requires. [DECISION REQUIRED: Sesedra] Approve the frontend Dockerfile and nginx configuration.
+- [CONFIRMED] The VPS was bootstrapped from `develop` at `4cf9172`, with the images built once on the server, and serves `https://lova.forastech.duckdns.org` with the five seeded works. NFT runs on the opt-in local chain with the fake IPFS driver; `nft-walkthrough.mjs` passes its on-chain checks there.
+- [CONFIRMED] The local chain is Anvil, not Ganache: the PreservingArt bytecode uses Cancun opcodes (MCOPY), so on Ganache 7.9.2 the mint succeeded but `tokenURI` and the NFT verification failed with `invalid opcode`. `docker-compose.demo.yml` still uses Ganache and has the same defect. [DECISION REQUIRED: salandri-42]
+- [PROPOSED] `scripts/demo/nft-walkthrough.mjs` now reads the contract address from `mint.network.contractAddress`, where NFT-05 returns it. The check failed on every run before.
+- [DECISION REQUIRED: endy-rkt] Gateway rate limits by `request.ip` behind two proxies, and D18 for a public domain: see the open points of the deployment README.
+- [DECISION REQUIRED: salandri-42] NFT network for production: the public test network or the local chain.
+- [DECISION REQUIRED: shidoAdr, endy-rkt] Image-to-3D generation: in root `docker-compose.yml`, LiDAR is on `internal_net` only, which has no Internet access, so its Meshy calls cannot leave the host. Production adds `egress_net` to LiDAR in `infrastructure/deploy/compose.prod.yml`; the root file needs the same for local runs. The Meshy key lives only in the server's `.env`.
+
 ## Latest session: DEMO-01 demo host is the staging VPS (rivon0507)
 
 - [CONFIRMED] DEMO-01 ([#72](https://github.com/songomby-D1/devfest2026/issues/72)) on `rivon0507/demo-01-host-validation`: the demo host is the staging VPS at <https://lova.forastech.duckdns.org>, reached over HTTPS with a Let's Encrypt certificate behind Caddy in front of nginx. Probed on 2026-11-22: `/api/health` reports `auth`, `content`, `nft` and `lidar` up, `/api/items` returns the five reviewed demo works, and `/api/auth/me` answers 401 for a guest. The [decision register](../decisions/project-decisions.md#demo-01-demo-host) and [demo runbook](../../scripts/demo/README.md) now record this host; the presenter-laptop Compose setup stays the offline fallback under D01.

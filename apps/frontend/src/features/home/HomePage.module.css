@@ -1,14 +1,73 @@
 /*
- * Home "Salon", Figma node 12:88. Coordinates are Figma pixels on the
- * 1440x900 stage, multiplied by --u (see tokens.css). Mobile uses its own
- * 390x844 stage, because no mobile mockup exists yet.
+ * Home, in the landing's composition. The first screen is the landing's sky:
+ * the three-column grid, a wide uppercase headline at the bottom left, the
+ * text block and actions in the third column, a pixel-font HUD. Below it the
+ * page scrolls through the frieze, the craft loop, the experiences and the
+ * closing sky. The hung works keep the 1440x900 stage (multiplied by --u).
  */
 .home {
   position: fixed;
   inset: 0;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  color: var(--l1);
+  background: var(--brand-paper);
+}
+
+.home[data-motion='pending'],
+.home[data-motion='running'] {
   overflow: hidden;
-  color: var(--color-ink);
-  background: var(--color-wall-ivory);
+}
+
+/* First screen: the landing's sky, crossed by warm light. */
+.screen {
+  position: relative;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  background: linear-gradient(0deg, #cce6f6 0%, #b8daf1 100%);
+}
+
+.screen::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: '';
+  background:
+    radial-gradient(
+      55% 20% at 18% 30%,
+      rgb(255 236 200 / 0.6),
+      transparent 70%
+    ),
+    radial-gradient(
+      45% 16% at 78% 52%,
+      rgb(255 228 190 / 0.5),
+      transparent 70%
+    ),
+    radial-gradient(
+      35% 12% at 48% 78%,
+      rgb(255 255 255 / 0.55),
+      transparent 70%
+    );
+  animation: sky-drift 26s var(--ease-in-out) infinite alternate;
+  will-change: transform;
+}
+
+@keyframes sky-drift {
+  to {
+    transform: translate3d(3%, -2%, 0) scale(1.05);
+  }
+}
+
+.scrollHint {
+  text-align: right;
+  animation: hint 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes hint {
+  50% {
+    transform: translateY(4px);
+  }
 }
 
 /* Nothing appears before its animation: content stays hidden until the intro sets its first frame. */
@@ -16,14 +75,7 @@
   visibility: hidden;
 }
 
-.grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: url('../../assets/home/paper-grain.svg') center / cover no-repeat;
-}
-
-/* Navigation, Figma "UI / Nav" */
+/* Header, as on the landing */
 .nav {
   position: absolute;
   top: 0;
@@ -33,13 +85,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: max(64px, calc(88 * var(--u)));
-  padding: 0 max(var(--space-20), calc(56 * var(--u)));
+  padding: 28px calc(var(--m) + var(--pad)) 0;
 }
 
 .logo {
-  display: block;
-  border-radius: var(--radius-button);
+  display: inline-flex;
+  color: var(--l1);
+  text-decoration: none;
 }
 
 .navRight {
@@ -57,7 +109,7 @@
   list-style: none;
 }
 
-/* The 1440x900 stage, fitted and centered without a transform so blending stays with the wall. */
+/* The 1440x900 stage, fitted and centered, for the hung works only. */
 .stage {
   position: absolute;
   inset: 0;
@@ -73,90 +125,122 @@
   height: calc(var(--h) * var(--u));
 }
 
-.womenInLamba {
-  --x: 132;
-  --y: 236;
-  --w: 184;
-  --h: 260;
-}
-
+/* The hanging fills the upper band, above the headline. */
 .avenueOfBaobabs {
-  --x: 1124;
-  --y: 132;
+  --x: 104;
+  --y: 136;
   --w: 132;
   --h: 172;
 }
 
-.sinibe {
-  --x: 1100;
-  --y: 476;
-  --w: 236;
-  --h: 354;
+.womenInLamba {
+  --x: 384;
+  --y: 118;
+  --w: 184;
+  --h: 260;
 }
 
 .vilanyTany {
-  --x: 244;
-  --y: 606;
+  --x: 760;
+  --y: 246;
   --w: 156;
   --h: 156;
 }
 
-/* Hero, Figma "UI / Hero centré" */
+.sinibe {
+  --x: 1104;
+  --y: 112;
+  --w: 236;
+  --h: 354;
+}
+
+/* Hero text on the grid: headline on columns 1 and 2, the rest on column 3. */
 .hero {
   position: absolute;
-  top: calc(50% + 27.5 * var(--u));
-  left: 50%;
+  right: var(--m);
+  bottom: max(12svh, 88px);
+  left: var(--m);
   z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: calc(20 * var(--u));
-  align-items: center;
-  width: calc(632 * var(--u));
-  text-align: center;
-  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+}
+
+.hero > * {
+  padding-inline: var(--pad);
 }
 
 .headline {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
   margin: 0;
   font-family: var(--font-display);
-  font-size: calc(92 * var(--u));
-  font-weight: 400;
-  line-height: 0.88;
-  letter-spacing: -0.01em;
+  font-size: min(5.6vw, 9.4svh);
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  letter-spacing: -0.005em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-/* SplitText line masks get headroom so accents and hairline tops are not clipped. */
+/* SplitText line masks get headroom so accents and descenders are not clipped. */
 .headline > div {
-  padding: 0.25em 0.08em 0.15em;
-  margin: -0.25em -0.08em -0.15em;
+  padding: 0.08em 0.06em 0.06em;
+  margin: -0.08em -0.06em -0.06em;
 }
 
+/* The one lime mark of the screen. */
 .accent {
-  color: var(--color-wine);
+  padding: 0 0.06em;
+  background: var(--brand-lime);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 .description {
-  max-width: max(320px, calc(460 * var(--u)));
-  margin: 0;
-  font-family: var(--font-text);
-  font-size: max(13px, calc(14 * var(--u)));
-  font-weight: var(--font-weight-medium);
-  line-height: 1.3;
-  letter-spacing: 0.02em;
+  grid-column: 3;
+  grid-row: 1;
+  max-width: 34ch;
+  margin: 0 0 var(--space-24);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--l2);
 }
 
 .ctas {
+  grid-column: 3;
+  grid-row: 2;
   display: flex;
-  gap: var(--space-14);
-  padding-top: var(--space-8);
+  flex-wrap: wrap;
+  gap: var(--space-10);
+}
+
+/* HUD, as on the landing */
+.hud {
+  position: absolute;
+  right: var(--m);
+  bottom: 24px;
+  left: var(--m);
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  line-height: 20px;
+  text-transform: uppercase;
+  color: var(--l2);
+  pointer-events: none;
+}
+
+.hud > * {
+  padding-inline: var(--pad);
 }
 
 /* Overlays for the intro light and the exit to the gallery */
 .dim,
 .blackout {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   visibility: hidden;
@@ -165,7 +249,7 @@
 
 .dim {
   z-index: 4;
-  background: var(--scrim-warm);
+  background: #cce6f6;
 }
 
 .home[data-intro='light'][data-motion='pending'] .dim {
@@ -175,7 +259,33 @@
 
 .blackout {
   z-index: 5;
-  background: var(--color-gallery-black);
+  background: linear-gradient(0deg, #cce6f6 0%, #b8daf1 100%);
+}
+
+/* Medium widths: the headline takes the full width, the text block goes under it. */
+@media (min-width: 768px) and (max-width: 1100px) {
+  .hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--space-24);
+  }
+
+  .headline {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    font-size: min(7.4vw, 8.6svh);
+  }
+
+  .description {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+  }
+
+  .ctas {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+  }
 }
 
 /* Low desktop screens: drop the two objects and tighten the headline. */
@@ -185,18 +295,31 @@
     display: none;
   }
 
-  .headline {
-    font-size: calc(80 * var(--u));
+  .hud > :not(.scrollHint) {
+    visibility: hidden;
+  }
+
+  .hero {
+    bottom: max(8svh, 48px);
   }
 }
 
-/* Mobile and tall tablets: the two paintings stay, smaller, at the top. */
+/* Mobile and tall tablets: two works at the top, the text stacked at the bottom. */
 @media (max-width: 767px), (max-aspect-ratio: 3/4) {
   .home {
     --u: min(100vw / 390, 100dvh / 844);
   }
 
-  .rooms {
+  .nav {
+    padding-top: 20px;
+  }
+
+  .navRight {
+    gap: var(--space-12);
+  }
+
+  .rooms,
+  .hud {
     display: none;
   }
 
@@ -212,43 +335,53 @@
 
   .womenInLamba {
     --x: 34;
-    --y: 92;
+    --y: 96;
     --w: 124;
     --h: 175;
   }
 
   .avenueOfBaobabs {
     --x: 236;
-    --y: 128;
+    --y: 132;
     --w: 110;
     --h: 143;
   }
 
   .hero {
-    top: calc(316 * var(--u));
-    bottom: calc(24 * var(--u));
-    width: calc(350 * var(--u));
-    gap: calc(16 * var(--u));
-    transform: translateX(-50%);
+    bottom: max(4svh, 20px);
+    grid-template-columns: 1fr;
+    row-gap: var(--space-14);
   }
 
   .headline {
-    font-size: calc(44 * var(--u));
+    grid-column: 1;
+    grid-row: 1;
+    font-size: min(8.2vw, 5.6svh);
   }
 
   .description {
+    grid-column: 1;
+    grid-row: 2;
     max-width: 100%;
+    margin: 0;
+    font-size: 15px;
+    line-height: 22px;
   }
 
   .ctas {
+    grid-column: 1;
+    grid-row: 3;
     flex-direction: column;
-    gap: var(--spacing-sm);
-    width: 100%;
-    margin-top: auto;
-    padding-top: 0;
   }
 
   .ctas > * {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen::before,
+  .scrollHint {
+    animation: none;
   }
 }

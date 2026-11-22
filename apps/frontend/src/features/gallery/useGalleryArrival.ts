@@ -5,9 +5,9 @@ import { waitForFonts } from '../../lib/motion/fonts';
 import { gsap, SplitText, useGSAP } from '../../lib/motion/gsap';
 
 const GALLERY_FONTS = [
-  '400 60px "Bebas Neue"',
-  'italic 400 24px "Instrument Serif"',
-  '500 13px "Helvetica Now Display"',
+  '700 80px "TikTok Sans"',
+  '400 16px "TikTok Sans"',
+  '400 14px "Departure Mono"',
 ];
 
 /** Room elements lit by the arrival sequence. Bars only on the first arrival. */

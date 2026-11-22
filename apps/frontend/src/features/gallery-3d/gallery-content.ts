@@ -76,7 +76,7 @@ export const rooms: readonly RoomRecord[] = [
     id: 'portraits',
     number: 1,
     label: 'Peinture',
-    eyebrow: 'Salle 01 · Peinture — Efitrano 01',
+    eyebrow: 'Salle 01 · Peinture · Efitrano 01',
     title: ['Portraits', 'de la cour', 'd’Imerina'],
     subtitle: 'Souverains, lamba et lumière des Hautes Terres.',
     paragraphs: [
@@ -88,7 +88,7 @@ export const rooms: readonly RoomRecord[] = [
     id: 'objets',
     number: 2,
     label: 'Objets',
-    eyebrow: 'Salle 02 · Objets — Efitrano 02',
+    eyebrow: 'Salle 02 · Objets · Efitrano 02',
     title: ['La terre', 'qui se', 'souvient'],
     subtitle: 'Jarres, pots et gestes des Hautes Terres.',
     paragraphs: [

@@ -17,10 +17,13 @@ body {
 
 body {
   font-family: var(--font-text);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-ink);
-  background: var(--color-wall-ivory);
+  font-size: 16px;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  color: var(--l1);
+  background: var(--brand-paper);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
@@ -45,9 +48,23 @@ a {
   color: inherit;
 }
 
+::selection {
+  color: var(--brand-black);
+  background: var(--brand-lime);
+}
+
+/* A visible ring on every ground: black on paper, lime where --focus is set on dark. */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Brand titles: TikTok Sans bold, 120 % wide, uppercase. */
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
 }
 
 .visually-hidden {

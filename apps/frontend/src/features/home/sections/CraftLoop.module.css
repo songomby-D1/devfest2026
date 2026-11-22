@@ -1,0 +1,468 @@
+/* The landing's craft loop, on its indigo ground. */
+.flow {
+  --ink: var(--brand-ink-dark);
+  --focus: var(--brand-lime);
+  --p: 0;
+
+  position: relative;
+  z-index: 1;
+  color: rgb(var(--ink));
+  background: var(--brand-indigo);
+}
+
+.flow[data-pinned='true'] {
+  height: 320svh;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-32);
+  padding: var(--space-72) calc(var(--m) + var(--pad));
+  overflow: hidden;
+}
+
+.flow[data-pinned='true'] .stage {
+  position: sticky;
+  top: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto 1fr;
+  gap: 0 var(--space-16);
+  height: 100svh;
+  padding: 104px calc(var(--m) + var(--pad)) 64px;
+}
+
+/* A faint woven texture, like the lamba's weft. */
+.weave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.025) 0 1px,
+      transparent 1px 14px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgb(255 255 255 / 0.02) 0 1px,
+      transparent 1px 14px
+    );
+}
+
+.head {
+  position: relative;
+  z-index: 2;
+  grid-column: 1;
+}
+
+.tag {
+  display: inline-block;
+  padding: 0 var(--space-4);
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--brand-black);
+  background: var(--brand-lime);
+}
+
+.title {
+  margin: var(--space-12) 0 0;
+  font-size: clamp(32px, 3.6vw, 56px);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.stepsWindow {
+  position: relative;
+  z-index: 2;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/*
+ * Pinned: a window two steps high at the bottom of the first column. The list
+ * rises one step at a time (current step on top, the next one under it), so
+ * nothing is ever cut, whatever the screen height.
+ */
+.flow[data-pinned='true'] .stepsWindow {
+  --step-h: 124px;
+
+  grid-column: 1;
+  grid-row: 2;
+  align-self: end;
+  height: calc(2 * var(--step-h));
+  overflow: hidden;
+}
+
+.flow[data-pinned='true'] .steps {
+  transition: transform 700ms var(--ease-out);
+}
+
+.stage[data-step='1'] .steps {
+  transform: translateY(calc(-1 * var(--step-h)));
+}
+
+.stage[data-step='2'] .steps,
+.stage[data-step='3'] .steps {
+  transform: translateY(calc(-2 * var(--step-h)));
+}
+
+.step {
+  padding: var(--space-12) 0 var(--space-14);
+  border-top: 1px solid rgb(var(--ink) / 0.14);
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.flow[data-pinned='true'] .step {
+  box-sizing: border-box;
+  height: var(--step-h);
+  opacity: 0.4;
+}
+
+.step span {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: var(--brand-lime);
+}
+
+.step p {
+  margin: var(--space-4) 0 0;
+  font-size: 15px;
+  line-height: 21px;
+}
+
+.stage[data-step='0'] .step[data-index='0'],
+.stage[data-step='1'] .step[data-index='1'],
+.stage[data-step='2'] .step[data-index='2'],
+.stage[data-step='3'] .step[data-index='3'] {
+  opacity: 1;
+}
+
+/* Short screens: a smaller title and tighter steps keep the whole stage visible. */
+@media (max-height: 720px) {
+  .flow[data-pinned='true'] .stage {
+    padding-top: 84px;
+    padding-bottom: 32px;
+  }
+
+  .flow[data-pinned='true'] .title {
+    font-size: min(3.6vw, 6.4svh);
+  }
+
+  .flow[data-pinned='true'] .stepsWindow {
+    --step-h: 104px;
+  }
+
+  .flow[data-pinned='true'] .step p {
+    font-size: 14px;
+    line-height: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow[data-pinned='true'] .steps {
+    transition: none;
+  }
+}
+
+/* The map: two nodes, two arcs, the porthole in between. */
+.map {
+  position: relative;
+  min-height: 420px;
+}
+
+.flow[data-pinned='true'] .map {
+  grid-column: 2 / 4;
+  grid-row: 1 / 3;
+  min-height: 0;
+}
+
+.arcs {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.arcTop,
+.arcBottom {
+  fill: none;
+  stroke: var(--brand-lime);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.arcTop {
+  stroke-dashoffset: calc(1 - min(1, var(--p) * 2));
+}
+
+.arcBottom {
+  stroke-dashoffset: calc(1 - max(0, var(--p) * 2 - 1));
+}
+
+.flow[data-pinned='false'] .arcTop,
+.flow[data-pinned='false'] .arcBottom {
+  stroke-dashoffset: 0;
+}
+
+.node {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.nodeA {
+  left: 20%;
+}
+
+.nodeB {
+  left: 80%;
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  margin-bottom: var(--space-8);
+  background: var(--brand-lime);
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px rgb(192 254 4 / 0.12);
+}
+
+.node b {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 2.34vw, 32px);
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.node small {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  color: rgb(var(--ink) / 0.6);
+}
+
+.core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.porthole {
+  position: relative;
+  width: clamp(150px, 16vw, 230px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #141c40;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgb(var(--ink) / 0.18),
+    0 30px 60px -20px rgb(0 0 0 / 0.6);
+}
+
+.porthole > span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  opacity: 0;
+  transform: scale(1.08);
+  transition:
+    opacity var(--duration-slow) var(--ease-out),
+    transform 700ms var(--ease-out);
+  place-items: center;
+}
+
+.stage[data-step='0'] [data-for='0'],
+.stage[data-step='1'] [data-for='1'],
+.stage[data-step='2'] [data-for='2'],
+.stage[data-step='3'] [data-for='3'] {
+  opacity: 1;
+  transform: none;
+}
+
+.flow[data-pinned='false'] .porthole > [data-for='2'] {
+  opacity: 1;
+  transform: none;
+}
+
+/* 01 Matter: bark fibres, drawn in CSS. */
+.matter {
+  background:
+    repeating-linear-gradient(
+      100deg,
+      rgb(0 0 0 / 0.18) 0 2px,
+      transparent 2px 9px
+    ),
+    repeating-linear-gradient(
+      96deg,
+      rgb(255 236 200 / 0.12) 0 1px,
+      transparent 1px 5px
+    ),
+    linear-gradient(160deg, #b98a4e, #7a5330 60%, #4f351f);
+}
+
+/* 02 Support: a sheet of handmade paper with its deckled edge. */
+.sheet {
+  background: radial-gradient(circle at 50% 50%, #2a3670, #141c40 70%);
+}
+
+.sheet::before {
+  width: 58%;
+  height: 70%;
+  content: '';
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      rgb(185 138 78 / 0.18) 0 2px,
+      transparent 3px
+    ),
+    radial-gradient(
+      circle at 70% 60%,
+      rgb(185 138 78 / 0.14) 0 2px,
+      transparent 3px
+    ),
+    #efe3c8;
+  background-size:
+    18px 18px,
+    23px 23px,
+    auto;
+  border-radius: 3px 6px 4px 5px;
+  box-shadow: 0 12px 24px -8px rgb(0 0 0 / 0.5);
+  transform: rotate(-6deg);
+}
+
+/* 03 Work: a piece from the collection. */
+.work {
+  background: #141c40;
+}
+
+.workImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 04 Give back: the LOVA mark on lime. */
+.brand {
+  background: var(--brand-lime);
+}
+
+.brand svg {
+  width: 56%;
+  height: auto;
+  aspect-ratio: 356 / 304;
+  fill: var(--brand-black);
+}
+
+.caption {
+  display: grid;
+  min-height: 16px;
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--brand-lime);
+}
+
+.caption > span {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.flow[data-pinned='false'] .caption > [data-for='2'] {
+  opacity: 1;
+}
+
+/* Material chips orbiting the porthole. */
+.chips {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  list-style: none;
+}
+
+.chips li {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-flex;
+  gap: var(--space-6);
+  align-items: center;
+  padding: 4px 12px 4px 4px;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 16px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgb(var(--ink));
+  background: rgb(13 18 44 / 0.7);
+  border: 1px solid rgb(var(--ink) / 0.14);
+  border-radius: var(--radius-pill);
+  transform: rotate(calc(var(--i) * 51.4deg + var(--p) * 120deg))
+    translateX(clamp(150px, 19vw, 300px))
+    rotate(calc(var(--i) * -51.4deg - var(--p) * 120deg)) translate(-50%, -50%);
+}
+
+.chips i {
+  width: 16px;
+  height: 16px;
+  background: var(--sw);
+  border-radius: 50%;
+}
+
+@media (max-width: 760px) {
+  .chips {
+    display: none;
+  }
+
+  .map {
+    min-height: 340px;
+  }
+
+  .nodeA {
+    top: 14%;
+    left: 50%;
+  }
+
+  .nodeB {
+    top: 86%;
+    left: 50%;
+  }
+
+  .arcs {
+    display: none;
+  }
+}

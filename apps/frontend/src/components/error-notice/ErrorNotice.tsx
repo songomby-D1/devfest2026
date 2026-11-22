@@ -10,19 +10,19 @@ export interface ErrorNoticeProps {
   className?: string | undefined;
 }
 
-/** A public error: its safe message, a retry action and the request ID for support. */
+/** A public error: its safe message, a retry action and, for real failures, the request ID for support. */
 export function ErrorNotice({
   error,
   onRetry,
   title,
   className,
 }: ErrorNoticeProps) {
-  const { message, requestId } = describeError(error);
+  const { message, requestId, showReference } = describeError(error);
   return (
     <div className={cx(styles.notice, className)} role="alert">
       {title !== undefined && <p className={styles.title}>{title}</p>}
       <p className={styles.message}>{message}</p>
-      {requestId !== '' && (
+      {showReference && (
         <p className={styles.reference}>
           Référence pour le support : <code>{requestId}</code>
         </p>

@@ -6,38 +6,35 @@
  * by renaming var(--g-*) to var(--color-*).
  */
 .experience {
-  --g-ink: #0e1116;
-  --g-ink-60: rgb(14 17 22 / 0.62);
-  --g-paper: #f0ece4;
-  --g-paper-95: rgb(240 236 228 / 0.95);
-  --g-paper-70: rgb(240 236 228 / 0.7);
-  --g-paper-16: rgb(240 236 228 / 0.16);
-  --g-white: #fffdf7;
-  --g-gold: #c8a174;
-  --g-wine: #67271f;
-  --g-accent: #7e2a20;
-  --g-glass: rgb(20 5 3 / 0.32);
-  --g-glass-dark: rgb(0 0 0 / 0.28);
-  --g-shadow-label: 0 6px 14px -4px rgb(0 0 0 / 0.25);
-  --g-font-display:
-    'New Icon Serif', 'Instrument Serif', Georgia, 'Times New Roman', serif;
-  --g-font-text:
-    'Helvetica Now Display', 'Instrument Sans', 'Helvetica Neue', Arial,
-    sans-serif;
-  --g-font-condensed:
-    'Bebas Neue', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
-  --g-font-serif-italic:
-    'Averia Serif Libre', 'Instrument Serif', Georgia, serif;
-  --g-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --g-focus-ring: 0 0 0 3px var(--g-gold);
+  /* Local names, mapped to the brand tokens (tokens.css). */
+  --g-ink: var(--brand-black);
+  --g-ink-60: var(--l2);
+  --g-paper: rgb(var(--brand-ink-dark));
+  --g-paper-95: var(--color-paper-95);
+  --g-paper-70: var(--color-paper-70);
+  --g-paper-16: var(--color-paper-16);
+  --g-white: var(--brand-paper);
+  --g-gold: var(--brand-lime);
+  --g-wine: var(--brand-night);
+  --g-accent: var(--brand-lime);
+  --g-glass: var(--color-glass-wine);
+  --g-glass-dark: var(--color-glass-dark);
+  --g-shadow-label: none;
+  --g-font-display: var(--font-display);
+  --g-font-text: var(--font-text);
+  --g-font-condensed: var(--font-display);
+  --g-font-serif-italic: var(--font-display);
+  --g-ease: var(--ease-out);
+  --g-focus-ring: 0 0 0 2px var(--brand-night), 0 0 0 4px var(--brand-lime);
+  --focus: var(--brand-lime);
 
   position: fixed;
   inset: 0;
   overflow: hidden;
   font-family: var(--g-font-text);
-  font-weight: 500;
+  font-weight: var(--font-weight-regular);
   color: var(--g-paper);
-  background: #070403;
+  background: var(--brand-night);
 }
 
 .experience :focus-visible {
@@ -140,28 +137,25 @@
 
 .enterButton {
   display: inline-flex;
+  gap: var(--space-10);
   align-items: center;
-  gap: 12px;
-  height: 48px;
-  padding: 0 24px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  min-height: 48px;
+  padding: 12px 22px;
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  font-weight: var(--font-weight-regular);
+  line-height: 24px;
   text-transform: uppercase;
-  color: var(--g-paper);
+  color: var(--brand-black);
   cursor: pointer;
-  background: var(--g-ink);
-  border: 1px solid var(--g-ink);
-  border-radius: 2px;
-  transition:
-    transform 0.2s var(--g-ease),
-    background-color 0.2s var(--g-ease);
+  background: var(--brand-lime);
+  border: 0;
+  border-radius: var(--radius-pill);
+  transition: transform var(--duration-slow) var(--ease-out);
 }
 
 .enterButton:hover:not(:disabled) {
-  background: var(--g-accent);
-  border-color: var(--g-accent);
-  transform: translateY(-1px);
+  transform: translateY(-2px) rotate(-2deg);
 }
 
 .enterButton:disabled {
@@ -270,7 +264,7 @@
 .fallbackCaption > span:nth-child(2) {
   font-family: var(--g-font-serif-italic);
   font-size: 15px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .fallbackButton {

@@ -1,42 +1,55 @@
-/* Shared layout of the account, contribution and review screens. */
+/* Shared layout of the account, contribution and review screens (landing type and actions). */
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(32px, 5vw, 52px);
-  font-weight: 400;
+  font-size: clamp(36px, 4.6vw, 64px);
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
+  letter-spacing: -0.005em;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .lead {
   max-width: 60ch;
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--color-ink-60);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--l2);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-20);
+  gap: var(--space-24);
 }
 
+/* A group is a hairline and a pixel-font heading, never a box. */
 .fieldset {
   display: flex;
   flex-direction: column;
   gap: var(--space-16);
+  min-width: 0;
   margin: 0;
-  padding: var(--space-20);
-  border: 1px solid var(--color-ink-08);
+  padding: var(--space-20) 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 
 .legend {
-  padding: 0 var(--space-6);
-  font-size: 11px;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.14em;
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-4);
+  padding: 0;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  line-height: 16px;
   text-transform: uppercase;
+}
+
+.legend + * {
+  clear: both;
 }
 
 .columns {
@@ -48,128 +61,162 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-14);
+  gap: var(--space-12);
   align-items: center;
 }
 
 .primary,
 .secondary {
   display: inline-flex;
+  gap: var(--space-8);
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 0 var(--space-24);
-  font-size: 13px;
-  letter-spacing: 0.07em;
+  padding: 12px 24px;
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  line-height: 24px;
   text-decoration: none;
   text-transform: uppercase;
+  white-space: nowrap;
   cursor: pointer;
-  border: 1px solid var(--color-ink);
-  border-radius: var(--radius-button);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  transition:
+    transform var(--duration-slow) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out);
 }
 
 .primary {
-  color: var(--color-paper);
-  background: var(--color-ink);
+  color: var(--brand-black);
+  background: var(--brand-lime);
 }
 
 .primary:hover:not(:disabled) {
-  background: var(--color-wine);
-  border-color: var(--color-wine);
+  transform: translateY(-2px) rotate(-2deg);
 }
 
 .secondary {
-  color: var(--color-ink);
+  color: var(--l1);
   background: transparent;
+  border-color: var(--l1);
+}
+
+.secondary:hover:not(:disabled) {
+  color: var(--brand-paper);
+  background: var(--l1);
+}
+
+.primary:active:not(:disabled),
+.secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .primary:disabled,
 .secondary:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .checkbox {
   display: flex;
-  gap: var(--space-10);
+  gap: var(--space-12);
   align-items: flex-start;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .checkbox input {
+  flex: none;
   width: 20px;
   height: 20px;
-  margin: 0;
-  flex: none;
+  margin: 1px 0 0;
+  accent-color: var(--brand-black);
 }
 
 .status {
   margin: 0;
-  font-size: 14px;
-  color: var(--color-ink-60);
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  line-height: 20px;
+  text-transform: uppercase;
+  color: var(--l2);
 }
 
 .success {
   margin: 0;
-  padding: var(--space-14) var(--space-16);
-  font-size: 14px;
-  border-left: 3px solid var(--color-status-verified);
-  background: var(--color-ink-08);
+  padding: var(--space-12) var(--space-16);
+  font-size: 15px;
+  line-height: 22px;
+  background: var(--color-surface);
+  border-left: 4px solid var(--brand-lime);
+  border-radius: 0 var(--radius-field) var(--radius-field) 0;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-10);
   margin: 0;
   padding: 0;
   list-style: none;
+  border-bottom: 1px solid var(--line);
 }
 
 .card {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  padding: var(--space-16) var(--space-20);
-  border: 1px solid var(--color-ink-08);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--line);
 }
 
 .cardTitle {
   margin: 0;
-  font-family: var(--font-serif-italic);
-  font-size: 22px;
-  font-style: italic;
-  font-weight: 400;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-stretch: var(--title-stretch);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  line-height: 24px;
+  text-transform: uppercase;
 }
 
 .badges {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-6);
+  gap: var(--space-6) var(--space-16);
 }
 
 .textLink {
   color: inherit;
-  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.textLink:hover {
+  text-decoration-color: var(--brand-black);
+  background: var(--brand-lime);
 }
 
 .smallPrint {
   margin: 0;
-  font-size: 12px;
-  color: var(--color-ink-60);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--l2);
 }
 
 .fieldError {
   margin: var(--space-6) 0 0;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 18px;
   color: var(--color-danger);
 }
 
 .progress {
   width: 100%;
-  height: 8px;
-  accent-color: var(--color-ink);
+  height: 6px;
+  accent-color: var(--brand-black);
 }
 
 .radioGroup {
@@ -179,4 +226,8 @@
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.radioGroup input {
+  accent-color: var(--brand-black);
 }

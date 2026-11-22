@@ -1,0 +1,103 @@
+.grid {
+  --guide: var(--line);
+  --cw: calc((100% - 2 * var(--m)) / 3);
+  --gy1: 33.2%;
+  --gy2: 68.7%;
+
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--guide), var(--guide)) var(--m) 0 / 1px 100% no-repeat,
+    linear-gradient(var(--guide), var(--guide)) calc(var(--m) + var(--cw)) 0 /
+      1px 100% no-repeat,
+    linear-gradient(var(--guide), var(--guide)) calc(var(--m) + 2 * var(--cw))
+      0 / 1px 100% no-repeat,
+    linear-gradient(var(--guide), var(--guide)) calc(100% - var(--m)) 0 / 1px
+      100% no-repeat,
+    linear-gradient(var(--guide), var(--guide)) 0 var(--gy1) / 100% 1px
+      no-repeat,
+    linear-gradient(var(--guide), var(--guide)) 0 var(--gy2) / 100% 1px
+      no-repeat;
+}
+
+.dark {
+  --guide: rgb(var(--brand-ink-dark) / 0.08);
+}
+
+/* A 12px cross centered on each intersection. */
+.cross {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  opacity: 0.55;
+}
+
+.cross::before,
+.cross::after {
+  position: absolute;
+  content: '';
+  background: var(--l1);
+}
+
+.dark .cross::before,
+.dark .cross::after {
+  background: rgb(var(--brand-ink-dark));
+}
+
+.cross::before {
+  top: 5.5px;
+  left: 0;
+  width: 12px;
+  height: 1px;
+}
+
+.cross::after {
+  top: 0;
+  left: 5.5px;
+  width: 1px;
+  height: 12px;
+}
+
+.cross[data-column='0'] {
+  left: var(--m);
+}
+
+.cross[data-column='1'] {
+  left: calc(var(--m) + var(--cw));
+}
+
+.cross[data-column='2'] {
+  left: calc(var(--m) + 2 * var(--cw));
+}
+
+.cross[data-column='3'] {
+  left: calc(100% - var(--m));
+}
+
+.cross[data-row='top'] {
+  top: var(--gy1);
+}
+
+.cross[data-row='bottom'] {
+  top: var(--gy2);
+}
+
+@media (max-width: 760px) {
+  .grid {
+    --cw: calc((100% - 2 * var(--m)) / 2);
+
+    background:
+      linear-gradient(var(--guide), var(--guide)) var(--m) 0 / 1px 100%
+        no-repeat,
+      linear-gradient(var(--guide), var(--guide)) 50% 0 / 1px 100% no-repeat,
+      linear-gradient(var(--guide), var(--guide)) calc(100% - var(--m)) 0 / 1px
+        100% no-repeat;
+  }
+
+  .cross {
+    display: none;
+  }
+}

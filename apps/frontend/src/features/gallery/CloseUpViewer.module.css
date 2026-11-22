@@ -1,8 +1,9 @@
 .viewer {
+  --focus: var(--brand-lime);
   display: flex;
   flex-direction: column;
   height: 100%;
-  font-family: var(--font-ui);
+  font-family: var(--font-text);
   color: var(--color-paper);
   background: var(--color-gallery-black);
 }
@@ -18,9 +19,12 @@
 .title {
   margin: 0;
   overflow: hidden;
-  font-family: var(--font-serif-italic);
-  font-size: 18px;
-  font-style: italic;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-stretch: var(--title-stretch);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

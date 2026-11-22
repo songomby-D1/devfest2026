@@ -3,14 +3,14 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  color: var(--color-paper);
-  background: var(--color-gallery-black);
+  color: var(--brand-black);
+  background: linear-gradient(0deg, #cce6f6 0%, #b8daf1 100%);
 }
 
 .logo {
   display: inline-flex;
-  padding: var(--space-24) max(var(--space-20), calc(56 * var(--u)));
-  color: var(--color-paper);
+  padding: var(--space-24) calc(var(--m) + var(--pad));
+  color: var(--brand-black);
 }
 
 .body {
@@ -27,22 +27,24 @@
 .title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 48px);
-  font-weight: 400;
+  font-size: clamp(28px, 4vw, 56px);
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
   text-transform: uppercase;
 }
 
 .loading {
   margin: 0;
+  font-family: var(--font-pixel);
   font-size: 13px;
-  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-paper-70);
+  color: rgb(0 0 0 / 0.6);
 }
 
 .error {
   max-width: 520px;
-  color: var(--color-paper);
+  color: var(--brand-black);
   text-align: left;
-  background: var(--color-paper-16);
+  background: rgb(251 250 244 / 0.7);
 }

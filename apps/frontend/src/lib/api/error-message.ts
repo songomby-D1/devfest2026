@@ -45,10 +45,29 @@ const MESSAGES: Record<string, string> = {
   LIDAR_UNAVAILABLE: 'Le service 3D est momentanément indisponible.',
 };
 
+/**
+ * Answers to what the visitor typed or did, not failures: support has nothing
+ * to look up, so these never show a reference.
+ */
+const VISITOR_ANSWERS = new Set([
+  'INVALID_CREDENTIALS',
+  'EMAIL_ALREADY_REGISTERED',
+  'RATE_LIMITED',
+  'VALIDATION_FAILED',
+  'UNAUTHENTICATED',
+  'SESSION_INVALID',
+]);
+
 export interface DisplayError {
   message: string;
   requestId: string;
   code: string;
+  /**
+   * True only for failures support can act on (server errors and unexpected
+   * codes). A wrong password, a taken email or a refused file is the visitor's
+   * own answer: no reference is shown for it.
+   */
+  showReference: boolean;
 }
 
 export function describeError(error: unknown): DisplayError {
@@ -57,11 +76,18 @@ export function describeError(error: unknown): DisplayError {
       message: 'Une erreur inattendue est survenue.',
       requestId: '',
       code: 'UNKNOWN_ERROR',
+      showReference: false,
     };
   }
   const message =
     error.code === 'FORBIDDEN'
       ? `Action refusée : ${error.message}`
       : (MESSAGES[error.code] ?? error.message);
-  return { message, requestId: error.requestId, code: error.code };
+  const expected = error.status < 500 && VISITOR_ANSWERS.has(error.code);
+  return {
+    message,
+    requestId: error.requestId,
+    code: error.code,
+    showReference: error.requestId !== '' && !expected,
+  };
 }

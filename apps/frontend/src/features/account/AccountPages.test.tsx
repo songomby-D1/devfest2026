@@ -48,7 +48,8 @@ describe('account pages', () => {
     expect(alert.textContent).toContain(
       'Adresse e-mail ou mot de passe incorrect.',
     );
-    expect(alert.textContent).toMatch(/Référence pour le support : mock-\d+/);
+    // A wrong password is the visitor's own answer: no support reference.
+    expect(alert.textContent).not.toMatch(/Référence pour le support/);
     expect(window.location.pathname).toBe('/connexion');
   });
 

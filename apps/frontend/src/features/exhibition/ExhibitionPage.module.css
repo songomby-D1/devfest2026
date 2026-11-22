@@ -4,9 +4,27 @@
  * spaced capitals for the eyebrows, thin gold rules.
  */
 .page {
-  --x-night: #0b0806;
-  --x-panel: #15100d;
-  --x-line: rgb(240 236 228 / 0.14);
+  /* LOVA light theme: the landing's sky, paper panels, ink text, lime fills,
+     indigo for accent text and rules. Layout, type and motion are unchanged. */
+  --x-night: #cce6f6;
+  --x-panel: #fbfaf4;
+  --x-line: rgb(0 0 0 / 0.14);
+  --x-accent: #1f2a5c;
+  --color-paper: #000;
+  --color-paper-95: rgb(0 0 0 / 0.92);
+  --color-paper-70: rgb(0 0 0 / 0.66);
+  --color-paper-40: rgb(0 0 0 / 0.4);
+  --color-gold: #c0fe04;
+  --color-ink: #000;
+  --color-wine: #b4472a;
+  --focus: #000;
+
+  /* The exhibition keeps its own editorial typography. */
+  --font-display: 'Instrument Serif', 'Times New Roman', serif;
+  --font-serif-italic: 'Instrument Serif', 'Times New Roman', serif;
+  --font-condensed: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  --font-ui: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-text: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
   --x-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --x-gutter: clamp(16px, 3.4vw, 48px);
 
@@ -16,6 +34,10 @@
   color: var(--color-paper);
   background: var(--x-night);
   font-family: var(--font-ui);
+}
+
+.page :where(h1, h2) {
+  font-stretch: normal;
 }
 
 .stage {
@@ -35,7 +57,7 @@
   padding: 12vh 18vw 12vh 0;
   background: radial-gradient(
     80% 70% at 68% 50%,
-    #2a1d15 0%,
+    #e6f2fb 0%,
     var(--x-night) 70%
   );
 }
@@ -52,12 +74,12 @@
   background:
     linear-gradient(
       90deg,
-      rgb(11 8 6 / 0.88) 0%,
-      rgb(11 8 6 / 0.35) 34%,
+      rgb(204 230 246 / 0.88) 0%,
+      rgb(204 230 246 / 0.35) 34%,
       transparent 52%
     ),
-    linear-gradient(180deg, rgb(11 8 6 / 0.7) 0%, transparent 16%),
-    linear-gradient(0deg, rgb(11 8 6 / 0.6) 0%, transparent 18%);
+    linear-gradient(180deg, rgb(204 230 246 / 0.7) 0%, transparent 16%),
+    linear-gradient(0deg, rgb(204 230 246 / 0.6) 0%, transparent 18%);
 }
 
 /* Top bar ------------------------------------------------------------- */
@@ -101,7 +123,7 @@
 }
 
 .mastheadNumber {
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .mastheadTitle {
@@ -157,7 +179,7 @@
 }
 
 .primary:hover:not(:disabled) {
-  background: #d8b487;
+  background: #b2ec00;
 }
 
 .primary:disabled {
@@ -167,7 +189,7 @@
 
 .ghost {
   color: var(--color-paper);
-  background: rgb(11 8 6 / 0.35);
+  background: rgb(251 250 244 / 0.6);
   border: 1px solid var(--color-paper-40);
   backdrop-filter: blur(var(--blur-glass));
 }
@@ -183,7 +205,7 @@
   height: 20px;
   padding: 0 6px;
   font-size: 11px;
-  color: var(--color-ink);
+  color: #fbfaf4;
   background: var(--color-paper);
   border-radius: var(--radius-pill);
 }
@@ -263,7 +285,7 @@
   font-family: var(--font-condensed);
   font-size: clamp(56px, 7vw, 92px);
   line-height: 0.8;
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .total {
@@ -284,7 +306,7 @@
 
 .eyebrow {
   margin: 0 0 var(--space-10);
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .title {
@@ -335,13 +357,13 @@
 }
 
 .play {
-  color: var(--color-ink);
+  color: #fbfaf4;
   background: var(--color-paper);
   border: 1px solid var(--color-paper);
 }
 
 .play:hover {
-  background: #fff;
+  background: var(--x-accent);
 }
 
 .icon {
@@ -363,8 +385,8 @@
 }
 
 .icon[aria-pressed='true'] {
-  color: var(--color-gold);
-  border-color: var(--color-gold);
+  color: var(--x-accent);
+  border-color: var(--x-accent);
 }
 
 .icon[data-speaking='true'] {
@@ -377,12 +399,12 @@
   color: var(--color-paper);
   background: none;
   border: 0;
-  border-bottom: 1px solid var(--color-gold);
+  border-bottom: 1px solid var(--x-accent);
   border-radius: 0;
 }
 
 .examineButton:hover {
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .examineButton span {
@@ -528,7 +550,7 @@
 .hintLine {
   width: 1px;
   height: 36px;
-  background: linear-gradient(180deg, transparent, var(--color-gold));
+  background: linear-gradient(180deg, transparent, var(--x-accent));
   animation: travel 2.2s var(--x-ease) infinite;
 }
 
@@ -588,7 +610,7 @@
 }
 
 .sheet::backdrop {
-  background: rgb(5 3 2 / 0.6);
+  background: rgb(31 42 92 / 0.32);
   backdrop-filter: blur(3px);
 }
 
@@ -651,7 +673,7 @@
 
 .sheetTitle em {
   font-family: var(--font-serif-italic);
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .sheetMeta,
@@ -683,7 +705,7 @@
   min-height: 280px;
   background: radial-gradient(
     60% 60% at 50% 45%,
-    #2a1f18 0%,
+    #eef6fb 0%,
     var(--x-panel) 100%
   );
   border: 1px solid var(--x-line);
@@ -693,7 +715,7 @@
   width: 100%;
   height: 100%;
   --poster-color: transparent;
-  --progress-bar-color: var(--color-gold);
+  --progress-bar-color: var(--x-accent);
   --progress-bar-height: 2px;
 }
 
@@ -746,7 +768,7 @@
 
 .field input:focus-visible,
 .field textarea:focus-visible {
-  border-bottom-color: var(--color-gold);
+  border-bottom-color: var(--x-accent);
   box-shadow: none;
   outline: none;
 }
@@ -772,10 +794,10 @@
     repeating-linear-gradient(
       135deg,
       transparent 0 14px,
-      rgb(200 161 116 / 0.05) 14px 15px
+      rgb(31 42 92 / 0.05) 14px 15px
     ),
-    #100c0a;
-  border: 1px dashed rgb(200 161 116 / 0.55);
+    #efede7;
+  border: 1px dashed rgb(31 42 92 / 0.55);
   transition:
     border-color var(--duration-base) var(--ease-out),
     background-color var(--duration-base) var(--ease-out);
@@ -783,7 +805,7 @@
 
 .dropzone:hover,
 .dropzone[data-dragging='true'] {
-  border-color: var(--color-gold);
+  border-color: var(--x-accent);
   border-style: solid;
 }
 
@@ -830,7 +852,7 @@
 
 .tips li::before {
   margin-right: var(--space-6);
-  color: var(--color-gold);
+  color: var(--x-accent);
   content: '—';
 }
 
@@ -839,8 +861,8 @@
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: #f2c4bd;
-  background: rgb(143 29 20 / 0.25);
+  color: #a3301a;
+  background: rgb(163 48 26 / 0.08);
   border-left: 2px solid #c4473a;
 }
 
@@ -853,7 +875,7 @@
   margin-bottom: var(--space-24);
   font-size: 14px;
   line-height: 1.5;
-  background: rgb(240 236 228 / 0.04);
+  background: rgb(0 0 0 / 0.03);
   border: 1px solid var(--x-line);
 }
 
@@ -866,8 +888,8 @@
 .progress {
   padding: var(--space-20);
   margin-bottom: var(--space-24);
-  background: rgb(200 161 116 / 0.06);
-  border: 1px solid rgb(200 161 116 / 0.3);
+  background: rgb(31 42 92 / 0.06);
+  border: 1px solid rgb(31 42 92 / 0.3);
 }
 
 .progressHead {
@@ -881,7 +903,7 @@
 .progressValue {
   font-family: var(--font-condensed);
   font-size: 24px;
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 .progressBar {
@@ -921,7 +943,7 @@
 
 .stages li[data-state='done']::before {
   background: var(--color-gold);
-  border-color: var(--color-gold);
+  border-color: var(--x-accent);
 }
 
 .stages li[data-state='current'] {
@@ -929,7 +951,7 @@
 }
 
 .stages li[data-state='current']::before {
-  border-color: var(--color-gold);
+  border-color: var(--x-accent);
   animation: pulse 1.4s ease-in-out infinite;
 }
 
@@ -966,13 +988,13 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
-  background: #100c0a;
+  background: #efede7;
   border: 1px solid var(--x-line);
 }
 
 .creationAction {
   font-size: 11px;
-  color: var(--color-gold);
+  color: var(--x-accent);
 }
 
 /* Guest book --------------------------------------------------------------- */
@@ -993,13 +1015,13 @@
 }
 
 .thanks span {
-  color: var(--color-gold);
+  color: var(--x-accent);
   transition: transform 0.4s var(--x-ease);
 }
 
 .thanks[aria-pressed='true'] {
-  background: rgb(200 161 116 / 0.1);
-  border-color: var(--color-gold);
+  background: rgb(31 42 92 / 0.1);
+  border-color: var(--x-accent);
 }
 
 .thanks[aria-pressed='true'] span {
@@ -1083,11 +1105,11 @@
 
   .vignette {
     background:
-      linear-gradient(180deg, rgb(11 8 6 / 0.7) 0%, transparent 14%),
+      linear-gradient(180deg, rgb(204 230 246 / 0.7) 0%, transparent 14%),
       linear-gradient(
         0deg,
-        rgb(11 8 6 / 0.96) 0%,
-        rgb(11 8 6 / 0.85) 42%,
+        rgb(204 230 246 / 0.96) 0%,
+        rgb(204 230 246 / 0.85) 42%,
         transparent 62%
       );
   }
@@ -1199,10 +1221,10 @@
 
 @keyframes pulse-ring {
   from {
-    box-shadow: 0 0 0 0 rgb(200 161 116 / 0.45);
+    box-shadow: 0 0 0 0 rgb(192 254 4 / 0.7);
   }
   to {
-    box-shadow: 0 0 0 10px rgb(200 161 116 / 0);
+    box-shadow: 0 0 0 10px rgb(192 254 4 / 0);
   }
 }
 

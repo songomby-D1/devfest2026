@@ -1,149 +1,166 @@
 /*
- * Design tokens from the LOVA Figma file (nodes 12:88 and 114:3877).
- * Names mirror the Figma variables in kebab-case: color/ink -> --color-ink.
- * Components read tokens only. See ../../rules.md#design-and-figma.
+ * LOVA brand tokens, from the landing page (DESIGN.md at the repository root).
+ * Paper and black, one lime accent, a three-column grid, three OFL families.
+ * The legacy names below (ink, paper, gold, wine, frame...) are kept so every
+ * component reads the brand through the same variables. See ../../rules.md.
  */
 :root {
-  /* Figma variables */
-  --color-ink: #0e1116;
-  --color-ink-60: rgb(14 17 22 / 0.62);
-  --color-ink-08: rgb(14 17 22 / 0.08);
-  --color-paper: #f0ece4;
-  --color-paper-95: rgb(240 236 228 / 0.95);
-  --color-paper-70: rgb(240 236 228 / 0.7);
-  --color-paper-40: rgb(240 236 228 / 0.4);
-  --color-paper-16: rgb(240 236 228 / 0.16);
-  --color-gold: #c8a174;
-  --color-wine: #67271f;
-  --color-accent: #7e2a20;
+  /* Brand palette */
+  --brand-paper: #fbfaf4;
+  --brand-paper-elev: #efede7;
+  --brand-black: #000000;
+  --brand-lime: #c0fe04;
+  --brand-label-d: 54 54 48;
+  --brand-night: #0d0c0b;
+  --brand-indigo: #1f2a5c;
+  --brand-terracotta: #b4472a;
+  --brand-ochre: #d99a2b;
+  --brand-green: #6c8f4e;
+  --brand-sand: #e9dcc0;
+  --brand-wood: #3b2a20;
+  /* Text on dark grounds, used at 1, .78, .6, .45 and .38 */
+  --brand-ink-dark: 243 239 230;
+
+  /* Text levels on paper */
+  --l1: var(--brand-black);
+  --l2: rgb(var(--brand-label-d) / 0.6);
+  --l3: rgb(var(--brand-label-d) / 0.32);
+  --l4: rgb(var(--brand-label-d) / 0.18);
+  --line: rgb(var(--brand-label-d) / 0.12);
+
+  /* Legacy names, mapped to the brand */
+  --color-ink: var(--brand-black);
+  --color-ink-60: rgb(var(--brand-label-d) / 0.72);
+  --color-ink-08: var(--line);
+  --color-paper: rgb(var(--brand-ink-dark));
+  --color-paper-95: rgb(var(--brand-ink-dark) / 0.95);
+  --color-paper-70: rgb(var(--brand-ink-dark) / 0.72);
+  --color-paper-40: rgb(var(--brand-ink-dark) / 0.45);
+  --color-paper-16: rgb(var(--brand-ink-dark) / 0.16);
+  --color-gold: var(--brand-lime);
+  --color-wine: var(--brand-black);
+  --color-accent: var(--brand-black);
   --spacing-sm: 12px;
 
-  /* Status colors for forms and review labels (pending Figma variables) */
-  --color-status-verified: #2f5d3a;
-  --color-status-uncertain: #85520f;
-  --color-status-unreviewed: rgb(14 17 22 / 0.7);
-  --color-danger: #8f1d14;
-  --color-danger-08: rgb(143 29 20 / 0.08);
-  --color-field-border: rgb(14 17 22 / 0.35);
-  --radius-button: 2px;
+  /* Review and form states: an 8px dot and an ink label, never a tinted block */
+  --color-status-verified: var(--brand-green);
+  --color-status-uncertain: var(--brand-ochre);
+  --color-status-unreviewed: rgb(var(--brand-label-d) / 0.45);
+  --color-danger: #a3301a;
+  --color-danger-08: rgb(163 48 26 / 0.08);
+  --color-field-border: rgb(var(--brand-label-d) / 0.32);
+  --radius-button: 999px;
+  --radius-field: 8px;
+  --radius-card: 16px;
 
   /* Surfaces */
-  --color-wall-ivory: #fefefe;
-  --color-gallery-black: #000000;
-  --color-glass-dark: rgb(0 0 0 / 0.28);
-  --color-glass-wine: rgb(20 5 3 / 0.32);
-  --color-scrim: rgb(0 0 0 / 0.86);
+  --color-wall-ivory: var(--brand-paper);
+  --color-surface: var(--brand-paper-elev);
+  --color-gallery-black: var(--brand-night);
+  --color-glass-dark: rgb(0 0 0 / 0.32);
+  --color-glass-wine: rgb(13 12 11 / 0.6);
+  --color-scrim: rgb(13 12 11 / 0.92);
   --scrim-warm: radial-gradient(
     120% 90% at 50% 42%,
-    rgb(46 30 20 / 0.9) 0%,
-    rgb(14 9 6 / 0.98) 100%
+    rgb(40 34 28 / 0.92) 0%,
+    rgb(13 12 11 / 0.98) 100%
   );
-  --blur-glass: 7px;
+  --blur-glass: 8px;
 
-  /* Dark wood frame (Figma component Cadre, variant Bois noir) */
-  --frame-wood-outer: linear-gradient(
-    125deg,
-    rgb(75 68 64) 0%,
-    rgb(38 33 30) 28.571%,
-    rgb(62 55 51) 46.429%,
-    rgb(26 22 20) 71.429%
-  );
-  --frame-wood-edge: rgb(140 128 120 / 0.55);
-  --frame-wood-gorge: linear-gradient(
-    180deg,
-    #1c1816 0%,
-    #3a332f 50%,
-    #151210 100%
-  );
-  --frame-wood-beads: rgb(110 100 92 / 0.7);
-  --frame-wood-inner: linear-gradient(
-    124deg,
-    rgb(46 40 36) 0%,
-    rgb(17 14 12) 71.429%
-  );
-  --frame-wood-lip: rgb(154 138 120 / 0.45);
-  --color-media-missing: #2a2420;
-  --color-contact-shadow: rgb(38 26 18 / 0.32);
+  /* Artwork frame: flat black, a hairline lip and the long gallery shadow */
+  --frame-wood-outer: linear-gradient(180deg, #151413 0%, #0b0a09 100%);
+  --frame-wood-edge: rgb(var(--brand-ink-dark) / 0.08);
+  --frame-wood-gorge: linear-gradient(180deg, #0b0a09 0%, #1a1817 100%);
+  --frame-wood-beads: rgb(var(--brand-ink-dark) / 0.06);
+  --frame-wood-inner: linear-gradient(180deg, #121110 0%, #0b0a09 100%);
+  --frame-wood-lip: rgb(var(--brand-ink-dark) / 0.14);
+  --color-media-missing: #1a1817;
+  --color-contact-shadow: rgb(0 0 0 / 0.28);
 
-  /* Gallery walls for rooms without a scene photograph */
+  /* Gallery grounds: the landing's night, warmed by one spotlight */
   --wall-red: radial-gradient(
     120% 90% at 35% 45%,
-    #5a1712 0%,
-    #2a0907 55%,
-    #0c0302 100%
+    #1c1916 0%,
+    #0d0c0b 60%,
+    #070606 100%
   );
-  --wall-stone: radial-gradient(
-    120% 90% at 35% 45%,
-    #3b3a36 0%,
-    #1d1c1a 55%,
-    #090908 100%
-  );
-  --wall-ochre: radial-gradient(
-    120% 90% at 35% 45%,
-    #6a4320 0%,
-    #33200f 55%,
-    #0f0904 100%
-  );
+  --wall-stone: var(--wall-red);
+  --wall-ochre: var(--wall-red);
   --wall-indigo: radial-gradient(
     120% 90% at 35% 45%,
-    #23284a 0%,
-    #111426 55%,
-    #05060c 100%
+    #26336b 0%,
+    #1f2a5c 55%,
+    #121a3d 100%
   );
   --spot-light: radial-gradient(
     50% 50% at 50% 50%,
-    rgb(255 214 170 / 0.32) 0%,
-    rgb(255 190 140 / 0.12) 45%,
-    rgb(255 190 140 / 0) 100%
+    rgb(255 232 190 / 0.2) 0%,
+    rgb(255 220 170 / 0.07) 45%,
+    rgb(255 220 170 / 0) 100%
   );
 
-  /* Effects: Figma style Shadow/Wall and its raised hover state */
+  /* Depth goes to the works only */
   --shadow-wall:
-    0 14px 22px -4px rgb(38 26 18 / 0.28), 0 2px 3px 0 rgb(26 18 13 / 0.25);
+    0 50px 90px -30px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(0 0 0 / 0.06);
   --shadow-wall-raised:
-    0 26px 34px -6px rgb(38 26 18 / 0.34), 0 4px 6px 0 rgb(26 18 13 / 0.26);
-  --shadow-label: 0 6px 14px -4px rgb(0 0 0 / 0.25);
-  --shadow-label-raised: 0 12px 20px -6px rgb(0 0 0 / 0.35);
-  --focus-ring: 0 0 0 3px var(--color-gold);
+    0 60px 100px -30px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(0 0 0 / 0.08);
+  --shadow-label: none;
+  --shadow-label-raised: none;
 
-  /* Typography. Licensed families load locally and fall back to OFL fonts. */
-  --font-display:
-    'New Icon Serif', 'Instrument Serif', 'Times New Roman', serif;
-  --font-text:
-    'Helvetica Now Display', 'Instrument Sans', 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-ui: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
-  --font-serif-italic: 'Instrument Serif', 'Times New Roman', serif;
-  --font-condensed: 'Bebas Neue', 'Arial Narrow', sans-serif;
-  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* Focus: black on paper, lime on dark grounds (set --focus there) */
+  --focus: var(--brand-black);
+  --focus-ring: 0 0 0 2px var(--brand-paper), 0 0 0 4px var(--focus);
+
+  /* Typography: TikTok Sans for text and titles, Departure Mono for interface
+     labels, Geist Mono for numbers and technical values. */
+  --font-sans: 'TikTok Sans', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --font-pixel: 'Departure Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-mono: 'Geist Mono', ui-monospace, Menlo, Consolas, monospace;
+  --font-display: var(--font-sans);
+  --font-text: var(--font-sans);
+  --font-ui: var(--font-pixel);
+  --font-serif-italic: var(--font-sans);
+  --font-condensed: var(--font-sans);
+  --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
+  /* Titles: uppercase, bold, 120 % wide */
+  --title-stretch: 120%;
 
-  /* Spacing scale in CSS pixels */
-  --space-2: 2px;
+  /* Spacing scale in CSS pixels, every step on the 4px grid (legacy names kept) */
+  --space-2: 4px;
   --space-4: 4px;
-  --space-6: 6px;
+  --space-6: 8px;
   --space-8: 8px;
-  --space-10: 10px;
-  --space-14: 14px;
+  --space-10: 12px;
+  --space-12: 12px;
+  --space-14: 16px;
   --space-16: 16px;
   --space-20: 20px;
   --space-24: 24px;
   --space-32: 32px;
   --space-40: 40px;
+  --space-48: 48px;
   --space-56: 56px;
+  --space-72: 72px;
+
+  /* Three-column grid of the landing */
+  --m: clamp(16px, 4.36vw, 72px);
+  --pad: 8px;
 
   --radius-pill: 999px;
-  --radius-dot: 3px;
+  --radius-dot: 50%;
 
-  /* Motion (CSS hover transitions only; GSAP owns choreography) */
-  --duration-fast: 150ms;
-  --duration-base: 200ms;
+  /* Motion (CSS transitions; GSAP owns choreography) */
+  --duration-fast: 160ms;
+  --duration-base: 240ms;
+  --duration-slow: 450ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   /*
-   * One Figma pixel of the 1440x900 stage, fitted inside the viewport.
-   * Layout coordinates in page modules are multiplied by --u.
+   * One stage pixel of the 1440x900 home and gallery, fitted inside the
+   * viewport. Layout coordinates in those modules are multiplied by --u.
    */
   --u: min(100vw / 1440, 100dvh / 900);
 }

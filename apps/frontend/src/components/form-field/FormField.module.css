@@ -4,31 +4,49 @@
   gap: var(--space-6);
 }
 
+/* Landing field label: pixel font, uppercase, in ink for contrast. */
 .label {
+  font-family: var(--font-pixel);
   font-size: 13px;
-  font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
+  text-transform: uppercase;
 }
 
 .required,
 .optional {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-ink-60);
+  color: var(--l2);
+  text-transform: none;
 }
 
 .control {
   width: 100%;
-  min-height: 44px;
-  padding: var(--space-10) var(--space-14);
+  min-height: 48px;
+  padding: var(--space-12) var(--space-14);
   font: inherit;
-  font-size: 15px;
-  color: var(--color-ink);
-  background: var(--color-wall-ivory);
-  border: 1px solid var(--color-field-border);
-  border-radius: var(--radius-button);
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--l1);
+  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-field);
+  transition:
+    border-color var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out);
+}
+
+.control:hover {
+  border-color: var(--color-field-border);
+}
+
+.control:focus-visible {
+  background: var(--brand-paper);
+  border-color: var(--l1);
+  outline-offset: 2px;
 }
 
 textarea.control {
-  min-height: 120px;
+  min-height: 140px;
   resize: vertical;
 }
 
@@ -38,14 +56,14 @@ textarea.control {
 
 .hint {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--color-ink-60);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--l2);
 }
 
 .error {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 18px;
   color: var(--color-danger);
 }

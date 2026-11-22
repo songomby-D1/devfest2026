@@ -96,6 +96,7 @@ export function SoundToggle({
       )}
       aria-pressed={sound.enabled}
       aria-keyshortcuts="M"
+      data-sound-toggle=""
       onClick={() => {
         ambience.toggle();
       }}

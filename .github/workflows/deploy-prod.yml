@@ -1,0 +1,192 @@
+name: Deploy production
+
+# Continuous deployment of main to the production VPS (infrastructure/deploy/README.md).
+# A main commit is deployed only after its CI run succeeded: the six images are built here,
+# pushed to GHCR under the commit SHA, then the server pulls them through a restricted SSH key.
+# A manual run with a commit SHA redeploys images that already exist, without rebuilding:
+# that is the rollback path.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to redeploy (40 hex). Leave empty to build and deploy the head of main.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+# Deploys queue instead of cancelling each other halfway.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: resolve
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.target.outputs.sha }}
+      build: ${{ steps.target.outputs.build }}
+      registry: ${{ steps.target.outputs.registry }}
+    steps:
+      - name: Select the commit
+        id: target
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_SHA: ${{ inputs.sha }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          REF: ${{ github.ref }}
+          HEAD_SHA: ${{ github.sha }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          build=true
+          if [ "$EVENT" = workflow_run ]; then
+            sha=$RUN_SHA
+          elif [ -n "$INPUT_SHA" ]; then
+            sha=$INPUT_SHA
+            build=false
+          elif [ "$REF" = refs/heads/main ]; then
+            sha=$HEAD_SHA
+          else
+            echo "::error::Run this workflow from main, or give the commit to redeploy."
+            exit 1
+          fi
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::Not a full commit SHA: $sha"
+            exit 1
+          fi
+          {
+            echo "sha=$sha"
+            echo "build=$build"
+            echo "registry=ghcr.io/$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: build (${{ matrix.image }})
+    needs: resolve
+    if: needs.resolve.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - image: auth
+            dockerfile: apps/backend/auth/Dockerfile
+          - image: gateway
+            dockerfile: apps/backend/gateway/Dockerfile
+          - image: content
+            dockerfile: apps/backend/content/Dockerfile
+          - image: nft
+            dockerfile: apps/backend/nft/Dockerfile
+          - image: lidar
+            dockerfile: apps/backend/lidar/Dockerfile
+          - image: web
+            dockerfile: apps/frontend/Dockerfile
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          target: runtime
+          push: true
+          tags: ${{ needs.resolve.outputs.registry }}/lova-${{ matrix.image }}:${{ needs.resolve.outputs.sha }}
+          # Links the package to this repository, so the workflow token can read it.
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.resolve.outputs.sha }}
+          cache-from: type=gha,scope=lova-${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=lova-${{ matrix.image }}
+
+  deploy:
+    name: deploy
+    needs: [resolve, build]
+    if: >-
+      !cancelled() && needs.resolve.result == 'success' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: production
+      url: https://${{ vars.LOVA_DOMAIN }}
+    steps:
+      - name: Deploy on the VPS
+        env:
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+          PROD_HOST: ${{ vars.PROD_HOST }}
+          PROD_USER: ${{ vars.PROD_USER }}
+          SHA: ${{ needs.resolve.outputs.sha }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The server key only runs ssh-gate.sh; the token travels on stdin.
+          printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 -o ServerAliveInterval=30 \
+            "$PROD_USER@$PROD_HOST" "deploy $SHA"
+
+      - name: Smoke test through the public domain
+        env:
+          DOMAIN: ${{ vars.LOVA_DOMAIN }}
+        run: |
+          curl -fsS --retry 6 --retry-delay 5 --retry-all-errors "https://$DOMAIN/api/health"
+          curl -fsS --retry 3 --retry-delay 5 --retry-all-errors -o /dev/null "https://$DOMAIN/"
+
+      - name: Remove the deploy key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      - name: Notify Discord
+        if: always()
+        continue-on-error: true
+        env:
+          WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+          SHA: ${{ needs.resolve.outputs.sha }}
+          AUTHOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DOMAIN: ${{ vars.LOVA_DOMAIN }}
+        run: |
+          [ -n "$WEBHOOK_URL" ] || exit 0
+          if [ "$STATUS" = success ]; then title="LOVA production deployed"; color=3066993
+          else title="LOVA production deploy failed"; color=15158332; fi
+          jq -n --arg title "$title" --argjson color "$color" --arg sha "${SHA:0:12}" \
+            --arg author "$AUTHOR" --arg run "$RUN_URL" --arg url "https://$DOMAIN" \
+            '{embeds: [{title: $title, color: $color, url: $run, fields: [
+              {name: "Commit", value: ("`" + $sha + "`"), inline: true},
+              {name: "Author", value: $author, inline: true},
+              {name: "Site", value: $url, inline: false}],
+              timestamp: (now | todate)}]}' |
+            curl -fsS -H 'Content-Type: application/json' -d @- "$WEBHOOK_URL"

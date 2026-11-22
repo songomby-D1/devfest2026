@@ -1,26 +1,31 @@
 .panel {
   display: flex;
   flex-direction: column;
-  gap: var(--space-14);
+  gap: var(--space-12);
   font-family: var(--font-text);
 }
 
 .heading {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: normal;
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
+  text-transform: uppercase;
 }
 
 .still {
   display: block;
   width: 100%;
   max-height: 70vh;
+  padding: clamp(16px, 3vw, 40px);
   object-fit: contain;
-  background: var(--color-media-missing);
+  background: var(--brand-night);
 }
 
 .message {
   margin: 0;
-  color: var(--color-ink-60);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--l2);
 }

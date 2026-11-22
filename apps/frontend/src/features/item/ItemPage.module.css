@@ -1,13 +1,14 @@
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: var(--space-40);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--space-48);
   align-items: start;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
+    gap: var(--space-32);
   }
 }
 
@@ -15,55 +16,73 @@
 .textColumn {
   display: flex;
   flex-direction: column;
-  gap: var(--space-24);
+  gap: var(--space-32);
+  min-width: 0;
+}
+
+/* The media stays in view while the notice scrolls on wide screens. */
+@media (min-width: 861px) {
+  .mediaColumn {
+    position: sticky;
+    top: 96px;
+  }
 }
 
 .header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-10);
 }
 
 .title {
   margin: 0;
-  font-family: var(--font-serif-italic);
-  font-size: clamp(32px, 4vw, 48px);
-  font-style: italic;
-  font-weight: 400;
-  line-height: 1.05;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 3.6vw, 56px);
+  font-stretch: var(--title-stretch);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
 .byline {
   margin: 0;
-  font-size: 15px;
-  color: var(--color-ink-60);
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  line-height: 20px;
+  text-transform: uppercase;
+  color: var(--l2);
 }
 
 .workflow {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-10);
+  flex-wrap: wrap;
+  gap: var(--space-10) var(--space-20);
+  align-items: center;
 }
 
 .sectionTitle {
-  margin: 0 0 var(--space-8);
-  font-size: 10px;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.16em;
+  margin: 0 0 var(--space-10);
+  font-family: var(--font-pixel);
+  font-size: 13px;
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
   text-transform: uppercase;
 }
 
 .description p {
-  margin: 0 0 var(--space-10);
-  font-size: 15px;
-  line-height: 1.6;
+  max-width: 62ch;
+  margin: 0 0 var(--space-12);
+  font-size: 16px;
+  line-height: 26px;
 }
 
 .rights {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--color-ink-60);
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--l2);
 }
 
 .signals {
@@ -73,5 +92,12 @@
 }
 
 .signal {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* A panel that renders nothing (no 3D model, no certificate) leaves no gap. */
+.mediaColumn > [data-slot]:empty,
+.textColumn > [data-slot]:empty {
+  display: none;
 }

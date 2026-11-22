@@ -1,33 +1,36 @@
 /*
- * Licensed fonts live in public/fonts/licensed/, which Git ignores because the
- * repository is public. Without them, the stacks in tokens.css fall back to the
- * OFL fonts below. See ../../rules.md#design-and-figma.
+ * The three LOVA families, all under the SIL Open Font License 1.1
+ * (licences in public/fonts/ofl/). Variable fonts: one file per family.
  */
 @font-face {
-  font-family: 'New Icon Serif';
+  font-family: 'TikTok Sans';
+  font-style: normal;
+  font-weight: 300 900;
+  font-stretch: 75% 150%;
+  font-display: swap;
+  src: url('/fonts/ofl/TikTokSans-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/ofl/GeistMono-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Departure Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/licensed/NewIconSerif-Regular.woff2') format('woff2');
+  src: url('/fonts/ofl/DepartureMono-Regular.woff2') format('woff2');
 }
 
-@font-face {
-  font-family: 'Helvetica Now Display';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/licensed/HelveticaNowDisplay-Medium.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Helvetica Now Display';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/licensed/HelveticaNowDisplay-Bold.woff2') format('woff2');
-}
-
-/* SIL Open Font License 1.1, see public/fonts/ofl/. Latin subset. */
+/*
+ * The 3D exhibition keeps its editorial typography (OFL as well). These faces
+ * are only fetched on that page, the only one that uses them.
+ */
 @font-face {
   font-family: 'Instrument Sans';
   font-style: normal;

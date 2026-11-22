@@ -35,6 +35,7 @@ export function PageShell({
           <NavLink to="/musee" current={current === 'museum'}>
             Musée
           </NavLink>
+          <NavLink to="/expositions/1">Exposition 3D</NavLink>
           <NavLink to="/contribuer" current={current === 'contribute'}>
             Déposer une œuvre
           </NavLink>
@@ -42,6 +43,9 @@ export function PageShell({
             <NavLink to="/mes-depots" current={current === 'mine'}>
               Mes dépôts
             </NavLink>
+          )}
+          {session.status === 'signed-in' && (
+            <NavLink to="/expositions/1?creer=1">Créer en 3D</NavLink>
           )}
           {isReviewer(session) && (
             <NavLink to="/revue" current={current === 'review'}>

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setForcedReducedMotion } from '../../lib/motion/reduced-motion';
 import { settleMotion } from '../../test/motion';
@@ -49,39 +49,51 @@ describe('HomePage', () => {
   it('renders the two CTAs as links to the museum and the contribution flow', async () => {
     await renderHome();
 
-    expect(
-      screen
-        .getByRole('link', { name: /Entrer dans le musée/ })
-        .getAttribute('href'),
-    ).toBe('/musee');
-    expect(
-      screen
-        .getByRole('link', { name: /Déposer une œuvre/ })
-        .getAttribute('href'),
-    ).toBe('/contribuer');
+    // The hero and the closing section repeat them: every one keeps its target.
+    const museum = screen.getAllByRole('link', {
+      name: /Entrer dans le musée/,
+    });
+    const contribute = screen.getAllByRole('link', {
+      name: /Déposer une œuvre/,
+    });
+    expect(museum.length).toBeGreaterThan(0);
+    expect(contribute.length).toBeGreaterThan(0);
+    for (const link of museum) expect(link.getAttribute('href')).toBe('/musee');
+    for (const link of contribute) {
+      expect(link.getAttribute('href')).toBe('/contribuer');
+    }
   });
 
   it('hangs the two paintings as figures with alt text and a cartel, and skips objects without a photo', async () => {
     await renderHome();
 
     // Both pottery photos are pending (objectImages), so only the paintings hang.
-    expect(screen.getAllByRole('figure')).toHaveLength(2);
+    // The frieze below repeats the works, so the check stays on the hanging.
+    const figures = screen.getAllByRole('figure');
+    expect(figures).toHaveLength(2);
+    const hung = (name: RegExp): boolean =>
+      figures.some(
+        (figure) => within(figure).queryByRole('img', { name }) !== null,
+      );
+    expect(hung(/femme malgache debout/i)).toBe(true);
+    expect(hung(/colline rocheuse/i)).toBe(true);
     expect(
-      screen.getByRole('img', { name: /femme malgache debout/i }),
-    ).toBeTruthy();
-    expect(screen.getByRole('img', { name: /colline rocheuse/i })).toBeTruthy();
-    expect(screen.getByText('Antongona')).toBeTruthy();
+      figures.some((figure) => within(figure).queryByText('Antongona')),
+    ).toBe(true);
     expect(screen.queryByText('Sinibe')).toBeNull();
   });
 
   it('links each frame to its artwork in the gallery', async () => {
     await renderHome();
 
-    expect(
-      screen
-        .getByRole('link', { name: /femme malgache debout/i })
-        .getAttribute('href'),
-    ).toBe('/musee/peinture/01');
+    // The ribbon below links the same work to its notice: check the hanging.
+    const frame = screen
+      .getAllByRole('figure')
+      .map((figure) =>
+        within(figure).queryByRole('link', { name: /femme malgache debout/i }),
+      )
+      .find((link) => link !== null);
+    expect(frame?.getAttribute('href')).toBe('/musee/peinture/01');
   });
 
   it('opens without frames when the collection cannot load', async () => {

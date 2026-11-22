@@ -18,25 +18,30 @@
 .eyebrow,
 .rights,
 .details dt {
-  font-size: 10px;
-  font-weight: var(--font-weight-bold);
-  line-height: 1.2;
-  letter-spacing: 0.16em;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
   text-transform: uppercase;
 }
 
 .eyebrow {
+  align-self: flex-start;
   margin: 0;
-  color: var(--color-accent);
+  padding: 0 var(--space-4);
+  color: var(--brand-black);
+  background: var(--brand-lime);
 }
 
 .title {
   margin: 0;
-  font-family: var(--font-serif-italic);
-  font-size: 32px;
-  font-style: italic;
-  font-weight: 400;
-  line-height: 1.1;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-stretch: var(--title-stretch);
+  font-style: normal;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .close {
@@ -50,9 +55,15 @@
   line-height: 1;
   cursor: pointer;
   background: none;
-  border: 1px solid var(--color-ink-08);
+  border: 1px solid var(--l1);
   border-radius: var(--radius-pill);
   place-items: center;
+  transition: background-color var(--duration-base) var(--ease-out);
+}
+
+.close:hover {
+  background: var(--brand-lime);
+  border-color: var(--brand-lime);
 }
 
 .details {
@@ -67,7 +78,7 @@
   grid-template-columns: 96px 1fr;
   gap: var(--space-14);
   padding-bottom: var(--space-10);
-  border-bottom: 1px solid var(--color-ink-08);
+  border-bottom: 1px solid var(--line);
 }
 
 .details dt {
@@ -77,8 +88,8 @@
 
 .details dd {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .story {
@@ -89,20 +100,34 @@
 
 .story p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 24px;
 }
 
 .rights {
   margin: 0;
-  color: var(--color-ink-60);
-  letter-spacing: 0.08em;
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--l2);
   text-transform: none;
 }
 
 .more {
   align-self: flex-start;
-  font-size: 13px;
-  color: var(--color-accent);
-  text-underline-offset: 3px;
+  min-height: 44px;
+  padding: 12px 20px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  line-height: 24px;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--brand-black);
+  background: var(--brand-lime);
+  border-radius: var(--radius-pill);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.more:hover {
+  transform: translateY(-2px) rotate(-2deg);
 }

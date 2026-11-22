@@ -1,10 +1,29 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useCollection } from '../../lib/collection/published-items';
 import { buildRooms } from '../gallery/data/collection';
+import type { Room } from '../gallery/data/rooms';
 import { buildHomeExhibits } from './home-content';
 import type { HomeExhibit } from './home-content';
 import { HomePage } from './HomePage';
 import styles from './HomePage.module.css';
+import type { FriezePiece } from './sections/ArtFrieze';
+
+/** Every published work, room by room, for the frieze. */
+function buildFriezePieces(rooms: readonly Room[]): FriezePiece[] {
+  return rooms.flatMap((room) =>
+    room.artworks.map((artwork) => ({
+      id: artwork.id,
+      title: artwork.title,
+      artist: artwork.artist,
+      technique: artwork.technique,
+      period: artwork.year,
+      room: room.name,
+      story: artwork.story[0] ?? '',
+      image: artwork.image,
+      alt: artwork.alt,
+    })),
+  );
+}
 
 /** How long the home waits for the collection before hanging empty frames. */
 export const HOME_DATA_TIMEOUT_MS = 1500;
@@ -19,9 +38,17 @@ export function HomeRoute() {
   const [timedOut, setTimedOut] = useState(false);
   const [hung, setHung] = useState<readonly HomeExhibit[] | null>(null);
   const items = collection.status === 'ready' ? collection.items : null;
-  const exhibits = useMemo(
-    () => (items === null ? null : buildHomeExhibits(buildRooms(items))),
+  const rooms = useMemo(
+    () => (items === null ? null : buildRooms(items)),
     [items],
+  );
+  const exhibits = useMemo(
+    () => (rooms === null ? null : buildHomeExhibits(rooms)),
+    [rooms],
+  );
+  const pieces = useMemo(
+    () => (rooms === null ? [] : buildFriezePieces(rooms)),
+    [rooms],
   );
 
   useEffect(() => {
@@ -46,5 +73,5 @@ export function HomeRoute() {
       <div className={styles.home} data-motion="pending" aria-busy="true" />
     );
   }
-  return <HomePage exhibits={hung} />;
+  return <HomePage exhibits={hung} pieces={pieces} />;
 }

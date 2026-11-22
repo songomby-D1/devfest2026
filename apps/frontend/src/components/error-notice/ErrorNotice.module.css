@@ -1,38 +1,56 @@
+/* Errors: a rule and ink text, no tinted block. */
 .notice {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  padding: var(--space-14) var(--space-16);
-  color: var(--color-danger);
-  background: var(--color-danger-08);
+  padding: var(--space-4) 0 var(--space-4) var(--space-16);
+  color: var(--l1);
   border-left: 3px solid var(--color-danger);
 }
 
 .title {
   margin: 0;
-  font-weight: var(--font-weight-bold);
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  font-weight: var(--font-weight-regular);
+  line-height: 20px;
+  text-transform: uppercase;
+  color: var(--color-danger);
 }
 
 .message {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 22px;
 }
 
 .reference {
   margin: 0;
-  font-size: 11px;
-  color: var(--color-ink-60);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--l2);
 }
 
 .retry {
   align-self: flex-start;
-  padding: var(--space-6) var(--space-14);
-  font-size: 12px;
-  letter-spacing: 0.07em;
+  min-height: 40px;
+  margin-top: var(--space-6);
+  padding: 8px 16px;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  line-height: 22px;
   text-transform: uppercase;
+  color: var(--l1);
   cursor: pointer;
   background: transparent;
-  border: 1px solid currentColor;
-  border-radius: var(--radius-button);
+  border: 1px solid var(--l1);
+  border-radius: var(--radius-pill);
+  transition:
+    color var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out);
+}
+
+.retry:hover {
+  color: var(--brand-paper);
+  background: var(--l1);
 }

@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import {
-  AdditiveBlending,
+  NormalBlending,
   Box3,
   BufferAttribute,
   BufferGeometry,
@@ -31,8 +31,11 @@ import {
 import type { Chapter } from './exhibition-content';
 import type { DepthState } from './use-depth-navigation';
 
-const NIGHT = '#0b0806';
-const GOLD = '#c8a174';
+// LOVA light theme: the corridor recedes into the landing's sky, the portals
+// are ink lines and the plinth rings glow lime. Geometry and motion unchanged.
+const NIGHT = '#cce6f6';
+const GOLD = '#111111';
+const LIME = '#c0fe04';
 const DRACO_PATH = `${import.meta.env.BASE_URL}draco/`;
 
 export interface DepthSceneProps {
@@ -107,7 +110,7 @@ function Corridor({ count }: { readonly count: number }) {
     <group>
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, -length / 2 + 20]}>
         <planeGeometry args={[40, length]} />
-        <meshStandardMaterial color="#120d0a" roughness={0.92} metalness={0} />
+        <meshStandardMaterial color="#efede7" roughness={0.92} metalness={0} />
       </mesh>
       {Array.from({ length: count }, (_, index) => (
         <mesh
@@ -150,8 +153,8 @@ function Portal({
             color={GOLD}
             emissive={GOLD}
             emissiveIntensity={0.35}
-            metalness={0.8}
-            roughness={0.3}
+            metalness={0.2}
+            roughness={0.5}
           />
         </mesh>
       ))}
@@ -212,7 +215,7 @@ function Dust({
   return (
     <points ref={points} geometry={geometry}>
       <pointsMaterial
-        color="#e8c79a"
+        color="#3d7cf0"
         map={sprite}
         alphaTest={0.01}
         size={0.035}
@@ -220,7 +223,7 @@ function Dust({
         transparent
         opacity={0.55}
         depthWrite={false}
-        blending={AdditiveBlending}
+        blending={NormalBlending}
       />
     </points>
   );
@@ -315,7 +318,7 @@ function Station({
       <mesh position={[0, 0.08, 0]}>
         <cylinderGeometry args={[0.78, 0.86, 0.16, 64]} />
         <meshStandardMaterial
-          color="#1b1410"
+          color="#fbfaf4"
           roughness={0.75}
           metalness={0.1}
         />
@@ -323,8 +326,8 @@ function Station({
       <mesh ref={ring} position={[0, 0.162, 0]} rotation-x={-Math.PI / 2}>
         <ringGeometry args={[0.76, 0.79, 96]} />
         <meshStandardMaterial
-          color={GOLD}
-          emissive={new Color(GOLD)}
+          color={LIME}
+          emissive={new Color(LIME)}
           emissiveIntensity={0.2}
         />
       </mesh>
@@ -459,8 +462,8 @@ export function DepthScene({
       >
         <color attach="background" args={[NIGHT]} />
         <fogExp2 attach="fog" args={[NIGHT, 0.068]} />
-        <ambientLight intensity={0.18} />
-        <hemisphereLight args={['#f3dcc0', '#120a06', 0.4]} />
+        <ambientLight intensity={0.55} />
+        <hemisphereLight args={['#ffffff', '#cce6f6', 0.9]} />
         <Environment />
         <DepthCamera depth={depth} reducedMotion={reducedMotion} />
         <Corridor count={chapters.length} />

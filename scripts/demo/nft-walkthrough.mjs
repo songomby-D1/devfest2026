@@ -156,7 +156,10 @@ async function mintAndVerify(item, owner, { negative }) {
   check(
     'provenance names the deployed contract',
     String(
-      mint.contractAddress ?? provenance.body?.contractAddress ?? '',
+      mint.network?.contractAddress ??
+        mint.contractAddress ??
+        provenance.body?.contractAddress ??
+        '',
     ).toLowerCase() === contract,
     JSON.stringify(mint),
   );

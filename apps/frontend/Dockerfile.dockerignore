@@ -1,0 +1,26 @@
+# Build context is the repository root (D14). Keep only the root manifests, every workspace
+# manifest that the root lockfile references, the shared types and this app.
+*
+!package.json
+!package-lock.json
+!.npmrc
+!tsconfig.base.json
+!apps/frontend/
+!apps/backend/*/package.json
+!packages/*/package.json
+!packages/shared/
+
+**/node_modules
+**/dist
+**/coverage
+**/.env
+**/.env.*
+# Licensed fonts and cultural media never enter the image before rights clearance (D18).
+apps/frontend/public/fonts/licensed
+apps/frontend/public/media
+apps/frontend/public/draco
+apps/frontend/**/*.test.ts
+apps/frontend/**/*.test.tsx
+apps/frontend/src/test
+apps/frontend/Dockerfile*
+packages/shared/test

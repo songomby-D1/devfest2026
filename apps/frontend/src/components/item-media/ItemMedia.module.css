@@ -1,30 +1,43 @@
 .grid {
   display: grid;
-  gap: var(--space-14);
+  gap: var(--space-16);
 }
 
+/* The work on the night ground, lit and framed like the landing's gallery. */
 .figure {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-8);
   margin: 0;
   font-size: 12px;
-  color: var(--color-ink-60);
+  line-height: 16px;
+  color: var(--l2);
 }
 
 .media {
   width: 100%;
-  max-height: 70vh;
+  max-height: 72vh;
+  padding: clamp(16px, 3vw, 40px);
   object-fit: contain;
-  background: var(--color-ink-08);
+  background:
+    radial-gradient(
+      60% 60% at 50% 40%,
+      rgb(255 232 190 / 0.1),
+      transparent 70%
+    ),
+    var(--brand-night);
 }
 
 .missing,
 .empty {
   display: grid;
-  min-height: 220px;
+  min-height: 240px;
+  padding: var(--space-24);
+  font-family: var(--font-pixel);
   font-size: 13px;
+  text-align: center;
+  text-transform: uppercase;
   color: var(--color-paper-70);
-  background: var(--color-media-missing);
+  background: var(--brand-night);
   place-items: center;
 }

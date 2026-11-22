@@ -6,8 +6,9 @@ import type { IntroVariant } from '../../lib/motion/motion-prefs';
 
 /** Fonts the headline and copy need before SplitText measures the lines. */
 const HOME_FONTS = [
-  '400 92px "New Icon Serif"',
-  '500 14px "Helvetica Now Display"',
+  '700 80px "TikTok Sans"',
+  '400 16px "TikTok Sans"',
+  '400 14px "Departure Mono"',
 ];
 
 /** Headline lines start this far below their mask, which has extra headroom. */

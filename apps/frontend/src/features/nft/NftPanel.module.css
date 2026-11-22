@@ -1,14 +1,16 @@
+/* The landing's token card: black, 16px radius, light ink, lime for the proof. */
 .panel {
+  --focus: var(--brand-lime);
   display: flex;
   flex-direction: column;
-  gap: var(--space-14);
-  padding: var(--space-24) var(--space-16);
-  border: 1px solid var(--color-ink-08);
-  border-radius: var(--radius-button);
-  background: var(--color-paper);
-  color: var(--color-ink);
+  gap: var(--space-16);
+  padding: var(--space-24) var(--space-20);
   font-family: var(--font-text);
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 22px;
+  color: rgb(var(--brand-ink-dark));
+  background: #111110;
+  border-radius: var(--radius-card);
 }
 
 @media (min-width: 768px) {
@@ -20,46 +22,54 @@
 .heading {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.75rem;
-  font-weight: normal;
+  font-size: 22px;
+  font-stretch: var(--title-stretch);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 
 .scope,
 .custody {
   margin: 0;
+  color: rgb(var(--brand-ink-dark) / 0.78);
 }
 
 .custody {
   padding-left: var(--space-14);
-  border-left: 3px solid var(--color-gold);
+  border-left: 2px solid var(--brand-lime);
 }
 
 .status {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: var(--space-8);
-  font-weight: var(--font-weight-medium);
+  align-items: center;
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  line-height: 20px;
+  text-transform: uppercase;
 }
 
 .failure {
-  font-weight: normal;
+  font-family: var(--font-text);
+  text-transform: none;
 }
 
 .muted {
   margin: 0;
-  color: var(--color-ink-60);
-  font-size: 0.9rem;
+  font-size: 13px;
+  line-height: 20px;
+  color: rgb(var(--brand-ink-dark) / 0.6);
 }
 
 .alert {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-8);
-  padding: var(--space-14);
-  border-left: 3px solid var(--color-accent);
-  background: var(--color-ink-08);
+  align-items: flex-start;
+  padding: var(--space-4) 0 var(--space-4) var(--space-14);
+  border-left: 2px solid #e4704f;
 }
 
 .alert p {
@@ -69,56 +79,58 @@
 .action {
   display: flex;
   flex-direction: column;
+  gap: var(--space-10);
   align-items: flex-start;
-  gap: var(--space-8);
+  padding-top: var(--space-8);
+  border-top: 1px solid rgb(var(--brand-ink-dark) / 0.14);
 }
 
 .button {
-  min-height: 44px;
-  padding: var(--space-10) var(--space-20);
-  border: 0;
-  border-radius: var(--radius-button);
-  background: var(--color-wine);
-  color: var(--color-paper);
-  font: inherit;
-  font-family: var(--font-ui);
-  font-weight: var(--font-weight-medium);
+  min-height: 48px;
+  padding: 12px 24px;
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  line-height: 24px;
+  text-transform: uppercase;
+  color: var(--brand-black);
   cursor: pointer;
+  background: var(--brand-lime);
+  border: 0;
+  border-radius: var(--radius-pill);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-2px) rotate(-2deg);
 }
 
 .button:disabled {
-  background: var(--color-ink-60);
   cursor: not-allowed;
-}
-
-.button:focus-visible,
-.link:focus-visible,
-.linkButton:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  opacity: 0.5;
 }
 
 .link,
 .linkButton {
-  color: var(--color-accent);
+  color: var(--brand-lime);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .linkButton {
   padding: 0;
-  border: 0;
-  background: none;
   font: inherit;
   cursor: pointer;
+  background: none;
+  border: 0;
 }
 
 .spinner {
-  width: 1em;
-  height: 1em;
-  border: 2px solid var(--color-ink-08);
-  border-top-color: var(--color-wine);
-  border-radius: var(--radius-pill);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgb(var(--brand-ink-dark) / 0.2);
+  border-top-color: var(--brand-lime);
+  border-radius: 50%;
   animation: spin 900ms linear infinite;
 }
 
@@ -135,67 +147,77 @@
 }
 
 .verification {
-  padding: var(--space-14);
-  border-left: 3px solid var(--color-ink-60);
-  background: var(--color-ink-08);
-}
-
-.verification[data-state='verified'] {
-  border-left-color: var(--color-gold);
-}
-
-.verification[data-state='mismatch'] {
-  border-left-color: var(--color-accent);
+  padding: var(--space-16);
+  background: rgb(var(--brand-ink-dark) / 0.06);
+  border-radius: 10px;
 }
 
 .verificationLabel {
   display: flex;
+  gap: var(--space-10);
   align-items: center;
-  gap: var(--space-8);
   margin: 0;
-  font-weight: var(--font-weight-bold);
+  font-family: var(--font-pixel);
+  font-size: 15px;
+  font-weight: var(--font-weight-regular);
+  line-height: 20px;
+  text-transform: uppercase;
 }
 
 .verificationMark {
   display: inline-grid;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: var(--font-weight-bold);
+  color: var(--brand-black);
+  background: rgb(var(--brand-ink-dark) / 0.6);
+  border-radius: 50%;
   place-items: center;
-  width: 1.4em;
-  height: 1.4em;
-  border-radius: var(--radius-pill);
-  background: var(--color-ink);
-  color: var(--color-paper);
-  font-size: 0.85em;
+}
+
+.verification[data-state='verified'] .verificationMark {
+  background: var(--brand-lime);
 }
 
 .verification[data-state='mismatch'] .verificationMark {
-  background: var(--color-accent);
+  color: var(--brand-paper);
+  background: #e4704f;
 }
 
 .verificationText {
-  margin: var(--space-4) 0;
+  margin: var(--space-6) 0 var(--space-4);
+  color: rgb(var(--brand-ink-dark) / 0.78);
 }
 
 .details {
   display: grid;
-  gap: var(--space-10);
   margin: 0;
+  border-bottom: 1px solid rgb(var(--brand-ink-dark) / 0.14);
 }
 
 .details > div {
   display: grid;
   gap: var(--space-2);
+  padding: var(--space-10) 0;
+  border-top: 1px solid rgb(var(--brand-ink-dark) / 0.14);
 }
 
 @media (min-width: 768px) {
   .details > div {
-    grid-template-columns: 16rem 1fr;
+    grid-template-columns: 11rem 1fr;
     gap: var(--space-16);
   }
 }
 
 .details dt {
-  color: var(--color-ink-60);
-  font-size: 0.9rem;
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  line-height: 20px;
+  text-transform: uppercase;
+  color: rgb(var(--brand-ink-dark) / 0.6);
 }
 
 .details dd {
@@ -205,5 +227,5 @@
 
 .hex {
   font-family: var(--font-mono);
-  font-size: 0.9em;
+  font-size: 13px;
 }

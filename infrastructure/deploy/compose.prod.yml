@@ -1,0 +1,102 @@
+# Production override for the VPS, applied on top of the root docker-compose.yml.
+# The server's .env sets COMPOSE_FILE=docker-compose.yml:infrastructure/deploy/compose.prod.yml,
+# so plain `docker compose ps|logs|up` commands use both files. See README.md here.
+#
+# - Images come from GHCR, built by .github/workflows/deploy-prod.yml. deploy.sh runs
+#   `docker compose up --no-build`. The build sections below only serve a one-off build on
+#   the server before the first CI deploy (README.md, "Server bootstrap").
+# - Only `web` is published, on loopback. The host's reverse proxy terminates TLS in front of it.
+# - The local chain is opt-in (COMPOSE_PROFILES=local-chain). The default is the public test
+#   network configured in apps/backend/nft/.env.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  postgres:
+    logging: *logging
+
+  seaweedfs:
+    logging: *logging
+
+  seaweedfs-buckets:
+    logging: *logging
+
+  auth:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-auth:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    logging: *logging
+
+  gateway:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-gateway:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    # Reached only by `web` on edge_net.
+    ports: !reset []
+    environment:
+      GATEWAY_ALLOWED_ORIGINS: https://${LOVA_DOMAIN:?Set LOVA_DOMAIN}
+      SESSION_COOKIE_SECURE: 'true'
+    logging: *logging
+
+  content:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-content:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    logging: *logging
+
+  # The runtime image, so migrations apply on start (the base file builds the development target).
+  nft-service:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-nft:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    build:
+      target: runtime
+    logging: *logging
+
+  # Image-to-3D generation calls the Meshy API: LiDAR needs the outbound network,
+  # which the root file does not give it (internal_net has no Internet access).
+  lidar:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-lidar:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    networks: [internal_net, egress_net]
+    logging: *logging
+
+  # The single published entry point: the frontend bundle and the /api relay to the gateway.
+  web:
+    image: ${LOVA_REGISTRY:?Set LOVA_REGISTRY}/lova-web:${LOVA_IMAGE_TAG:?Set LOVA_IMAGE_TAG}
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${LOVA_WEB_PORT:-3300}:8080'
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks: [edge_net]
+    logging: *logging
+
+  # Opt-in local EVM chain (COMPOSE_PROFILES=local-chain), with its state kept in a volume
+  # and no published port. Anvil rather than the demo's Ganache: the PreservingArt bytecode
+  # targets Cancun (MCOPY), which Ganache 7 cannot execute, so token reads and the NFT
+  # verification failed there. The gallery wallet is the first account of
+  # DEMO_CHAIN_MNEMONIC (random, server .env only); MINTER_PRIVATE_KEY in
+  # apps/backend/nft/.env is its key. Compose interpolates inactive services too, so no `:?`.
+  chain:
+    profiles: [local-chain]
+    image: ghcr.io/foundry-rs/foundry:stable
+    restart: unless-stopped
+    user: '0:0'
+    entrypoint: [anvil]
+    command:
+      - --host=0.0.0.0
+      - --chain-id=31337
+      - --block-time=1
+      - --accounts=1
+      - --mnemonic=${DEMO_CHAIN_MNEMONIC:-}
+      - --state=/data/state.json
+      - --state-interval=10
+      - --silent
+    volumes:
+      - chain-data:/data
+    networks: [internal_net]
+    logging: *logging
+
+volumes:
+  chain-data:

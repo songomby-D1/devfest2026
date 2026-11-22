@@ -68,7 +68,12 @@ function ExhibitionView({ exhibition }: { readonly exhibition: Exhibition }) {
   const session = useSession();
   const generations = useGenerations();
   const book = useGuestBook(exhibition.id);
-  const [panel, setPanel] = useState<Panel>('none');
+  // `?creer=1` (the "Créer en 3D" links of the app) opens the generation panel directly.
+  const [panel, setPanel] = useState<Panel>(() =>
+    new URLSearchParams(window.location.search).has('creer')
+      ? 'generate'
+      : 'none',
+  );
   const [playing, setPlaying] = useState(false);
   const [voice, setVoice] = useState(speechAvailable);
   const [moved, setMoved] = useState(false);
