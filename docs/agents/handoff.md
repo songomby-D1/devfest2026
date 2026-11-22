@@ -2,6 +2,11 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: CTO-06 D08–D12 and D16 resolved (rivon0507)
+
+- [CONFIRMED] CTO-06 ([#27](https://github.com/songomby-D1/devfest2026/issues/27)) on `rivon0507/cto-06-d08-d16`: the decision register records the resolution. D08–D11 are resolved in [ADR 0003](../decisions/0003-d08-d11-nft-choices.md) (Avalanche Fuji, ERC-721 with one token per item, custodial gallery wallet, minimal `PreservingArt` with IPFS metadata), with two gates kept visible: salandri-42's confirmation and the Fuji rehearsal. D12 is resolved in [ADR 0001](../decisions/0001-d12-3d-demo-experience.md), accepted. D16 is validated against what ships: no queue, broker or Redis is deployed, the NFT mint is an in-process restart-safe worker polled over HTTP, and 3D preparation stays offline with LiDAR serving the asset status.
+- [NOT IMPLEMENTED] No code changed. The D16 baseline needs no new infrastructure; reopen it only if a measured cross-service need appears.
+
 ## Latest session: NFT-01 chain, standard, wallet and contract record (rivon0507)
 
 - [PROPOSED] NFT-01 ([#59](https://github.com/songomby-D1/devfest2026/issues/59)) on `rivon0507/nft-01-chain-decisions`: [ADR 0003](../decisions/0003-d08-d11-nft-choices.md) records the set the code already follows and compares the alternatives: Avalanche Fuji C-Chain `43113` (local Ganache `31337`), ERC-721 with one token per item, a custodial gallery wallet that signs and pays gas, and the minimal `PreservingArt` contract (Solidity 0.8.28, OpenZeppelin 5.x) with immutable tokens and IPFS metadata through Pinata. The master file is never published; only its SHA-256 goes on-chain.

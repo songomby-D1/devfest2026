@@ -76,7 +76,7 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## D16 System-wide async infrastructure
 
-[CONFIRMED] Start with synchronous HTTP and gateway status polling. Validate the baseline under endy-rkt-06 against salandri-42's NFT and shidoAdr's 3D proposals. Revisit shared async infrastructure only if there is a concrete cross-service need. [Communication](../architecture/overview.md#communication-and-long-running-work)
+[CONFIRMED] Start with synchronous HTTP and gateway status polling. endy-rkt-06 validated the baseline against salandri-42's NFT and shidoAdr's 3D proposals: no queue, broker or Redis is deployed; the NFT mint runs as an in-process, restart-safe worker whose status is read over HTTP; and 3D preparation stays offline with the asset status served by LiDAR. Revisit shared async infrastructure only if a cross-service need is measured. [Communication](../architecture/overview.md#communication-and-long-running-work)
 
 ## D18 Editorial policy and demo content
 
@@ -92,6 +92,6 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## Decisions already delegated
 
-- **D08–D11:** salandri-42 owns the NFT choices. [ADR 0003](0003-d08-d11-nft-choices.md) records Avalanche Fuji C-Chain, ERC-721 with one token per item, a custodial gallery wallet, and the minimal `PreservingArt` contract with content-addressed metadata, as proposed under NFT-01 ([#59](https://github.com/songomby-D1/devfest2026/issues/59)). It is not binding until salandri-42 confirms it and the Fuji signing, confirmation and metadata run is recorded. Reconcile the [service proposal](../../apps/backend/nft/nft_context.md) with D01, D05, D13 and D16 through endy-rkt-06.
-- **D12:** [ADR 0001](0001-d12-3d-demo-experience.md) is accepted. Use an offline-prepared GLB at 1K by default and 2K on demand with a poster and still-image fallback. Viewer and asset contracts and real-device verification remain with the affected owners.
+- **D08–D11:** resolved in [ADR 0003](0003-d08-d11-nft-choices.md) under NFT-01 ([#59](https://github.com/songomby-D1/devfest2026/issues/59)) and endy-rkt-06 ([#27](https://github.com/songomby-D1/devfest2026/issues/27)): Avalanche Fuji C-Chain, ERC-721 with one token per item, a custodial gallery wallet, and the minimal `PreservingArt` contract with content-addressed metadata. Two gates stay recorded before the choice counts as demonstrated: salandri-42's confirmation and the Fuji signing, confirmation and metadata run. Reconcile the [service proposal](../../apps/backend/nft/nft_context.md) with D01, D05, D13 and D16.
+- **D12:** resolved in [ADR 0001](0001-d12-3d-demo-experience.md), accepted. Use an offline-prepared GLB at 1K by default and 2K on demand with a poster and still-image fallback. Viewer and asset contracts and real-device verification remain with the affected owners.
 - **Service-local work:** Owners can proceed with approved work on their own API, schema, tests and packaging while the team resolves unrelated shared decisions. A shared dependency only blocks work that needs it.
