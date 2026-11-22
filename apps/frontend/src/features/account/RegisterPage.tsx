@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -30,7 +30,9 @@ export function validateRegistration(values: {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email.trim())) {
     errors.email = 'Indiquez une adresse e-mail valide.';
   }
-  const length = [...values.password.normalize('NFKC')].length;
+  // Counted in code points after NFKC, as Auth counts them.
+  let length = 0;
+  for (const _character of values.password.normalize('NFKC')) length += 1;
   if (length < PASSWORD_MIN || length > PASSWORD_MAX) {
     errors.password = `Le mot de passe compte de ${String(PASSWORD_MIN)} à ${String(PASSWORD_MAX)} caractères.`;
   }
@@ -61,7 +63,7 @@ export function RegisterPage() {
     setValues((previous) => ({ ...previous, [field]: value }));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const next = validateRegistration(values);
     setErrors(next);

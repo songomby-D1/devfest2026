@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -53,7 +53,7 @@ export function MediaUpload({
     setFileError(check.ok ? null : check.message);
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     if (file === null) {
       setFileError('Choisissez un fichier.');

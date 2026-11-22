@@ -31,7 +31,7 @@ export function setApiClient(next: ApiClient | null): void {
  * goes to the current client, so tests can swap it with `setApiClient`.
  */
 export const api: ApiClient = new Proxy({} as ApiClient, {
-  get: (_target, property) => client()[property as keyof ApiClient],
+  get: (_target, property): unknown => Reflect.get(client(), property),
 });
 
 export { ApiError, NETWORK_ERROR_CODE } from './client';

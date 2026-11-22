@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -47,7 +47,7 @@ export function DecisionForm({ item, onDecided }: DecisionFormProps) {
   const [done, setDone] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const problem = validateDecision(decision, note);
     setError(problem);

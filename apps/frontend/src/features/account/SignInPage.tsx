@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -24,7 +24,7 @@ export function SignInPage() {
   const [submitting, setSubmitting] = useState(false);
   const target = returnPath();
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const next: typeof errors = {};
     if (email.trim() === '') next.email = 'Indiquez votre adresse e-mail.';

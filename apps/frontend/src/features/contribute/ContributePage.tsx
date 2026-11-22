@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -74,7 +74,7 @@ function SubmissionForm() {
     </FormField>
   );
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const next = validateItemForm(values);
     setErrors(next);

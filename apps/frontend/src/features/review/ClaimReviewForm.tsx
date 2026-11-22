@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { FormField } from '../../components/form-field/FormField';
 import forms from '../../components/forms/forms.module.css';
@@ -40,7 +40,7 @@ export function ClaimReviewForm({
   const [submitting, setSubmitting] = useState(false);
   const label = CLAIM_TARGET_LABEL[target];
 
-  const submit = (event: FormEvent<HTMLFormElement>): void => {
+  const submit = (event: SubmitEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const next = validateClaimForm(values);
     setErrors(next);

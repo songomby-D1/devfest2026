@@ -127,7 +127,7 @@ export function createMockClient(options: MockClientOptions = {}): ApiClient {
   const accounts = new Map<string, Account>(
     Object.values(fixtureUsers).map((me) => [
       me.email,
-      { me: structuredClone(me) as Account['me'], password: null },
+      { me: structuredClone(me), password: null },
     ]),
   );
   let sessionUserId: string | null =

@@ -2,7 +2,7 @@
 
 The visitor-facing React app of LOVA, the digital museum of Malagasy heritage. It renders the home page and the gallery rooms from Sesedra's Figma mockups, with GSAP motion, plus the account, contribution, item detail and review screens, and talks to the backend only through the gateway.
 
-This page explains how the app is built and how to work on it. The rules every change must follow are in [rules.md](rules.md). Motion details are in [docs/motion.md](docs/motion.md), the review checklist in [docs/verification.md](docs/verification.md), and the origin of every media file in [media-sources.md](media-sources.md).
+This page explains how the app is built and how to work on it. The rules every change must follow are in [rules.md](rules.md). Motion details are in [docs/motion.md](docs/motion.md), the review checklist in [docs/verification.md](docs/verification.md), a hands-on walkthrough of every screen in [docs/manual-testing.md](docs/manual-testing.md), and the origin of every media file in [media-sources.md](media-sources.md).
 
 ## Quick start
 

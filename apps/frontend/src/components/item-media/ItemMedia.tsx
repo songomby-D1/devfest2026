@@ -34,6 +34,7 @@ function MediaFigure({ media, title }: { media: MediaRef; title: string }) {
           }}
         />
       ) : (
+        // eslint-disable-next-line jsx-a11y/media-has-caption -- FE-03 (#70): MediaRef carries no caption track yet (contract need).
         <video
           className={styles.media}
           src={media.url}
