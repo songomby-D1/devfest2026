@@ -2,6 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: CTO-21 first hosted CI with initialized workspaces (rivon0507)
+
+- [IMPLEMENTED] CTO-21 ([#42](https://github.com/songomby-D1/devfest2026/issues/42)) on `rivon0507/cto-21-hosted-ci`: the first hosted run with initialized workspaces passed on 2026-11-22, [run 45000699433](https://github.com/songomby-D1/devfest2026/actions/runs/45000699433), a manual dispatch of `ci.yml` on a `develop`-based branch. Every job is green: `branch-guard`, `secrets`, `detect`, `lint`, `compose`, the `service` matrix for `packages/shared`, `apps/frontend` and `apps/backend/{auth,content,gateway,lidar,nft}`, and `ci-ok`.
+- [IMPLEMENTED] No failure needed fixing. `npm ci`, Prettier, ESLint, typecheck, tests and build passed on Node 22 in every workspace, and the Prisma-backed suites (Auth, Content, NFT, LiDAR) ran against the disposable PostgreSQL 18.6 service.
+- [NOT IMPLEMENTED] Repository settings stay with endy-rkt-12 and endy-rkt-22: branch protection, the required `ci-ok` check and the merge rules are not applied yet.
+- [NOT RUN] No Docker image build job; images are not part of CI yet.
+
 ## Latest session: CTO-06 D08–D12 and D16 resolved (rivon0507)
 
 - [CONFIRMED] CTO-06 ([#27](https://github.com/songomby-D1/devfest2026/issues/27)) on `rivon0507/cto-06-d08-d16`: the decision register records the resolution. D08–D11 are resolved in [ADR 0003](../decisions/0003-d08-d11-nft-choices.md) (Avalanche Fuji, ERC-721 with one token per item, custodial gallery wallet, minimal `PreservingArt` with IPFS metadata), with two gates kept visible: salandri-42's confirmation and the Fuji rehearsal. D12 is resolved in [ADR 0001](../decisions/0001-d12-3d-demo-experience.md), accepted. D16 is validated against what ships: no queue, broker or Redis is deployed, the NFT mint is an in-process restart-safe worker polled over HTTP, and 3D preparation stays offline with LiDAR serving the asset status.
