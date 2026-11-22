@@ -1,0 +1,18 @@
+# Compose fragment for NFT-02 (#60), for Agent 1 to merge into the root
+# docker-compose.yml `nft-service` entry. It adds only the NFT -> Content
+# publication lookup settings; the other variables still come from
+# apps/backend/nft/.env.
+#
+# The secret is the same root .env variable that Content reads as
+# CONTENT_INBOUND_TOKEN_NFT (apps/backend/content/compose.fragment.yml), so
+# both sides of the pair always match. Its value comes from .env, never from
+# this file.
+services:
+  nft-service:
+    environment:
+      CONTENT_SERVICE_URL: ${NFT_CONTENT_SERVICE_URL:-http://content:3000}
+      CONTENT_SERVICE_TOKEN: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
+      CONTENT_TIMEOUT_MS: ${NFT_CONTENT_TIMEOUT_MS:-3000}
+    depends_on:
+      content:
+        condition: service_started

@@ -39,6 +39,9 @@ const URL_OPTIONS = {
 
 const PRIVATE_KEY_PATTERN = /^0x[0-9a-fA-F]{64}$/;
 
+/** Service tokens carry at least 32 random bytes (auth-contract.md). */
+export const MIN_SERVICE_TOKEN_LENGTH = 32;
+
 /** Accepts only the literal strings "true" and "false". */
 function toBoolean({ value }: { value: unknown }): unknown {
   if (value === 'true') return true;
@@ -145,6 +148,25 @@ export class EnvSchema {
   @IsOptional()
   @IsIn(FAULT_POINTS)
   FAULT_INJECT?: FaultPoint;
+
+  /** Content & Verification base URL, for the publication lookup (NFT-02). */
+  @IsUrl(URL_OPTIONS)
+  CONTENT_SERVICE_URL = 'http://content:3000';
+
+  /**
+   * Secret of the NFT → Content pair (Content's `CONTENT_INBOUND_TOKEN_NFT`).
+   * Optional outside production so that the service boots before the mint
+   * flow needs it; the lookup then answers `content_unavailable`.
+   */
+  @IsOptional()
+  @IsString()
+  CONTENT_SERVICE_TOKEN?: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(60_000)
+  CONTENT_TIMEOUT_MS = 3_000;
 }
 
 /** Thrown when the environment is invalid. Never contains variable values. */
@@ -177,6 +199,14 @@ function crossFieldProblems(env: EnvSchema): string[] {
     }
     if (env.BULL_BOARD_ENABLED) {
       problems.push('BULL_BOARD_ENABLED must be false in production');
+    }
+    if (
+      env.CONTENT_SERVICE_TOKEN === undefined ||
+      env.CONTENT_SERVICE_TOKEN.length < MIN_SERVICE_TOKEN_LENGTH
+    ) {
+      problems.push(
+        `CONTENT_SERVICE_TOKEN must be set in production, with at least ${String(MIN_SERVICE_TOKEN_LENGTH)} characters`,
+      );
     }
   }
   return problems;
