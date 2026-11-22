@@ -25,7 +25,7 @@ This page records the Content & Verification work that is deferred until after t
 
 **Guardrails the current code keeps.** These keep CONTENT-06 additive, so it needs no rework:
 
-1. Only the CONTENT-04 review route sets a claim status to `verified` or `uncertain`. A material edit only resets it to `unreviewed` (CONTENT-01). No other code path writes `claimStatus`, `publicationStatus` or `submissionStatus`.
+1. Only the CONTENT-04 review route sets a claim status to `verified` or `uncertain`. A material edit only resets it to `unreviewed` (CONTENT-01). `src/items/claim-status-writes.spec.ts` fails if any other code writes a claim status. Outside reviews, decisions and owner edits (CONTENT-04 puts an edited `returned` or `accepted` submission back `in_review`), no code path writes `claimStatus`, `publicationStatus` or `submissionStatus`.
 2. Publication depends on the two claim outcomes and rights clearance only (S3, proposed). Nothing in review or publication waits for, reads or requires a signal.
 3. Item and description claims stay separate, keyed by the stable ContentId (`items.id`), because each future signal names the claim it informs (`item` or `description`).
 4. Material edits keep resetting claims in the same transaction as the edit. CONTENT-06 marks signals stale in that same place.

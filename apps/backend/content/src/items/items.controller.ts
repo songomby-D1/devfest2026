@@ -22,6 +22,7 @@ import { listItemsQuerySchema } from './item-list';
 import {
   createItemSchema,
   decisionSchema,
+  reviewSchema,
   unpublishSchema,
   updateItemSchema,
 } from './item-schemas';
@@ -78,6 +79,16 @@ export class ItemsController {
     @Body() body: unknown,
   ): Promise<ItemDetailView> {
     return this.items.update(caller, id, parseOrThrow(updateItemSchema, body));
+  }
+
+  @Post(':id/review')
+  @HttpCode(HttpStatus.CREATED)
+  review(
+    @Caller() caller: CallerContext,
+    @Param('id', itemId) id: string,
+    @Body() body: unknown,
+  ): Promise<ItemDetailView> {
+    return this.items.review(caller, id, parseOrThrow(reviewSchema, body));
   }
 
   @Post(':id/decision')

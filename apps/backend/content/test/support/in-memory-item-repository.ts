@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type {
+  ClaimReviewChange,
+  ClaimReviewRecord,
   ItemChanges,
   ItemListFilter,
   ItemPosition,
@@ -11,6 +13,11 @@ import type {
   PublicationTransition,
 } from '../../src/items/item';
 import type { ItemRepository } from '../../src/items/item-repository';
+import {
+  claimStatusOf,
+  nextReviewTime,
+  resubmittedStatus,
+} from '../../src/items/review';
 
 /** Repository double with the same atomicity and status rules as Prisma. */
 export class InMemoryItemRepository implements ItemRepository {
@@ -21,6 +28,8 @@ export class InMemoryItemRepository implements ItemRepository {
   > & {
     readonly itemId: string;
   })[] = [];
+  /** The review history, oldest first. */
+  readonly reviews: (ClaimReviewRecord & { readonly itemId: string })[] = [];
   private clock = Date.UTC(2026, 10, 22, 8, 0, 0);
 
   private now(): Date {
@@ -44,6 +53,7 @@ export class InMemoryItemRepository implements ItemRepository {
       createdAt: now,
       updatedAt: now,
       media: [],
+      latestReviews: [],
     };
     this.items.set(record.id, record);
     return Promise.resolve(record);
@@ -117,14 +127,24 @@ export class InMemoryItemRepository implements ItemRepository {
     return updated;
   }
 
-  updateUnpublished(
+  changeDetails(
     id: string,
-    changes: ItemChanges,
+    decide: (current: ItemRecord) => ItemChanges | null,
   ): Promise<ItemRecord | null> {
+    // An error thrown by `decide` becomes a rejection, as in a transaction.
+    return new Promise((resolve) => {
+      resolve(this.applyDetails(id, decide));
+    });
+  }
+
+  private applyDetails(
+    id: string,
+    decide: (current: ItemRecord) => ItemChanges | null,
+  ): ItemRecord | null {
     const current = this.items.get(id);
-    if (current === undefined || current.publicationStatus === 'published') {
-      return Promise.resolve(null);
-    }
+    if (current === undefined) return null;
+    const changes = decide(current);
+    if (changes === null) return current;
     const updated: ItemRecord = {
       ...current,
       ...changes.metadata,
@@ -137,10 +157,60 @@ export class InMemoryItemRepository implements ItemRepository {
           : current.description.claimStatus,
       },
       claimStatus: changes.resetItemClaim ? 'unreviewed' : current.claimStatus,
+      submissionStatus: resubmittedStatus(current.submissionStatus),
       updatedAt: this.now(),
     };
     this.items.set(id, updated);
-    return Promise.resolve(updated);
+    return updated;
+  }
+
+  reviewClaim(
+    id: string,
+    decide: (current: ItemRecord) => ClaimReviewChange,
+  ): Promise<ItemRecord | null> {
+    return new Promise((resolve) => {
+      resolve(this.applyReview(id, decide));
+    });
+  }
+
+  private applyReview(
+    id: string,
+    decide: (current: ItemRecord) => ClaimReviewChange,
+  ): ItemRecord | null {
+    const current = this.items.get(id);
+    if (current === undefined) return null;
+    const change = decide(current);
+    const latest = current.latestReviews.find(
+      (review) => review.target === change.target,
+    );
+    const now = this.now();
+    const record: ClaimReviewRecord = {
+      target: change.target,
+      fromStatus: claimStatusOf(current, change.target),
+      outcome: change.outcome,
+      rationale: change.rationale,
+      evidence: [...change.evidence],
+      reviewerId: change.reviewerId,
+      reviewedAt: nextReviewTime(latest, now),
+    };
+    this.reviews.push({ ...record, itemId: id });
+    const updated: ItemRecord = {
+      ...current,
+      ...(change.target === 'item' ? { claimStatus: change.outcome } : {}),
+      description:
+        change.target === 'description'
+          ? { ...current.description, claimStatus: change.outcome }
+          : current.description,
+      latestReviews: [
+        record,
+        ...current.latestReviews.filter(
+          (review) => review.target !== change.target,
+        ),
+      ],
+      updatedAt: now,
+    };
+    this.items.set(id, updated);
+    return updated;
   }
 
   changeMedia(
@@ -182,13 +252,14 @@ export class InMemoryItemRepository implements ItemRepository {
       ...current,
       media,
       claimStatus: 'unreviewed',
+      submissionStatus: resubmittedStatus(current.submissionStatus),
       updatedAt: this.now(),
     };
     this.items.set(id, updated);
     return { item: updated, added, removed };
   }
 
-  /** Test helper standing in for the review and publication tasks. */
+  /** Test helper that sets fields directly, bypassing every rule. */
   patchRecord(id: string, fields: Partial<ItemRecord>): void {
     const current = this.items.get(id);
     if (current === undefined) throw new Error(`No item ${id}`);

@@ -11,6 +11,7 @@ import type { ItemRecord, MediaChange, MediaRecord } from '../items/item';
 import { ITEM_REPOSITORY, type ItemRepository } from '../items/item-repository';
 import { type MediaRefView, toMediaRef } from '../items/item-view';
 import { ITEM_PUBLISHED, canView } from '../items/items.service';
+import { rejectedConflict } from '../items/review';
 import {
   OBJECT_STORAGE,
   ObjectNotFoundError,
@@ -106,9 +107,9 @@ function requireUser(caller: CallerContext): string {
 }
 
 /**
- * Media changes follow the CONTENT-01 edit rules: only the owner, and only
- * while the item is not published (D13). Others get 404 for an item they
- * cannot see and 403 otherwise.
+ * Media changes follow the item edit rules: only the owner, only while the
+ * item is not published (D13) and never on a rejected submission
+ * (CONTENT-04). Others get 404 for an item they cannot see and 403 otherwise.
  */
 export function assertMediaEditable(
   item: ItemRecord,
@@ -125,6 +126,7 @@ export function assertMediaEditable(
       HttpStatus.CONFLICT,
     );
   }
+  if (item.submissionStatus === 'rejected') throw rejectedConflict();
 }
 
 async function withStorage<T>(operation: () => Promise<T>): Promise<T> {

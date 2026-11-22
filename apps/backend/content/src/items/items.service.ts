@@ -21,6 +21,7 @@ import { ITEM_REPOSITORY, type ItemRepository } from './item-repository';
 import type {
   CreateItemInput,
   DecisionInput,
+  ReviewInput,
   UnpublishInput,
   UpdateItemInput,
 } from './item-schemas';
@@ -31,7 +32,13 @@ import {
   toItemDetail,
   toItemSummary,
 } from './item-view';
-import { planPublish, planUnpublish } from './publication';
+import {
+  planPublish,
+  planReject,
+  planReturn,
+  planUnpublish,
+} from './publication';
+import { planReview, rejectedConflict } from './review';
 
 export const ITEM_PUBLISHED = 'ITEM_PUBLISHED';
 
@@ -121,15 +128,20 @@ export const PUBLICATION_LOOKUP_CALLERS: readonly ServiceCaller[] = [
   'lidar',
 ];
 
-export const DECISION_NOT_AVAILABLE = 'DECISION_NOT_AVAILABLE';
-
-/** Publication changes need the reviewer permission (D13, D18). */
-function requireReviewer(caller: CallerContext): string {
+/** Reviews and publication changes need the reviewer permission (D13, D18). */
+function requireReviewer(
+  caller: CallerContext,
+  message = 'Only a reviewer can change the publication',
+): string {
   const userId = requireUser(caller);
-  if (!isReviewer(caller)) {
-    throw PublicError.forbidden('Only a reviewer can change the publication');
-  }
+  if (!isReviewer(caller)) throw PublicError.forbidden(message);
   return userId;
+}
+
+function forbidOwnDecision(item: ItemRecord, reviewerId: string): void {
+  if (item.ownerId === reviewerId) {
+    throw PublicError.forbidden('A reviewer cannot decide on their own item');
+  }
 }
 
 /**
@@ -218,25 +230,30 @@ export class ItemsService {
     return toItemDetail(item, caller);
   }
 
-  /** Only the owner edits, and only while the item is not published (D13). */
+  /**
+   * Only the owner edits, and only while the item is not published (D13) and
+   * the submission is not rejected (CONTENT-04). The checks and the claim
+   * resets are computed on the locked current record. A real change to a
+   * `returned` or `accepted` submission puts it back `in_review`, so it
+   * shows up in the review queue again.
+   */
   async update(
     caller: CallerContext,
     id: string,
     patch: UpdateItemInput,
   ): Promise<ItemDetailView> {
     const userId = requireUser(caller);
-    const item = await this.items.findById(id);
-    if (item === null || !canView(item, caller)) throw PublicError.notFound();
-    if (item.ownerId !== userId) {
-      throw PublicError.forbidden('Only the submitter can edit this item');
-    }
-    if (item.publicationStatus === 'published') throw publishedConflict();
-
-    const changes = computeChanges(item, patch);
-    if (!hasChanges(changes)) return toItemDetail(item, caller);
-
-    const updated = await this.items.updateUnpublished(id, changes);
-    if (updated === null) throw publishedConflict();
+    const updated = await this.items.changeDetails(id, (item) => {
+      if (!canView(item, caller)) throw PublicError.notFound();
+      if (item.ownerId !== userId) {
+        throw PublicError.forbidden('Only the submitter can edit this item');
+      }
+      if (item.publicationStatus === 'published') throw publishedConflict();
+      if (item.submissionStatus === 'rejected') throw rejectedConflict();
+      const changes = computeChanges(item, patch);
+      return hasChanges(changes) ? changes : null;
+    });
+    if (updated === null) throw PublicError.notFound();
     return toItemDetail(updated, caller);
   }
 
@@ -270,30 +287,64 @@ export class ItemsService {
   }
 
   /**
-   * Gate 0 `POST /api/items/:id/decision`. Only `publish` is available until
-   * the review workflow (CONTENT-04) adds `return` and `reject`.
+   * Gate 0 `POST /api/items/:id/review` (CONTENT-04). A reviewer records the
+   * outcome of the item claims or of the description claims, with a
+   * rationale and evidence, on someone else's submission in review. The
+   * check and the write run under the item row lock. This is the only path
+   * that sets a claim status to `verified` or `uncertain`; automated signals
+   * never do (MVP B). Publication stays a separate reviewer decision until
+   * settlement S3 (automatic publication) is confirmed.
+   */
+  async review(
+    caller: CallerContext,
+    id: string,
+    input: ReviewInput,
+  ): Promise<ItemDetailView> {
+    const reviewerId = requireReviewer(
+      caller,
+      'Only a reviewer can review claims',
+    );
+    const item = await this.items.reviewClaim(id, (current) =>
+      planReview(current, reviewerId, input),
+    );
+    if (item === null) throw PublicError.notFound();
+    return toItemDetail(item, caller);
+  }
+
+  /**
+   * Gate 0 `POST /api/items/:id/decision`. `publish` goes through
+   * `publish`; `return` sends a submission in review back to its owner, and
+   * `reject` closes it (CONTENT-04). A reviewer never decides on their own
+   * submission.
    */
   async decide(
     caller: CallerContext,
     id: string,
     input: DecisionInput,
   ): Promise<ItemDetailView> {
-    requireReviewer(caller);
-    if (input.decision !== 'publish') {
-      throw new PublicError(
-        DECISION_NOT_AVAILABLE,
-        'This decision is not available yet',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+    const reviewerId = requireReviewer(caller);
+    switch (input.decision) {
+      case 'publish':
+        return this.publish(caller, id, input.note);
+      case 'return':
+        return this.transition(caller, id, (item) => {
+          forbidOwnDecision(item, reviewerId);
+          return planReturn(item, reviewerId, input.note);
+        });
+      case 'reject':
+        return this.transition(caller, id, (item) => {
+          forbidOwnDecision(item, reviewerId);
+          return planReject(item, reviewerId, input.note);
+        });
     }
-    return this.publish(caller, id, input.note);
   }
 
   /**
    * Publishes a draft or unpublished item. A reviewer other than the
    * submitter decides, after both claims are reviewed and the rights are
-   * confirmed (D13, D18). CONTENT-04 calls this from the decision route, or
-   * after the last review if settlement S3 is confirmed.
+   * confirmed (D13, D18). This is the only publish path: the decision route
+   * calls it, and so would the review route after the last review if
+   * settlement S3 (automatic publication) is confirmed.
    */
   async publish(
     caller: CallerContext,
@@ -302,9 +353,7 @@ export class ItemsService {
   ): Promise<ItemDetailView> {
     const reviewerId = requireReviewer(caller);
     return this.transition(caller, id, (item) => {
-      if (item.ownerId === reviewerId) {
-        throw PublicError.forbidden('A reviewer cannot publish their own item');
-      }
+      forbidOwnDecision(item, reviewerId);
       return planPublish(item, reviewerId, note, new Date());
     });
   }

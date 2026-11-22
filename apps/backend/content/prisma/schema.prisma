@@ -1,4 +1,4 @@
-// Content & Verification data (CONTENT-01, CONTENT-02, CONTENT-03). The service owns
+// Content & Verification data (CONTENT-01 to CONTENT-04). The service owns
 // this database and its migration and runtime roles (D04).
 
 generator client {
@@ -34,10 +34,19 @@ enum ClaimStatus {
   uncertain
 }
 
-/// Publication changes kept in the publication history (CONTENT-02).
+/// Publication and submission decisions kept in the publication history
+/// (CONTENT-02; `return` and `reject` since CONTENT-04).
 enum PublicationAction {
   publish
   unpublish
+  return
+  reject
+}
+
+/// The claim a review is about (D18: item and description apart).
+enum ClaimTarget {
+  item
+  description
 }
 
 /// Accepted media kinds (CONTENT-03, frozen contract `MediaKind`).
@@ -89,6 +98,7 @@ model Item {
   description       Description?
   publicationEvents PublicationEvent[]
   media             Media[]
+  claimReviews      ClaimReview[]
   /// Latest publication; kept when the item is unpublished.
   publishedAt       DateTime?          @db.Timestamptz(3)
   createdAt         DateTime           @default(now()) @db.Timestamptz(3)
@@ -129,6 +139,30 @@ model PublicationEvent {
 
   @@index([itemId, createdAt])
   @@map("publication_events")
+}
+
+/// Review history (CONTENT-04, D18: record the reviewer and rationale).
+/// One row per recorded claim review, written in the same transaction as
+/// the claim status it sets. Rows are never changed or deleted.
+model ClaimReview {
+  id           String      @id @default(uuid()) @db.Uuid
+  itemId       String      @db.Uuid
+  item         Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  target       ClaimTarget
+  /// Claim status before the review.
+  fromStatus   ClaimStatus
+  /// Claim status set by the review: `verified` or `uncertain`, never
+  /// `unreviewed` (enforced by a check constraint in the migration).
+  outcome      ClaimStatus
+  rationale    String
+  evidence     String[]
+  /// Auth account ID of the reviewer.
+  reviewerId   String      @db.Uuid
+  /// Set by the service under the item lock, strictly increasing per target.
+  reviewedAt   DateTime    @db.Timestamptz(3)
+
+  @@index([itemId, target, reviewedAt])
+  @@map("claim_reviews")
 }
 
 /// One image or video of an item (CONTENT-03). The bytes live in private

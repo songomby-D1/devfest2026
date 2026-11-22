@@ -210,13 +210,21 @@ describe('ItemsService', () => {
 
     it('reports a conflict when the item is published during the edit', async () => {
       const { id } = await submit();
-      jest.spyOn(repository, 'updateUnpublished').mockResolvedValueOnce(null);
+      // The item is published just before the edit takes the row lock.
+      const original = repository.changeDetails.bind(repository);
+      jest
+        .spyOn(repository, 'changeDetails')
+        .mockImplementationOnce((itemId, decide) => {
+          repository.patchRecord(itemId, { publicationStatus: 'published' });
+          return original(itemId, decide);
+        });
 
       await expect(
         service.update(OWNER, id, { title: 'x' }),
       ).rejects.toMatchObject({
         code: 'ITEM_PUBLISHED',
       });
+      expect(repository.items.get(id)?.title).toBe('Lamba mena');
     });
   });
 
@@ -322,15 +330,16 @@ describe('ItemsService', () => {
       ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     });
 
-    it('leaves return and reject to the review workflow', async () => {
+    it('refuses return and reject to a non-reviewer', async () => {
       const { id } = await submit();
 
       await expect(
-        service.decide(REVIEWER, id, { decision: 'return', note: '' }),
-      ).rejects.toMatchObject({ code: 'DECISION_NOT_AVAILABLE' });
-      await expect(
-        service.decide(OTHER, id, { decision: 'reject', note: '' }),
+        service.decide(OTHER, id, { decision: 'reject', note: 'No' }),
       ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(
+        service.decide(OWNER, id, { decision: 'return', note: 'No' }),
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(repository.items.get(id)?.submissionStatus).toBe('in_review');
     });
   });
 

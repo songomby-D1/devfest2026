@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: LOVA Content & Verification internal API
-  version: 0.3.0
+  version: 0.4.0
   description: >-
     Internal API of the Content service (CONTENT-01 #52, CONTENT-02 #53,
-    CONTENT-03 #54). Only the gateway, and
+    CONTENT-03 #54, CONTENT-04 #56). Only the gateway, and
     NFT and LiDAR for service calls, reach it on the internal network. The
     gateway forwards `/api/items...` to `/internal/v1/items...` with the same
     method, path rest, query and body (platform contract). Request and
@@ -32,9 +32,26 @@ info:
     `unreviewed` (D18 re-review).
 
 
-    Not yet available: reviews and the `return` and `reject` decisions
-    (CONTENT-04). `reviews` and `advisorySignals` are always empty arrays
-    until those tasks land.
+    Review (CONTENT-04): a reviewer records the outcome of the item claims
+    and of the description claims separately (`verified` or `uncertain`),
+    with a rationale and evidence, on someone else's submission `in_review`.
+    The review route is the only way a claim becomes `verified` or
+    `uncertain`; an owner edit resets the changed claims to `unreviewed`,
+    and automated signals never change a claim. Every review is kept in the
+    review history with the previous status. Publication stays a separate
+    reviewer decision (`publish`): settlement S3, automatic publication after
+    the last review, is only proposed.
+
+
+    Submission workflow (CONTENT-04): `return` sends a submission in review
+    back to its owner; `reject` closes it for good (no edit, media change,
+    review or publication). A real owner edit or media change of a
+    `returned` submission, or of an `accepted` one that was unpublished,
+    puts it back `in_review`, so it is listed under `scope=review` again.
+
+
+    `advisorySignals` is an empty array, for the owner and reviewers only,
+    until CONTENT-05c.
 servers:
   - url: http://content:3000
     description: Internal Compose network
@@ -154,8 +171,10 @@ paths:
         A `published` item is visible to everyone, guests included. A `draft`
         or `unpublished` item is visible only to its owner and to callers with
         the `reviewer` permission; anyone else gets `404`, so its existence is
-        not disclosed. `advisorySignals` is present only for the owner and
-        reviewers.
+        not disclosed. Everyone who may read the item sees its claim statuses
+        and `reviews`, the latest review of each claim that is still reviewed
+        (guests only read published items, as settlement S5 proposes).
+        `advisorySignals` is present only for the owner and reviewers.
       responses:
         '200':
           description: The item
@@ -171,8 +190,10 @@ paths:
       operationId: updateItem
       summary: Edit an own item that is not published
       description: >-
-        Only the owner can edit, and only while the item is `draft` or
-        `unpublished` (D13). Fields left out are unchanged; optional text
+        Only the owner can edit, only while the item is `draft` or
+        `unpublished` (D13) and never once the submission is `rejected`
+        (`409 SUBMISSION_REJECTED`). A real change of a `returned` or
+        `accepted` submission puts it back `in_review`. Fields left out are unchanged; optional text
         fields accept `null` to clear them. A change to the item metadata or
         author information resets the item claim status to `unreviewed`, and a
         change to the description text resets the description claim status
@@ -195,7 +216,9 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
-          description: '`ITEM_PUBLISHED`: a published item cannot be edited.'
+          description: >-
+            `ITEM_PUBLISHED`: a published item cannot be edited, or
+            `SUBMISSION_REJECTED`: a rejected submission is closed.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PublicError' }
@@ -346,6 +369,53 @@ paths:
         '404': { $ref: '#/components/responses/MediaNotFound' }
         '409': { $ref: '#/components/responses/MediaConflict' }
         '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}/review:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags: [items]
+      operationId: reviewItem
+      summary: Record a claim review
+      description: >-
+        Gate 0 `POST /api/items/{id}/review`. Reviewer only, and never on
+        one's own submission. Sets the claim status of `target` (the item
+        claims or the description claims) to `outcome` and records the
+        review (reviewer, previous status, outcome, rationale, evidence,
+        time) in the review history, in one transaction under the item row
+        lock. Only a submission `in_review` can be reviewed. Recording an
+        outcome never publishes the item.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewRequest' }
+      responses:
+        '201':
+          description: The item after the review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: >-
+            `FORBIDDEN`: the caller lacks the `reviewer` permission, or tries
+            to review their own submission.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: >-
+            `SUBMISSION_NOT_IN_REVIEW`: the submission is `returned`,
+            `rejected` or `accepted`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
   /internal/v1/items/{id}/decision:
     parameters:
       - $ref: '#/components/parameters/ItemId'
@@ -355,16 +425,20 @@ paths:
     post:
       tags: [items]
       operationId: decideItem
-      summary: Publish a submission
+      summary: Publish, return or reject a submission
       description: >-
         Gate 0 `POST /api/items/{id}/decision`. Reviewer only, and never on
-        one's own submission. `publish` moves a `draft` or `unpublished` item
+        one's own submission. Every decision is recorded with the reviewer
+        and note in the publication history. `publish` moves a `draft` or `unpublished` item
         to `published`, sets the submission to `accepted` and `publishedAt` to
         now. It needs a submission `in_review` or `accepted`, both claims
         reviewed (`verified` or `uncertain`) and the rights confirmed, checked
         under a row lock so that a concurrent edit cannot slip in. Publishing a
-        published item changes nothing and answers `200`. `return` and
-        `reject` answer `422 DECISION_NOT_AVAILABLE` until CONTENT-04.
+        published item changes nothing and answers `200`. `return` moves a
+        submission `in_review` to `returned`, and the owner's next real edit
+        puts it back `in_review`. `reject` moves a submission `in_review` or
+        `returned` to `rejected`, which is final. Both need a non-empty note,
+        leave the publication status unchanged and are no-ops when repeated.
       requestBody:
         required: true
         content:
@@ -384,7 +458,8 @@ paths:
           description: >-
             A rule blocks the decision: `SUBMISSION_NOT_PUBLISHABLE` (the
             submission is `returned` or `rejected`), `CLAIMS_UNREVIEWED`,
-            `RIGHTS_NOT_CONFIRMED` or `DECISION_NOT_AVAILABLE`.
+            `RIGHTS_NOT_CONFIRMED`, or `SUBMISSION_NOT_IN_REVIEW` (`return`
+            of a submission not in review, `reject` of an accepted one).
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PublicError' }
@@ -523,7 +598,7 @@ components:
     NotReviewer:
       description: >-
         `FORBIDDEN`: the caller lacks the `reviewer` permission, or tries to
-        publish their own submission.
+        decide on their own submission.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/PublicError' }
@@ -541,7 +616,8 @@ components:
           schema: { $ref: '#/components/schemas/PublicError' }
     MediaConflict:
       description: >-
-        `ITEM_PUBLISHED`: the media of a published item cannot be changed, or
+        `ITEM_PUBLISHED`: the media of a published item cannot be changed,
+        `SUBMISSION_REJECTED`: a rejected submission is closed, or
         `MEDIA_LIMIT_REACHED`: the item already holds the maximum number of
         media files.
       content:
@@ -686,8 +762,12 @@ components:
           items: { $ref: '#/components/schemas/MediaRef' }
         reviews:
           type: array
-          description: Empty until CONTENT-04.
-          items: { type: object }
+          description: >-
+            The latest review of each target whose claim is still reviewed.
+            A review whose claim was reset by an edit stays in the history
+            only.
+          maxItems: 2
+          items: { $ref: '#/components/schemas/ClaimReview' }
         isOwner: { type: boolean }
         advisorySignals:
           type: array
@@ -738,6 +818,35 @@ components:
         nextCursor:
           type: [string, 'null']
           description: Opaque. `null` on the last page.
+    ClaimTarget:
+      type: string
+      enum: [item, description]
+    ReviewOutcome:
+      type: string
+      enum: [verified, uncertain]
+    ClaimReview:
+      type: object
+      required: [target, outcome, rationale, evidence, reviewerId, reviewedAt]
+      properties:
+        target: { $ref: '#/components/schemas/ClaimTarget' }
+        outcome: { $ref: '#/components/schemas/ReviewOutcome' }
+        rationale: { type: string }
+        evidence: { type: array, items: { type: string } }
+        reviewerId: { type: string, format: uuid }
+        reviewedAt: { type: string, format: date-time }
+    ReviewRequest:
+      type: object
+      additionalProperties: false
+      required: [target, outcome, rationale, evidence]
+      description: Text is trimmed.
+      properties:
+        target: { $ref: '#/components/schemas/ClaimTarget' }
+        outcome: { $ref: '#/components/schemas/ReviewOutcome' }
+        rationale: { type: string, minLength: 1, maxLength: 4000 }
+        evidence:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 500 }
     DecisionRequest:
       type: object
       additionalProperties: false
@@ -747,7 +856,9 @@ components:
         note:
           type: string
           maxLength: 4000
-          description: Trimmed and kept in the publication history.
+          description: >-
+            Trimmed and kept in the publication history. Must not be empty
+            for `return` and `reject`.
     UnpublishRequest:
       type: object
       additionalProperties: false
@@ -815,7 +926,8 @@ components:
             - SUBMISSION_NOT_PUBLISHABLE
             - CLAIMS_UNREVIEWED
             - RIGHTS_NOT_CONFIRMED
-            - DECISION_NOT_AVAILABLE
+            - SUBMISSION_NOT_IN_REVIEW
+            - SUBMISSION_REJECTED
             - MEDIA_LIMIT_REACHED
             - PAYLOAD_TOO_LARGE
             - UNSUPPORTED_MEDIA_TYPE

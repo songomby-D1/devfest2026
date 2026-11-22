@@ -17,6 +17,40 @@ export type SubmissionStatus =
   'in_review' | 'returned' | 'rejected' | 'accepted';
 export type ClaimStatus = 'unreviewed' | 'verified' | 'uncertain';
 
+/** The claim a review is about (D18: item and description apart). */
+export const CLAIM_TARGETS = ['item', 'description'] as const;
+export type ClaimTarget = (typeof CLAIM_TARGETS)[number];
+
+/** Outcomes a reviewer records. Only an edit goes back to `unreviewed`. */
+export const REVIEW_OUTCOMES = ['verified', 'uncertain'] as const;
+export type ReviewOutcome = (typeof REVIEW_OUTCOMES)[number];
+
+/** One recorded claim review (CONTENT-04 review history). */
+export interface ClaimReviewRecord {
+  readonly target: ClaimTarget;
+  /** The claim status before this review. */
+  readonly fromStatus: ClaimStatus;
+  readonly outcome: ReviewOutcome;
+  readonly rationale: string;
+  readonly evidence: readonly string[];
+  /** Auth account ID of the reviewer. */
+  readonly reviewerId: string;
+  readonly reviewedAt: Date;
+}
+
+/**
+ * A claim review decided by the service on the locked current record. The
+ * repository sets the target's claim status to `outcome` and records the
+ * review, with the previous status, in the same transaction.
+ */
+export interface ClaimReviewChange {
+  readonly target: ClaimTarget;
+  readonly outcome: ReviewOutcome;
+  readonly rationale: string;
+  readonly evidence: readonly string[];
+  readonly reviewerId: string;
+}
+
 /** Free-text author information (S7). Never an Auth account. */
 export interface AuthorInfo {
   readonly name: string | null;
@@ -56,6 +90,8 @@ export interface ItemRecord extends ItemMetadata {
   readonly updatedAt: Date;
   /** Media in display order (CONTENT-03). */
   readonly media: readonly MediaRecord[];
+  /** The latest review of each target, if any (CONTENT-04). */
+  readonly latestReviews: readonly ClaimReviewRecord[];
 }
 
 /** A stored image or video of an item (CONTENT-03). */
@@ -115,11 +151,17 @@ export interface ItemChanges {
 }
 
 /** Publication actions recorded in the publication history (CONTENT-02). */
-export const PUBLICATION_ACTIONS = ['publish', 'unpublish'] as const;
+export const PUBLICATION_ACTIONS = [
+  'publish',
+  'unpublish',
+  'return',
+  'reject',
+] as const;
 export type PublicationAction = (typeof PUBLICATION_ACTIONS)[number];
 
 /**
- * A publication change decided by the service on the locked current record.
+ * A publication or submission change decided by the service on the locked
+ * current record (`return` and `reject` change only the submission).
  * The repository applies the target statuses and records the event together.
  */
 export interface PublicationTransition {
