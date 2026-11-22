@@ -75,3 +75,51 @@ export function toItemDetail(
     publishedAt: item.publishedAt?.toISOString() ?? null,
   };
 }
+
+/** `ItemSummary` of the gateway contract (packages/shared `content.ts`). */
+export type ItemSummaryView = Pick<
+  ItemDetailView,
+  | 'id'
+  | 'title'
+  | 'kind'
+  | 'creatorName'
+  | 'origin'
+  | 'period'
+  | 'thumbnailUrl'
+  | 'publicationStatus'
+  | 'submissionStatus'
+  | 'claims'
+  | 'updatedAt'
+>;
+
+/** `ItemPage` of the gateway contract. */
+export interface ItemPageView {
+  readonly items: readonly ItemSummaryView[];
+  readonly nextCursor: string | null;
+}
+
+/** `PublicationLookup` of the Gate 0 contract, for NFT and LiDAR. */
+export interface PublicationLookupView {
+  readonly contentId: string;
+  readonly publicationStatus: PublicationStatus;
+}
+
+/** Thumbnails arrive with media (CONTENT-03). */
+export function toItemSummary(item: ItemRecord): ItemSummaryView {
+  return {
+    id: item.id,
+    title: item.title,
+    kind: item.kind,
+    creatorName: item.author.name,
+    origin: item.origin,
+    period: item.period,
+    thumbnailUrl: null,
+    publicationStatus: item.publicationStatus,
+    submissionStatus: item.submissionStatus,
+    claims: {
+      item: item.claimStatus,
+      description: item.description.claimStatus,
+    },
+    updatedAt: item.updatedAt.toISOString(),
+  };
+}

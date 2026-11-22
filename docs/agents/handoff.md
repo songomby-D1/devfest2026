@@ -1,14 +1,24 @@
 # Current handoff
 
-[CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, NFT and LiDAR services are initialized; content is a placeholder. See the [backlog](../product/task.md) for owners and dependencies.
+[CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: Agent 1 follow-up merged into Agent 3 (Claude, agent N3)
+## Latest session: Agent 1 merged, Agent 3 brought up to date (Claude, agent N3)
+
+- [IMPLEMENTED] #109 (Gate 0) and #110 (Agent 1 foundations, with LiDAR and Content in root Compose) are merged into `develop`. Merged `develop` into `agent3-ux-fe-3d` for #104; Content's integration test takes the `develop` version, which already carries the workspace fix.
+
+## Earlier session: Agent 1 follow-up merged into Agent 3 (Claude, agent N3)
 
 - [IMPLEMENTED] Merged the updated `origin/agent1-foundation` (#110) into `agent3-ux-fe-3d`: the Draco ignore in ESLint and Prettier, the root `lint` script that generates the Prisma clients first, and LiDAR #101 and #108 integrated into the shared PostgreSQL and SeaweedFS. The handoff and log keep both sides; the root lockfile was regenerated from #110's with the frontend dependencies.
 - This resolves the earlier Agent 3 blockers on the root lockfile and on `apps/frontend/public/draco/`.
 - [IMPLEMENTED] Merged `develop` again to bring in CONTENT-01 #112, which made #104 conflict. Content now has a `package.json`, so the root workspace runs it; the root lockfile was regenerated.
 - [DECISION REQUIRED: Agent 2, rivon0507] Three workspace-compatibility edits in `apps/backend/content/`, mirroring the NFT and LiDAR ones: `"rootDir": "."` in `tsconfig.json` because ts-jest resolves the root TypeScript 6 (the build keeps `rootDir: src` and `dist/main.js`), the test scripts call `jest` from the PATH because the root workspace hoists it, and the integration test resolves the Prisma CLI through Node. Content passes 70 of 70 tests, including Testcontainers.
 - [NOT IMPLEMENTED: Agent 1] `apps/backend/content/compose.fragment.yml` is not merged into root Compose yet, and #110 needs the same `develop` merge.
+
+## Earlier session: Content integration and merge to develop (Claude, agent N1)
+
+- [IMPLEMENTED] Merged `develop` (CONTENT-01 #112, CONTENT-05c #113, CONTENT-02 #114) into `agent1-foundation` and added the `content` service to root Compose from `apps/backend/content/compose.fragment.yml`, on the shared PostgreSQL and unpublished. Brought in the Content workspace fix from `agent3-ux-fe-3d` (`rootDir`, `jest` from the PATH, the Prisma CLI resolved through Node), pending Agent 2's approval. Regenerated the root lockfile.
+- Checks run on Node 22.23.4: `npm ci`, lint, format:check, typecheck, test (Auth 63 + 19 skipped, Content 146 with Testcontainers, gateway 42, LiDAR 144, NFT 32, shared 4) and build pass. `docker compose up --build` brings PostgreSQL, SeaweedFS, Auth, Content, LiDAR and the gateway to healthy; `smoke:auth` passes 12 of 12; through the gateway a signed-in user creates an item (`draft`, `in_review`), finds it with `scope=mine`, and the public list stays empty.
+- [BLOCKER: salandri-42] `nft-service` still needs real secrets to start in Compose.
 
 ## Earlier session: Agent 1 follow-up, Docker run and LiDAR integration (Claude, agent N1)
 
@@ -46,6 +56,17 @@
 - [DECISION REQUIRED: endy-rkt] Approve the CI workflow change (AGENTS.md), apply branch protection (endy-rkt-12, endy-rkt-22), decide CODEOWNERS (endy-rkt-24) and hooks (endy-rkt-16), and run the SeaweedFS spike (endy-rkt-03).
 - [DECISION REQUIRED: endy-rkt, papangoo] [ADR 0002](../decisions/0002-open-question-settlements.md) proposes settlements that differ from the frozen Gate 0 contract: S3 publishes automatically after review, while Gate 0 has `POST /api/items/{id}/decision` to publish, return or reject; S4 filters with `?owner=me` and `?status=pending_review`, while Gate 0 has `scope=mine|review`; S9 keeps `x-caller-account-id`, while Gate 0 uses `x-caller-user-id` after `CallerContext.userId`. S12 proposes 5 registrations per minute, while the gateway uses one 10-per-minute setting. The Gate 0 contract applies until a `[CONTRACT CHANGE]` pull request merges.
 
+## Earlier session: deferred scope for CONTENT-06, CONTENT-08 and NFT-06 (rivon0507, Agent 2)
+
+- [PROPOSED] [Content deferred scope](../../apps/backend/content/docs/deferred-scope.md) (CONTENT-06 [#58](https://github.com/songomby-D1/devfest2026/issues/58), CONTENT-08 [#87](https://github.com/songomby-D1/devfest2026/issues/87)) and [NFT deferred scope](../../apps/backend/nft/docs/deferred-scope.md) (NFT-06 [#64](https://github.com/songomby-D1/devfest2026/issues/64)) record what is deferred, why, what the MVP does instead, the guardrails the code keeps, the dependencies, when to revisit and the open questions. Documentation only, nothing implemented.
+- [DECISION REQUIRED: papangoo, salandri-42] Confirm the entries and the [PROPOSED] guardrails. Agent 1 updates the three rows in the backlog.
+
+## Earlier session: CONTENT-02 publication and browsing (rivon0507, Agent 2)
+
+- [PROPOSED] CONTENT-02 ([#53](https://github.com/songomby-D1/devfest2026/issues/53)) on the Content service: `POST /internal/v1/items/{id}/decision` (`publish` only; reviewer other than the submitter; needs both claims reviewed and `rightsConfirmed`, else `422` rule codes), `POST /internal/v1/items/{id}/unpublish` (reviewer), republish of an unpublished item, `GET /internal/v1/items?scope=public|mine|review&kind&q&cursor&limit` with keyset pagination on (`createdAt`, `id`), and `GET /internal/v1/items/{id}/publication` for NFT and LiDAR only. Migration `20261122120000_publication` adds `publication_events` (reviewer, action, note) and listing indexes. Contract: [content.yaml](../api/content.yaml).
+- [DECISION REQUIRED: papangoo, endy-rkt] Publication trigger: implemented through the Gate 0 `/decision` route; S3 (automatic publication after the last review) would reuse `ItemsService.publish` from CONTENT-04. Listing follows the Gate 0 `scope` parameter rather than S4's `?owner=me&status=pending_review`. Unpublish has no gateway route yet. NFT ownership checks (S1) need the owner in the lookup or a relayed caller check.
+- [NOT IMPLEMENTED] `return` and `reject` decisions and moving an edited `accepted` item back into the review queue (CONTENT-04), thumbnails (CONTENT-03).
+
 ## Earlier session: CONTENT-05c advisory-signal contract (rivon0507, Agent 2)
 
 - [PROPOSED] CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)): the [AI-assisted analysis spike](../architecture/ai-assisted-analysis-spike.md#advisory-signal-contract-content-05c) proposes an append-only `advisory_signals` table keyed by ContentId and target (`item` or `description`), its fields, invariants (never changes a claim status, never a gate, stale on material change), privacy, failure modes, the reviewer panel and a sketched API. The 05a and 05b sections are placeholders.
@@ -57,6 +78,8 @@
 - [DECISION REQUIRED: papangoo] Confirm the proposed acceptance criteria in the PR, the 1:1 author-per-item model, the claim reset on material edits (D18) and the edit rule (owner only, not while published).
 - [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
 - [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
+
+- [NOT IMPLEMENTED] Media (CONTENT-03), reviews and rights clearance (CONTENT-04); listing and publication landed with CONTENT-02. Switch to the root workspace and lockfile when endy-rkt-19 lands.
 
 ## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
 

@@ -140,6 +140,27 @@ services:
         condition: service_healthy
     networks: [internal_net, edge_net]
 
+  # Content & Verification (owner: Agent 2), from apps/backend/content/compose.fragment.yml.
+  # Not published: the gateway forwards /api/items... to /internal/v1/items...
+  content:
+    build:
+      context: .
+      dockerfile: apps/backend/content/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      PORT: '3000'
+      DATABASE_URL: postgresql://${CONTENT_RUNTIME_DB_USER:-content_runtime}:${CONTENT_RUNTIME_DB_PASSWORD:?Set CONTENT_RUNTIME_DB_PASSWORD}@postgres:5432/${CONTENT_DB_NAME:?Set CONTENT_DB_NAME}
+      MIGRATION_DATABASE_URL: postgresql://${CONTENT_MIGRATION_DB_USER:-content_migrator}:${CONTENT_MIGRATION_DB_PASSWORD:?Set CONTENT_MIGRATION_DB_PASSWORD}@postgres:5432/${CONTENT_DB_NAME:?Set CONTENT_DB_NAME}
+      CONTENT_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_CONTENT:?Set SERVICE_TOKEN_GATEWAY_TO_CONTENT}
+      CONTENT_INBOUND_TOKEN_NFT: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
+      CONTENT_INBOUND_TOKEN_LIDAR: ${SERVICE_TOKEN_LIDAR_TO_CONTENT:-}
+    expose: ['3000']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal_net]
+
   # NFT service (owner: salandri-42, Agent 2). See apps/backend/nft/nft_context.md.
   # No published port: the gateway relays its read-only routes (§10.4).
   nft-service:

@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -9,8 +10,10 @@ import {
 import request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import {
+  NFT_TOKEN,
   OTHER_ID,
   OWNER_ID,
+  REVIEWER_ID,
   createBody,
   testConfig,
 } from '../support/fixtures';
@@ -222,6 +225,209 @@ describe('content-service with PostgreSQL (Testcontainers)', () => {
     expect((await prisma.item.findUniqueOrThrow({ where: { id } })).title).toBe(
       'Lamba mena',
     );
+  });
+
+  async function submitAs(
+    ownerId: string,
+    overrides: Record<string, unknown> = {},
+  ): Promise<string> {
+    const response = await http()
+      .post('/internal/v1/items')
+      .set(gatewayHeaders(ownerId))
+      .send(createBody(overrides));
+    expect(response.status).toBe(201);
+    return (response.body as { id: string }).id;
+  }
+
+  async function markReviewed(id: string): Promise<void> {
+    await prisma.item.update({
+      where: { id },
+      data: {
+        claimStatus: 'verified',
+        description: { update: { claimStatus: 'uncertain' } },
+      },
+    });
+  }
+
+  const reviewer = () => gatewayHeaders(REVIEWER_ID, ['reviewer']);
+
+  it('publishes, unpublishes and republishes with a recorded history', async () => {
+    const id = await submitAs(OWNER_ID);
+    await markReviewed(id);
+
+    const published = await http()
+      .post(`/internal/v1/items/${id}/decision`)
+      .set(reviewer())
+      .send({ decision: 'publish', note: 'Sources checked' });
+    expect(published.status).toBe(200);
+    expect(published.body).toMatchObject({
+      publicationStatus: 'published',
+      submissionStatus: 'accepted',
+    });
+
+    const lookup = await http()
+      .get(`/internal/v1/items/${id}/publication`)
+      .set({ 'x-service-name': 'nft', 'x-service-token': NFT_TOKEN });
+    expect(lookup.body).toEqual({
+      contentId: id,
+      publicationStatus: 'published',
+    });
+
+    await http()
+      .post(`/internal/v1/items/${id}/unpublish`)
+      .set(reviewer())
+      .send({ note: 'Rights dispute' })
+      .expect(200);
+    const hidden = await http()
+      .get(`/internal/v1/items/${id}`)
+      .set(gatewayHeaders(null));
+    expect(hidden.status).toBe(404);
+
+    // An edit while unpublished reopens the claim, so republishing waits for
+    // a new review (D18).
+    await http()
+      .patch(`/internal/v1/items/${id}`)
+      .set(gatewayHeaders(OWNER_ID))
+      .send({ title: 'Lamba mena (corrected)' })
+      .expect(200);
+    const blocked = await http()
+      .post(`/internal/v1/items/${id}/decision`)
+      .set(reviewer())
+      .send({ decision: 'publish', note: '' });
+    expect(blocked.status).toBe(422);
+    expect(blocked.body).toMatchObject({ code: 'CLAIMS_UNREVIEWED' });
+
+    await markReviewed(id);
+    await http()
+      .post(`/internal/v1/items/${id}/decision`)
+      .set(reviewer())
+      .send({ decision: 'publish', note: 'Re-reviewed' })
+      .expect(200);
+
+    const events = await prisma.publicationEvent.findMany({
+      where: { itemId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(
+      events.map(({ action, actorId, note }) => ({ action, actorId, note })),
+    ).toEqual([
+      { action: 'publish', actorId: REVIEWER_ID, note: 'Sources checked' },
+      { action: 'unpublish', actorId: REVIEWER_ID, note: 'Rights dispute' },
+      { action: 'publish', actorId: REVIEWER_ID, note: 'Re-reviewed' },
+    ]);
+  });
+
+  it('applies concurrent publish decisions once', async () => {
+    const id = await submitAs(OWNER_ID);
+    await markReviewed(id);
+
+    const responses = await Promise.all(
+      [1, 2, 3].map(() =>
+        http()
+          .post(`/internal/v1/items/${id}/decision`)
+          .set(reviewer())
+          .send({ decision: 'publish', note: '' }),
+      ),
+    );
+
+    expect(responses.map((response) => response.status)).toEqual([
+      200, 200, 200,
+    ]);
+    expect(await prisma.publicationEvent.count({ where: { itemId: id } })).toBe(
+      1,
+    );
+  });
+
+  it('pages through own items in a stable order, ties broken by id', async () => {
+    const owner = randomUUID();
+    const ids = [] as string[];
+    for (let index = 0; index < 5; index += 1) ids.push(await submitAs(owner));
+    await prisma.item.updateMany({
+      where: { ownerId: owner },
+      data: { createdAt: new Date('2026-11-22T09:00:00.000Z') },
+    });
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const response = await http()
+        .get('/internal/v1/items')
+        .query({
+          scope: 'mine',
+          limit: 2,
+          ...(cursor === null ? {} : { cursor }),
+        })
+        .set(gatewayHeaders(owner));
+      expect(response.status).toBe(200);
+      const page = response.body as {
+        items: { id: string }[];
+        nextCursor: string | null;
+      };
+      seen.push(...page.items.map((item) => item.id));
+      cursor = page.nextCursor;
+    } while (cursor !== null);
+
+    expect(seen).toEqual([...ids].sort().reverse());
+  });
+
+  it('filters published items by kind and literal text, never drafts', async () => {
+    const token = `zq${randomUUID().slice(0, 8)}`;
+    const published = await submitAs(OWNER_ID, {
+      title: `Sobika ${token} 100%`,
+      kind: 'object',
+    });
+    const draft = await submitAs(OWNER_ID, { title: `Sobika ${token} draft` });
+    const byAuthor = await submitAs(OWNER_ID, {
+      title: 'Untitled',
+      creatorName: `Rabe ${token}`,
+    });
+    await prisma.item.updateMany({
+      where: { id: { in: [published, byAuthor] } },
+      data: { publicationStatus: 'published' },
+    });
+
+    const list = async (query: Record<string, string>) => {
+      const response = await http()
+        .get('/internal/v1/items')
+        .query(query)
+        .set(gatewayHeaders(null));
+      expect(response.status).toBe(200);
+      return (response.body as { items: { id: string }[] }).items.map(
+        (item) => item.id,
+      );
+    };
+
+    expect(await list({ q: token.toUpperCase() })).toEqual([
+      byAuthor,
+      published,
+    ]);
+    expect(await list({ q: token, kind: 'object' })).toEqual([published]);
+    expect(await list({ q: `${token} 100%` })).toEqual([published]);
+    // `%` and `_` are literal characters, not wildcards.
+    expect(await list({ q: `${token}%` })).toEqual([]);
+    expect(await list({ q: `Sobika_${token}` })).toEqual([]);
+    expect(await list({ q: token })).not.toContain(draft);
+  });
+
+  it('lists the review queue for reviewers only', async () => {
+    const id = await submitAs(OTHER_ID);
+
+    const queue = await http()
+      .get('/internal/v1/items?scope=review&limit=50')
+      .set(reviewer());
+    expect(queue.status).toBe(200);
+    expect(
+      (queue.body as { items: { id: string; submissionStatus: string }[] })
+        .items,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id, submissionStatus: 'in_review' }),
+      ]),
+    );
+    const refused = await http()
+      .get('/internal/v1/items?scope=review')
+      .set(gatewayHeaders(OTHER_ID));
+    expect(refused.status).toBe(403);
   });
 
   it('runs with a runtime role that cannot change the schema (D04)', async () => {
