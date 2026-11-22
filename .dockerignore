@@ -1,0 +1,9 @@
+# Fallback for builders that ignore Dockerfile-specific ignore files (legacy builder).
+.git
+**/node_modules
+**/dist
+**/coverage
+**/generated
+**/.env
+**/.env.*
+!**/.env.example

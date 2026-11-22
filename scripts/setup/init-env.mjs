@@ -11,7 +11,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 /** Root secrets that are generated when empty. Other empty values are left for the owner. */
 const GENERATED =
-  /(_PASSWORD|_SECRET_KEY|_ACCESS_KEY|^SERVICE_TOKEN_.*|^GATEWAY_ADMIN_TOKEN)$/;
+  /(_PASSWORD|_SECRET_KEY|_ACCESS_KEY|^SERVICE_TOKEN_.*|^GATEWAY_ADMIN_TOKEN|^LIDAR_ADMIN_TOKEN)$/;
 
 const targets = [
   { example: '.env.example', target: '.env', generate: true },
