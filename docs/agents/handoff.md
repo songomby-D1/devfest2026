@@ -2,7 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: CONTENT-02 publication and browsing (rivon0507, Agent 2)
+## Latest session: deferred scope for CONTENT-06, CONTENT-08 and NFT-06 (rivon0507, Agent 2)
+
+- [PROPOSED] [Content deferred scope](../../apps/backend/content/docs/deferred-scope.md) (CONTENT-06 [#58](https://github.com/songomby-D1/devfest2026/issues/58), CONTENT-08 [#87](https://github.com/songomby-D1/devfest2026/issues/87)) and [NFT deferred scope](../../apps/backend/nft/docs/deferred-scope.md) (NFT-06 [#64](https://github.com/songomby-D1/devfest2026/issues/64)) record what is deferred, why, what the MVP does instead, the guardrails the code keeps, the dependencies, when to revisit and the open questions. Documentation only, nothing implemented.
+- [DECISION REQUIRED: papangoo, salandri-42] Confirm the entries and the [PROPOSED] guardrails. Agent 1 updates the three rows in the backlog.
+
+## Earlier session: CONTENT-02 publication and browsing (rivon0507, Agent 2)
 
 - [PROPOSED] CONTENT-02 ([#53](https://github.com/songomby-D1/devfest2026/issues/53)) on the Content service: `POST /internal/v1/items/{id}/decision` (`publish` only; reviewer other than the submitter; needs both claims reviewed and `rightsConfirmed`, else `422` rule codes), `POST /internal/v1/items/{id}/unpublish` (reviewer), republish of an unpublished item, `GET /internal/v1/items?scope=public|mine|review&kind&q&cursor&limit` with keyset pagination on (`createdAt`, `id`), and `GET /internal/v1/items/{id}/publication` for NFT and LiDAR only. Migration `20261122120000_publication` adds `publication_events` (reviewer, action, note) and listing indexes. Contract: [content.yaml](../api/content.yaml).
 - [DECISION REQUIRED: papangoo, endy-rkt] Publication trigger: implemented through the Gate 0 `/decision` route; S3 (automatic publication after the last review) would reuse `ItemsService.publish` from CONTENT-04. Listing follows the Gate 0 `scope` parameter rather than S4's `?owner=me&status=pending_review`. Unpublish has no gateway route yet. NFT ownership checks (S1) need the owner in the lookup or a relayed caller check.
