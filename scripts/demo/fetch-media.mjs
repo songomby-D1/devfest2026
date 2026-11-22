@@ -10,7 +10,27 @@ const here = join(root, 'scripts', 'demo');
 const dir = join(here, 'media');
 mkdirSync(dir, { recursive: true });
 const works = JSON.parse(readFileSync(join(here, 'items.json'), 'utf8'));
-const headers = { 'user-agent': 'lova-demo-seed/0.1' };
+// Wikimedia throttles requests that do not identify a contact point (HTTP 429).
+const headers = {
+  'user-agent':
+    'lova-demo-seed/0.1 (https://github.com/songomby-D1/devfest2026; demo seeding)',
+};
+
+async function get(url) {
+  for (let attempt = 1; ; attempt += 1) {
+    const response = await fetch(url, { headers });
+    if (response.ok) return response;
+    const retryable = response.status === 429 || response.status >= 500;
+    if (!retryable || attempt === 5) {
+      throw new Error(`${url}: HTTP ${response.status}`);
+    }
+    const wait = 2000 * 2 ** (attempt - 1);
+    process.stdout.write(
+      `  ..   retry ${attempt} in ${wait / 1000}s (HTTP ${response.status})\n`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, wait));
+  }
+}
 
 for (const work of works) {
   const target = join(dir, work.file);
@@ -28,12 +48,9 @@ for (const work of works) {
     iiurlwidth: '1920',
     titles: title,
   }).toString();
-  const page = Object.values(
-    (await (await fetch(info, { headers })).json()).query.pages,
-  )[0];
+  const page = Object.values((await (await get(info)).json()).query.pages)[0];
   const url = page.imageinfo[0].thumburl ?? page.imageinfo[0].url;
-  const response = await fetch(url, { headers });
-  if (!response.ok) throw new Error(`${work.file}: HTTP ${response.status}`);
+  const response = await get(url);
   writeFileSync(target, Buffer.from(await response.arrayBuffer()));
   process.stdout.write(`  got  ${work.file} (${work.license})\n`);
 }

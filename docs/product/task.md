@@ -156,7 +156,7 @@ endy-rkt owns the [shared PostgreSQL and SeaweedFS setup](../team/responsibiliti
 
 | ID      | Task (one line)                                                                                          | Priority | Depends on                                      | Status  |
 | ------- | -------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------- | ------- |
-| DEMO-01 | Validate the approved presenter-laptop Compose setup and second mobile device against demo requirements. | P0       | endy-rkt-01                                     | Backlog |
+| DEMO-01 | Validate the hosted demo environment (staging VPS) and a second mobile device against demo requirements. | P0       | endy-rkt-01                                     | Review  |
 | DEMO-02 | Seed the reviewed demo content with papangoo. D18                                                        | P0       | endy-rkt-05, CONTENT-02, CONTENT-03, CONTENT-04 | Backlog |
 | DEMO-03 | Coordinate end-to-end MVP validation with the app and service owners. DEMO-01                            | P0       | DEMO-01, DEMO-02, FE-03, FE-04, FE-05           | Backlog |
 | DEMO-04 | Write and rehearse the demo script.                                                                      | P0       | DEMO-03                                         | Backlog |
