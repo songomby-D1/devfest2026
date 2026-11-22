@@ -1,0 +1,25 @@
+# Compose fragment for CONTENT-01 (#52), for Agent 1 to merge into the root
+# docker-compose.yml. It assumes the shared `postgres` service and init script
+# of INFRA-01, which provision the `content` database with its migration and
+# runtime roles (D04), and the root .env variables of the agent1-foundation
+# branch (CONTENT_* database variables and SERVICE_TOKEN_*_TO_CONTENT).
+# The gateway already targets http://content:3000.
+services:
+  content:
+    build:
+      context: .
+      dockerfile: apps/backend/content/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    environment:
+      PORT: '3000'
+      DATABASE_URL: postgresql://${CONTENT_RUNTIME_DB_USER:-content_runtime}:${CONTENT_RUNTIME_DB_PASSWORD:?Set CONTENT_RUNTIME_DB_PASSWORD}@postgres:5432/${CONTENT_DB_NAME:-content}
+      MIGRATION_DATABASE_URL: postgresql://${CONTENT_MIGRATION_DB_USER:-content_migrator}:${CONTENT_MIGRATION_DB_PASSWORD:?Set CONTENT_MIGRATION_DB_PASSWORD}@postgres:5432/${CONTENT_DB_NAME:-content}
+      CONTENT_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_CONTENT:?Set SERVICE_TOKEN_GATEWAY_TO_CONTENT}
+      CONTENT_INBOUND_TOKEN_NFT: ${SERVICE_TOKEN_NFT_TO_CONTENT:-}
+      CONTENT_INBOUND_TOKEN_LIDAR: ${SERVICE_TOKEN_LIDAR_TO_CONTENT:-}
+    expose: ['3000']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [internal_net]

@@ -1,0 +1,24 @@
+# Exclusions for builds of apps/backend/content/Dockerfile from the repository
+# root. Everything is excluded, then only what the image needs is allowed.
+**
+
+!tsconfig.base.json
+!apps/backend/content/package.json
+!apps/backend/content/package-lock.json
+!apps/backend/content/.npmrc
+!apps/backend/content/nest-cli.json
+!apps/backend/content/tsconfig.json
+!apps/backend/content/tsconfig.build.json
+!apps/backend/content/prisma.config.ts
+!apps/backend/content/docker-entrypoint.sh
+!apps/backend/content/prisma/**
+!apps/backend/content/src/**
+
+# Never send these, even inside allowed folders.
+**/node_modules
+**/dist
+**/coverage
+**/src/generated
+**/.env
+**/.env.*
+**/*.spec.ts
