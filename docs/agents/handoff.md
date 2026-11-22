@@ -2,7 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, auth, content, nft and lidar directories are placeholders. See the [backlog](../product/task.md) for owners and dependencies.
 
-## Latest session: CONTENT-05c advisory-signal contract (rivon0507, Agent 2)
+## Latest session: CONTENT-02 publication and browsing (rivon0507, Agent 2)
+
+- [PROPOSED] CONTENT-02 ([#53](https://github.com/songomby-D1/devfest2026/issues/53)) on the Content service: `POST /internal/v1/items/{id}/decision` (`publish` only; reviewer other than the submitter; needs both claims reviewed and `rightsConfirmed`, else `422` rule codes), `POST /internal/v1/items/{id}/unpublish` (reviewer), republish of an unpublished item, `GET /internal/v1/items?scope=public|mine|review&kind&q&cursor&limit` with keyset pagination on (`createdAt`, `id`), and `GET /internal/v1/items/{id}/publication` for NFT and LiDAR only. Migration `20261122120000_publication` adds `publication_events` (reviewer, action, note) and listing indexes. Contract: [content.yaml](../api/content.yaml).
+- [DECISION REQUIRED: papangoo, endy-rkt] Publication trigger: implemented through the Gate 0 `/decision` route; S3 (automatic publication after the last review) would reuse `ItemsService.publish` from CONTENT-04. Listing follows the Gate 0 `scope` parameter rather than S4's `?owner=me&status=pending_review`. Unpublish has no gateway route yet. NFT ownership checks (S1) need the owner in the lookup or a relayed caller check.
+- [NOT IMPLEMENTED] `return` and `reject` decisions and moving an edited `accepted` item back into the review queue (CONTENT-04), thumbnails (CONTENT-03).
+
+## Earlier session: CONTENT-05c advisory-signal contract (rivon0507, Agent 2)
 
 - [PROPOSED] CONTENT-05c ([#86](https://github.com/songomby-D1/devfest2026/issues/86)): the [AI-assisted analysis spike](../architecture/ai-assisted-analysis-spike.md#advisory-signal-contract-content-05c) proposes an append-only `advisory_signals` table keyed by ContentId and target (`item` or `description`), its fields, invariants (never changes a claim status, never a gate, stale on material change), privacy, failure modes, the reviewer panel and a sketched API. The 05a and 05b sections are placeholders.
 - [DECISION REQUIRED: papangoo, endy-rkt, Sesedra] Confirm the contract (papangoo), the clearance and the additive `[CONTRACT CHANGE]` on `AdvisorySignal` with a nullable `score` (endy-rkt), and the reviewer panel (Sesedra). Questions are listed in the report.
@@ -12,7 +18,7 @@
 - [PROPOSED] CONTENT-01 ([#52](https://github.com/songomby-D1/devfest2026/issues/52)): `apps/backend/content/` is a standalone NestJS 11 service on Node 22 with Prisma 7.10.1 and its first migration (`authors`, `items`, `descriptions`). The item ID is the ContentId, `publicationStatus` defaults to `draft`, and claim status is stored separately on the item and on its description. Internal routes: `POST /internal/v1/items`, `GET /internal/v1/items/{id}` and `PATCH /internal/v1/items/{id}`, behind a per-caller service-token guard, with the `{ code, message, requestId }` error shape. Bodies follow the Gate 0 contract on `agent1-foundation` (`CreateItemRequest`, `ItemDetail`). Contract: [content.yaml](../api/content.yaml). Compose: `apps/backend/content/compose.fragment.yml` for Agent 1.
 - [DECISION REQUIRED: papangoo] Confirm the proposed acceptance criteria in the PR, the 1:1 author-per-item model, the claim reset on material edits (D18) and the edit rule (owner only, not while published).
 - [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
-- [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
+- [NOT IMPLEMENTED] Media (CONTENT-03), reviews and rights clearance (CONTENT-04); listing and publication landed with CONTENT-02. Switch to the root workspace and lockfile when endy-rkt-19 lands.
 
 ## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
 

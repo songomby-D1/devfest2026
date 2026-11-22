@@ -9,14 +9,27 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { Caller, type CallerContext } from '../common/caller-context';
+import { CallingService } from '../common/calling-service';
 import { PublicError } from '../common/public-error';
 import { ServiceTokenGuard } from '../common/service-token.guard';
 import { parseOrThrow } from '../common/zod-validation';
-import { createItemSchema, updateItemSchema } from './item-schemas';
-import type { ItemDetailView } from './item-view';
+import type { ServiceCaller } from '../config/app-config';
+import { listItemsQuerySchema } from './item-list';
+import {
+  createItemSchema,
+  decisionSchema,
+  unpublishSchema,
+  updateItemSchema,
+} from './item-schemas';
+import type {
+  ItemDetailView,
+  ItemPageView,
+  PublicationLookupView,
+} from './item-view';
 import { ItemsService } from './items.service';
 
 const itemId = new ParseUUIDPipe({
@@ -26,7 +39,7 @@ const itemId = new ParseUUIDPipe({
 
 /**
  * Internal routes behind the gateway (`/api/items...` forwards to
- * `/internal/v1/items...`). Listing and publication arrive with CONTENT-02.
+ * `/internal/v1/items...`), plus the publication lookup for NFT and LiDAR.
  */
 @Controller('internal/v1/items')
 @UseGuards(ServiceTokenGuard)
@@ -40,6 +53,14 @@ export class ItemsController {
     @Body() body: unknown,
   ): Promise<ItemDetailView> {
     return this.items.create(caller, parseOrThrow(createItemSchema, body));
+  }
+
+  @Get()
+  list(
+    @Caller() caller: CallerContext,
+    @Query() query: unknown,
+  ): Promise<ItemPageView> {
+    return this.items.list(caller, parseOrThrow(listItemsQuerySchema, query));
   }
 
   @Get(':id')
@@ -57,5 +78,37 @@ export class ItemsController {
     @Body() body: unknown,
   ): Promise<ItemDetailView> {
     return this.items.update(caller, id, parseOrThrow(updateItemSchema, body));
+  }
+
+  @Post(':id/decision')
+  @HttpCode(HttpStatus.OK)
+  decide(
+    @Caller() caller: CallerContext,
+    @Param('id', itemId) id: string,
+    @Body() body: unknown,
+  ): Promise<ItemDetailView> {
+    return this.items.decide(caller, id, parseOrThrow(decisionSchema, body));
+  }
+
+  @Post(':id/unpublish')
+  @HttpCode(HttpStatus.OK)
+  unpublish(
+    @Caller() caller: CallerContext,
+    @Param('id', itemId) id: string,
+    @Body() body: unknown,
+  ): Promise<ItemDetailView> {
+    return this.items.unpublish(
+      caller,
+      id,
+      parseOrThrow(unpublishSchema, body),
+    );
+  }
+
+  @Get(':id/publication')
+  publication(
+    @CallingService() service: ServiceCaller,
+    @Param('id', itemId) id: string,
+  ): Promise<PublicationLookupView> {
+    return this.items.publication(service, id);
   }
 }
