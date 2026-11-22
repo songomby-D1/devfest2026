@@ -2,6 +2,13 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: ownership transfer, CODEOWNERS withdrawn (rivon0507)
+
+- [CONFIRMED] The project ownership transferred, so the owners named in [responsibilities](../team/responsibilities.md) and in settlement S19 no longer own these areas. The CTO-24 CODEOWNERS proposal (PR #134) was closed before merge and its branch deleted; `develop` has no `.github/CODEOWNERS`.
+- [NOT IMPLEMENTED] The team page and settlement S19 still name the previous owners. Correcting them needs the new ownership list and the new owner's approval; do not add CODEOWNERS or code-owner review before that.
+- [IMPLEMENTED] Stale-issue audit retained: 21 already-delivered issues (CTO foundation, Auth, gateway baseline, frontend shell and the FE-03 flows) were verified against `develop` and hosted run 45000699433 and closed with per-issue evidence.
+- [NOT IMPLEMENTED] No branch protection, ruleset or required check was applied, and none should be added on the previous ownership assumptions.
+
 ## Latest session: CTO-21 first hosted CI with initialized workspaces (rivon0507)
 
 - [IMPLEMENTED] CTO-21 ([#42](https://github.com/songomby-D1/devfest2026/issues/42)) on `rivon0507/cto-21-hosted-ci`: the first hosted run with initialized workspaces passed on 2026-11-22, [run 45000699433](https://github.com/songomby-D1/devfest2026/actions/runs/45000699433), a manual dispatch of `ci.yml` on a `develop`-based branch. Every job is green: `branch-guard`, `secrets`, `detect`, `lint`, `compose`, the `service` matrix for `packages/shared`, `apps/frontend` and `apps/backend/{auth,content,gateway,lidar,nft}`, and `ci-ok`.
