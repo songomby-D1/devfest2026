@@ -8,7 +8,7 @@ Use this register to see which decisions need endy-rkt, which belong to app or s
 - Owners choose their internal design, service-local dependencies and testing approach within the shared quality rules. Owners agree cross-service contracts, changes to shared Compose resources and integration timing with the affected owners.
 - endy-rkt defines the MVP and system overview. Escalate scope changes, system-wide architecture and security rules, and repository-wide tooling or policy changes to endy-rkt. Agents take direction from the relevant owner.
 - **D02 is resolved.** endy-rkt owns the gateway and shared local infrastructure, shidoAdr owns Auth and LiDAR, and Sesedra owns frontend implementation and design. MVP planning proceeds without a deadline. [Team responsibilities](../team/responsibilities.md)
-- **D05 storage provider.** SeaweedFS is the local S3-compatible object store, and endy-rkt owns setup. Media delivery is still open. [Data and storage](../architecture/data-storage.md#s3-compatible-option)
+- **D05 storage provider.** SeaweedFS is the local S3-compatible object store, and endy-rkt owns setup. Gateway-mediated media delivery is confirmed; the [storage spike](../architecture/storage-spike.md) records the evidence and two operational conditions. [Data and storage](../architecture/data-storage.md#s3-compatible-option)
 
 ## D01 First integrated MVP demo
 
@@ -60,7 +60,7 @@ Keep the same-repository `develop`-to-`main` guard and Gitleaks blocking. Keep f
 
 ## D05 Media delivery
 
-[CONDITIONAL] Use gateway-mediated media delivery for the MVP once endy-rkt-03 validates SeaweedFS with representative video and 3D assets. Verify scoped access, range reads and restart persistence before closing the delivery decision. Keep object storage private and authorize against current item or asset visibility. [Storage and delivery](../architecture/data-storage.md#s3-compatible-option)
+[CONFIRMED] Use gateway-mediated media delivery for the MVP. endy-rkt-03 validated SeaweedFS with representative video and 3D assets: scoped bucket access, private reads, ranged reads, deletion and restart persistence all passed, and the [storage spike](../architecture/storage-spike.md) records the method and limits. Keep object storage private and authorize against current item or asset visibility. Two operational conditions remain, neither of which reopens the delivery decision: the filer and STS signing key for `security.toml`, and free disk headroom on the host. [Storage and delivery](../architecture/data-storage.md#s3-compatible-option)
 
 ## D06 Gateway deployment boundary
 

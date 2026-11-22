@@ -2,6 +2,12 @@
 
 [CONFIRMED] The backend layout is `apps/backend/<service>/`. The gateway, Auth, Content, NFT and LiDAR services are initialized. See the [backlog](../product/task.md) for owners and dependencies.
 
+## Latest session: CTO-04 D05 media delivery confirmed (rivon0507)
+
+- [CONFIRMED] CTO-04 ([#25](https://github.com/songomby-D1/devfest2026/issues/25)) on `rivon0507/cto-04-d05-closure`: with the CTO-03 evidence merged in [#128](https://github.com/songomby-D1/devfest2026/pull/128), D05 is confirmed. D04 and D06 were already recorded. Gateway-mediated delivery stays, objects stay private, and reads are authorized against current item or asset visibility. [Decision register](../decisions/project-decisions.md#d05-media-delivery) · [Storage spike](../architecture/storage-spike.md)
+- [CONFIRMED] The two spike conditions are operational rather than decision blockers: the filer and STS signing key in `security.toml`, and free disk headroom on the host. Both stay with endy-rkt.
+- [NOT IMPLEMENTED] No code changed. CTO-10 ([#31](https://github.com/songomby-D1/devfest2026/issues/31)) is now unblocked to wire the Content storage settings and the NFT database and token settings into root Compose, and DEMO-01 and DEMO-03 can rely on media delivery.
+
 ## Latest session: CTO-03 SeaweedFS storage spike (rivon0507)
 
 - [CONFIRMED] CTO-03 ([#24](https://github.com/songomby-D1/devfest2026/issues/24)) on `rivon0507/cto-03-seaweedfs-spike`: SeaweedFS 4.54 passes the D05 checks on a single node. Put and get with an identical SHA-256, ranged reads (1024 bytes, byte-identical prefix), `AccessDenied` for each service outside its bucket, refused anonymous get and list, deletion, and restart persistence over two consecutive restarts. A 50 MiB video-sized write took 3.3 s and a 5 MiB GLB-sized write 1.4 s; the first 12 MiB write on a fresh cluster took 26.9 s while the first volume was allocated. Method, table and limits are in [the storage spike](../architecture/storage-spike.md).
