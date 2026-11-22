@@ -1,10 +1,12 @@
 name: CI
 
+# CI runs on PRs into main and pushes to main only. PRs into develop skip it
+# to speed up development; run it on a branch by hand with workflow_dispatch.
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [main]
   push:
-    branches: [develop, main]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
