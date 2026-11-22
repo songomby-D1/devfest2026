@@ -1,5 +1,5 @@
-// Content & Verification data (CONTENT-01). The service owns this database
-// and its migration and runtime roles (D04).
+// Content & Verification data (CONTENT-01, CONTENT-02). The service owns
+// this database and its migration and runtime roles (D04).
 
 generator client {
   provider     = "prisma-client"
@@ -34,6 +34,12 @@ enum ClaimStatus {
   uncertain
 }
 
+/// Publication changes kept in the publication history (CONTENT-02).
+enum PublicationAction {
+  publish
+  unpublish
+}
+
 enum ItemKind {
   painting
   sculpture
@@ -59,28 +65,32 @@ model Author {
 
 /// The item ID is the opaque ContentId shared with NFT and LiDAR (D01).
 model Item {
-  id                String            @id @default(uuid()) @db.Uuid
+  id                String             @id @default(uuid()) @db.Uuid
   /// Auth account ID of the submitter, from the caller context.
-  ownerId           String            @db.Uuid
+  ownerId           String             @db.Uuid
   title             String
   kind              ItemKind
   origin            String?
   period            String?
   rightsStatement   String
   rightsConfirmed   Boolean
-  publicationStatus PublicationStatus @default(draft)
-  submissionStatus  SubmissionStatus  @default(in_review)
+  publicationStatus PublicationStatus  @default(draft)
+  submissionStatus  SubmissionStatus   @default(in_review)
   /// Status of the identity or source claims about the item.
-  claimStatus       ClaimStatus       @default(unreviewed)
-  authorId          String            @unique @db.Uuid
-  author            Author            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  claimStatus       ClaimStatus        @default(unreviewed)
+  authorId          String             @unique @db.Uuid
+  author            Author             @relation(fields: [authorId], references: [id], onDelete: Restrict)
   description       Description?
-  publishedAt       DateTime?         @db.Timestamptz(3)
-  createdAt         DateTime          @default(now()) @db.Timestamptz(3)
-  updatedAt         DateTime          @updatedAt @db.Timestamptz(3)
+  publicationEvents PublicationEvent[]
+  /// Latest publication; kept when the item is unpublished.
+  publishedAt       DateTime?          @db.Timestamptz(3)
+  createdAt         DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime           @updatedAt @db.Timestamptz(3)
 
-  @@index([ownerId])
-  @@index([publicationStatus])
+  // Keyset pagination of the listing scopes on (createdAt, id).
+  @@index([publicationStatus, createdAt, id])
+  @@index([ownerId, createdAt, id])
+  @@index([submissionStatus, createdAt, id])
   @@map("items")
 }
 
@@ -96,4 +106,20 @@ model Description {
   updatedAt   DateTime    @updatedAt @db.Timestamptz(3)
 
   @@map("descriptions")
+}
+
+/// Who published or unpublished an item, when, and the reviewer's note
+/// (D18: record the reviewer). Written with the status change.
+model PublicationEvent {
+  id        String            @id @default(uuid()) @db.Uuid
+  itemId    String            @db.Uuid
+  item      Item              @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  action    PublicationAction
+  /// Auth account ID of the reviewer.
+  actorId   String            @db.Uuid
+  note      String
+  createdAt DateTime          @default(now()) @db.Timestamptz(3)
+
+  @@index([itemId, createdAt])
+  @@map("publication_events")
 }

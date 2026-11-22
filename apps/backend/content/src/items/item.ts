@@ -74,3 +74,46 @@ export interface ItemChanges {
   /** Resets the description claim status to `unreviewed` (D18 re-review). */
   readonly resetDescriptionClaim: boolean;
 }
+
+/** Publication actions recorded in the publication history (CONTENT-02). */
+export const PUBLICATION_ACTIONS = ['publish', 'unpublish'] as const;
+export type PublicationAction = (typeof PUBLICATION_ACTIONS)[number];
+
+/**
+ * A publication change decided by the service on the locked current record.
+ * The repository applies the target statuses and records the event together.
+ */
+export interface PublicationTransition {
+  readonly action: PublicationAction;
+  /** Auth account ID of the reviewer who made the change. */
+  readonly actorId: string;
+  readonly note: string;
+  readonly publicationStatus: PublicationStatus;
+  readonly submissionStatus: SubmissionStatus;
+  readonly publishedAt: Date | null;
+}
+
+/** Position of the last item of a page, for keyset pagination. */
+export interface ItemPosition {
+  readonly createdAt: Date;
+  readonly id: string;
+}
+
+/**
+ * A listing filter built by the service from the scope and the caller. The
+ * order is on the immutable (`createdAt`, `id`) pair, so pages are stable.
+ */
+export interface ItemListFilter {
+  readonly publicationStatus?: PublicationStatus;
+  readonly submissionStatus?: SubmissionStatus;
+  readonly ownerId?: string;
+  /** Leaves out one owner's items, such as a reviewer's own submissions. */
+  readonly excludeOwnerId?: string;
+  readonly kind?: ItemKind;
+  /** Case-insensitive substring of the title or the author name. */
+  readonly text?: string;
+  readonly order: 'newest_first' | 'oldest_first';
+  /** Returns only items strictly after this position in the order. */
+  readonly after?: ItemPosition;
+  readonly limit: number;
+}

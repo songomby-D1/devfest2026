@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
   title: LOVA Content & Verification internal API
-  version: 0.1.0
+  version: 0.2.0
   description: >-
-    Internal API of the Content service (CONTENT-01, #52). Only the gateway, and
+    Internal API of the Content service (CONTENT-01 #52, CONTENT-02 #53). Only the gateway, and
     NFT and LiDAR for service calls, reach it on the internal network. The
     gateway forwards `/api/items...` to `/internal/v1/items...` with the same
     method, path rest, query and body (platform contract). Request and
@@ -16,10 +16,16 @@ info:
     `x-caller-permissions` and `x-request-id`.
 
 
-    Not yet available: listing (`GET /internal/v1/items`, CONTENT-02),
-    publication and the publication lookup used by NFT and LiDAR (CONTENT-02),
-    media (CONTENT-03) and reviews (CONTENT-04). `media`, `reviews` and
-    `advisorySignals` are always empty arrays until those tasks land.
+    Publication (CONTENT-02): an item moves `draft` → `published` →
+    `unpublished`, and an unpublished item can be published again. Only a
+    reviewer changes the publication, and publishing needs both claims
+    reviewed and the rights confirmed (D13, D18). Every change is recorded
+    with the reviewer and note in the publication history.
+
+
+    Not yet available: media (CONTENT-03), reviews and the `return` and
+    `reject` decisions (CONTENT-04). `media`, `reviews` and `advisorySignals`
+    are always empty arrays until those tasks land.
 servers:
   - url: http://content:3000
     description: Internal Compose network
@@ -47,6 +53,57 @@ paths:
                 properties:
                   status: { type: string, const: ok }
   /internal/v1/items:
+    get:
+      tags: [items]
+      operationId: listItems
+      summary: List items for browsing, own submissions or the review queue
+      description: >-
+        Gate 0 `GET /api/items`. `public` (default) lists `published` items
+        for everyone, newest first. `mine` lists every item of the signed-in
+        caller, newest first. `review` lists the submissions `in_review`,
+        oldest first, without the reviewer's own submissions, and needs the
+        `reviewer` permission. The order is on the immutable creation time
+        and then the ID, so a cursor never skips or repeats an item. `q`
+        matches a case-insensitive substring of the title or the author name;
+        `%` and `_` are literal. Unknown query parameters are ignored.
+      parameters:
+        - $ref: '#/components/parameters/CallerUserId'
+        - $ref: '#/components/parameters/CallerPermissions'
+        - $ref: '#/components/parameters/RequestId'
+        - name: scope
+          in: query
+          schema:
+            { type: string, enum: [public, mine, review], default: public }
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/ItemKind' }
+        - name: q
+          in: query
+          description: Trimmed. A blank value means no text filter.
+          schema: { type: string, maxLength: 100 }
+        - name: cursor
+          in: query
+          description: >-
+            `nextCursor` of the previous page, passed back unchanged. A cursor
+            from another scope answers `400`.
+          schema: { type: string, maxLength: 200 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: One page of items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemPage' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: '`FORBIDDEN`: `scope=review` without the `reviewer` permission.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
     post:
       tags: [items]
       operationId: createItem
@@ -134,6 +191,115 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/PublicError' }
         '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}/decision:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags: [items]
+      operationId: decideItem
+      summary: Publish a submission
+      description: >-
+        Gate 0 `POST /api/items/{id}/decision`. Reviewer only, and never on
+        one's own submission. `publish` moves a `draft` or `unpublished` item
+        to `published`, sets the submission to `accepted` and `publishedAt` to
+        now. It needs a submission `in_review` or `accepted`, both claims
+        reviewed (`verified` or `uncertain`) and the rights confirmed, checked
+        under a row lock so that a concurrent edit cannot slip in. Publishing a
+        published item changes nothing and answers `200`. `return` and
+        `reject` answer `422 DECISION_NOT_AVAILABLE` until CONTENT-04.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DecisionRequest' }
+      responses:
+        '200':
+          description: The item after the decision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/NotReviewer' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422':
+          description: >-
+            A rule blocks the decision: `SUBMISSION_NOT_PUBLISHABLE` (the
+            submission is `returned` or `rejected`), `CLAIMS_UNREVIEWED`,
+            `RIGHTS_NOT_CONFIRMED` or `DECISION_NOT_AVAILABLE`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}/unpublish:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/CallerUserId'
+      - $ref: '#/components/parameters/CallerPermissions'
+      - $ref: '#/components/parameters/RequestId'
+    post:
+      tags: [items]
+      operationId: unpublishItem
+      summary: Take a published item out of public browsing
+      description: >-
+        Reviewer only. Moves a `published` item to `unpublished`: guests no
+        longer list or read it, and the owner can edit it again. `publishedAt`
+        keeps the last publication. Unpublishing an unpublished item changes
+        nothing. Not routed by the gateway yet: see the contract need in the
+        CONTENT-02 pull request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UnpublishRequest' }
+      responses:
+        '200':
+          description: The item after the change
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ItemDetail' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/NotReviewer' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: '`ITEM_NOT_PUBLISHED`: a draft was never published.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
+  /internal/v1/items/{id}/publication:
+    parameters:
+      - $ref: '#/components/parameters/ItemId'
+      - $ref: '#/components/parameters/RequestId'
+    get:
+      tags: [items]
+      operationId: getPublication
+      summary: Publication status for NFT and LiDAR
+      description: >-
+        Platform contract service-to-service lookup (D01: the ContentId and the
+        publication status are the handoffs from Content). Only the `nft` and
+        `lidar` callers get an answer, for any existing item. The `gateway`
+        caller gets `404`, so the route stays off the public surface and never
+        reveals a draft. Callers decide eligibility themselves, for example
+        NFT mints only when `publicationStatus` is `published`.
+      responses:
+        '200':
+          description: The item's publication status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicationLookup' }
+        '400': { $ref: '#/components/responses/ValidationFailed' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: '`NOT_FOUND`: the item does not exist, or the caller is the gateway.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicError' }
+        '500': { $ref: '#/components/responses/InternalError' }
 components:
   securitySchemes:
     serviceName:
@@ -191,6 +357,13 @@ components:
           schema: { $ref: '#/components/schemas/PublicError' }
     Forbidden:
       description: '`FORBIDDEN`: the caller can see the item but is not its owner.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PublicError' }
+    NotReviewer:
+      description: >-
+        `FORBIDDEN`: the caller lacks the `reviewer` permission, or tries to
+        publish their own submission.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/PublicError' }
@@ -328,6 +501,72 @@ components:
           items: { type: object }
         createdAt: { type: string, format: date-time }
         publishedAt: { type: [string, 'null'], format: date-time }
+    ItemSummary:
+      type: object
+      required:
+        [
+          id,
+          title,
+          kind,
+          creatorName,
+          origin,
+          period,
+          thumbnailUrl,
+          publicationStatus,
+          submissionStatus,
+          claims,
+          updatedAt,
+        ]
+      properties:
+        id: { $ref: '#/components/schemas/ContentId' }
+        title: { type: string }
+        kind: { $ref: '#/components/schemas/ItemKind' }
+        creatorName: { type: [string, 'null'] }
+        origin: { type: [string, 'null'] }
+        period: { type: [string, 'null'] }
+        thumbnailUrl:
+          type: [string, 'null']
+          description: Always `null` until media lands (CONTENT-03).
+        publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
+        submissionStatus: { $ref: '#/components/schemas/SubmissionStatus' }
+        claims: { $ref: '#/components/schemas/ClaimStatuses' }
+        updatedAt: { type: string, format: date-time }
+    ItemPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/ItemSummary' }
+        nextCursor:
+          type: [string, 'null']
+          description: Opaque. `null` on the last page.
+    DecisionRequest:
+      type: object
+      additionalProperties: false
+      required: [decision, note]
+      properties:
+        decision: { type: string, enum: [publish, return, reject] }
+        note:
+          type: string
+          maxLength: 4000
+          description: Trimmed and kept in the publication history.
+    UnpublishRequest:
+      type: object
+      additionalProperties: false
+      required: [note]
+      properties:
+        note:
+          type: string
+          maxLength: 4000
+          description: Trimmed and kept in the publication history.
+    PublicationLookup:
+      type: object
+      required: [contentId, publicationStatus]
+      properties:
+        contentId: { $ref: '#/components/schemas/ContentId' }
+        publicationStatus: { $ref: '#/components/schemas/PublicationStatus' }
     ValidationIssue:
       type: object
       required: [field, reason]
@@ -348,6 +587,11 @@ components:
             - FORBIDDEN
             - NOT_FOUND
             - ITEM_PUBLISHED
+            - ITEM_NOT_PUBLISHED
+            - SUBMISSION_NOT_PUBLISHABLE
+            - CLAIMS_UNREVIEWED
+            - RIGHTS_NOT_CONFIRMED
+            - DECISION_NOT_AVAILABLE
             - INTERNAL_ERROR
         message: { type: string }
         requestId: { type: string }
