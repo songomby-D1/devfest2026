@@ -27,18 +27,39 @@ describe('createHttpClient', () => {
     ]);
   });
 
-  it('sends the mandatory idempotency key on mint', async () => {
+  it('sends the mandatory idempotency key on mint and reports 202 as created', async () => {
+    const mint = { mintId: 'm1', contentId: 'id-1', status: 'pending' };
     const fetchImpl = vi.fn((_input: string, _init?: RequestInit) =>
-      Promise.resolve(
-        jsonResponse(202, { contentId: 'id-1', status: 'pending' }),
-      ),
+      Promise.resolve(jsonResponse(202, mint)),
     );
     const result = await createHttpClient(fetchImpl).mintItem('id-1', 'k-42');
     const [url, init] = fetchImpl.mock.calls[0] ?? [];
     expect(url).toBe('/api/items/id-1/mint');
     expect(init?.method).toBe('POST');
     expect(new Headers(init?.headers).get('Idempotency-Key')).toBe('k-42');
-    expect(result.status).toBe('pending');
+    expect(result).toEqual({ created: true, mint });
+  });
+
+  it('reports a replayed mint key (200) as not created', async () => {
+    const mint = { mintId: 'm1', contentId: 'id-1', status: 'confirmed' };
+    const client = createHttpClient(() =>
+      Promise.resolve(jsonResponse(200, mint)),
+    );
+    expect(await client.mintItem('id-1', 'k-42')).toEqual({
+      created: false,
+      mint,
+    });
+  });
+
+  it('normalizes the 3D descriptor', async () => {
+    const client = createHttpClient(() =>
+      Promise.resolve(jsonResponse(200, { contentId: 'id-1', status: 'none' })),
+    );
+    expect(await client.getModel3d('id-1')).toEqual({
+      contentId: 'id-1',
+      status: 'missing',
+      variants: null,
+    });
   });
 
   it('posts the review as JSON', async () => {
