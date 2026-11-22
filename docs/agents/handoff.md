@@ -6,6 +6,9 @@
 
 - [IMPLEMENTED] Merged the updated `origin/agent1-foundation` (#110) into `agent3-ux-fe-3d`: the Draco ignore in ESLint and Prettier, the root `lint` script that generates the Prisma clients first, and LiDAR #101 and #108 integrated into the shared PostgreSQL and SeaweedFS. The handoff and log keep both sides; the root lockfile was regenerated from #110's with the frontend dependencies.
 - This resolves the earlier Agent 3 blockers on the root lockfile and on `apps/frontend/public/draco/`.
+- [IMPLEMENTED] Merged `develop` again to bring in CONTENT-01 #112, which made #104 conflict. Content now has a `package.json`, so the root workspace runs it; the root lockfile was regenerated.
+- [DECISION REQUIRED: Agent 2, rivon0507] Three workspace-compatibility edits in `apps/backend/content/`, mirroring the NFT and LiDAR ones: `"rootDir": "."` in `tsconfig.json` because ts-jest resolves the root TypeScript 6 (the build keeps `rootDir: src` and `dist/main.js`), the test scripts call `jest` from the PATH because the root workspace hoists it, and the integration test resolves the Prisma CLI through Node. Content passes 70 of 70 tests, including Testcontainers.
+- [NOT IMPLEMENTED: Agent 1] `apps/backend/content/compose.fragment.yml` is not merged into root Compose yet, and #110 needs the same `develop` merge.
 
 ## Earlier session: Agent 1 follow-up, Docker run and LiDAR integration (Claude, agent N1)
 
@@ -42,6 +45,13 @@
 - [NOT IMPLEMENTED: Agent 3] When rebasing PR #101, drop `10-lidar.sh` and the provisional PostgreSQL service, because `00-service-databases.sh` already provisions `LIDAR_*`. Check publication through `GET /internal/v1/items/{id}/publication` and serve `GET /files/{path}`. The frontend calls `/api` through a same-origin proxy or from an origin listed in `GATEWAY_ALLOWED_ORIGINS`.
 - [DECISION REQUIRED: endy-rkt] Approve the CI workflow change (AGENTS.md), apply branch protection (endy-rkt-12, endy-rkt-22), decide CODEOWNERS (endy-rkt-24) and hooks (endy-rkt-16), and run the SeaweedFS spike (endy-rkt-03).
 - [DECISION REQUIRED: endy-rkt, papangoo] [ADR 0002](../decisions/0002-open-question-settlements.md) proposes settlements that differ from the frozen Gate 0 contract: S3 publishes automatically after review, while Gate 0 has `POST /api/items/{id}/decision` to publish, return or reject; S4 filters with `?owner=me` and `?status=pending_review`, while Gate 0 has `scope=mine|review`; S9 keeps `x-caller-account-id`, while Gate 0 uses `x-caller-user-id` after `CallerContext.userId`. S12 proposes 5 registrations per minute, while the gateway uses one 10-per-minute setting. The Gate 0 contract applies until a `[CONTRACT CHANGE]` pull request merges.
+
+## Earlier session: CONTENT-01 items, authors and descriptions (rivon0507, Agent 2)
+
+- [PROPOSED] CONTENT-01 ([#52](https://github.com/songomby-D1/devfest2026/issues/52)): `apps/backend/content/` is a standalone NestJS 11 service on Node 22 with Prisma 7.10.1 and its first migration (`authors`, `items`, `descriptions`). The item ID is the ContentId, `publicationStatus` defaults to `draft`, and claim status is stored separately on the item and on its description. Internal routes: `POST /internal/v1/items`, `GET /internal/v1/items/{id}` and `PATCH /internal/v1/items/{id}`, behind a per-caller service-token guard, with the `{ code, message, requestId }` error shape. Bodies follow the Gate 0 contract on `agent1-foundation` (`CreateItemRequest`, `ItemDetail`). Contract: [content.yaml](../api/content.yaml). Compose: `apps/backend/content/compose.fragment.yml` for Agent 1.
+- [DECISION REQUIRED: papangoo] Confirm the proposed acceptance criteria in the PR, the 1:1 author-per-item model, the claim reset on material edits (D18) and the edit rule (owner only, not while published).
+- [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
+- [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
 
 ## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
 
