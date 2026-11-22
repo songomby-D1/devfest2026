@@ -37,6 +37,11 @@ export interface MintConfig {
   readonly maxStalledCount: number;
 }
 
+export interface ContentServiceConfig {
+  readonly serviceUrl: string;
+  readonly timeoutMs: number;
+}
+
 export interface DevToolsConfig {
   readonly bullBoardEnabled: boolean;
   readonly faultInject: FaultPoint | undefined;
@@ -106,6 +111,18 @@ export class AppConfigService {
         infer: true,
       }),
     };
+  }
+
+  get content(): ContentServiceConfig {
+    return {
+      serviceUrl: this.config.get('CONTENT_SERVICE_URL', { infer: true }),
+      timeoutMs: this.config.get('CONTENT_TIMEOUT_MS', { infer: true }),
+    };
+  }
+
+  /** Secret of the NFT → Content pair. Never log it. */
+  get contentServiceToken(): string | undefined {
+    return this.config.get('CONTENT_SERVICE_TOKEN', { infer: true });
   }
 
   /** `faultInject` is ignored outside `NODE_ENV=test` (nft_context.md §9.3). */
