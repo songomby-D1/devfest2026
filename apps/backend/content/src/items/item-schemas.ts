@@ -74,3 +74,27 @@ export const updateItemSchema = z
     when: (payload) => payload.issues.length === 0,
   });
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
+
+/** Length of a decision or unpublication note (gateway `DecisionRequest`). */
+export const NOTE_LIMIT = 4000;
+
+const note = z
+  .string({ error: 'must be a string' })
+  .trim()
+  .max(NOTE_LIMIT, `must be at most ${String(NOTE_LIMIT)} characters`);
+
+export const DECISIONS = ['publish', 'return', 'reject'] as const;
+export type Decision = (typeof DECISIONS)[number];
+
+/** `POST /internal/v1/items/:id/decision`, the gateway's `DecisionRequest`. */
+export const decisionSchema = z.strictObject({
+  decision: z.enum(DECISIONS, {
+    error: `must be one of ${DECISIONS.join(', ')}`,
+  }),
+  note,
+});
+export type DecisionInput = z.infer<typeof decisionSchema>;
+
+/** `POST /internal/v1/items/:id/unpublish` (Content only, see content.yaml). */
+export const unpublishSchema = z.strictObject({ note });
+export type UnpublishInput = z.infer<typeof unpublishSchema>;

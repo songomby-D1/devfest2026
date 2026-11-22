@@ -1,7 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import type { ItemChanges, ItemRecord, NewItem } from './item';
+import type {
+  ItemChanges,
+  ItemListFilter,
+  ItemRecord,
+  NewItem,
+  PublicationTransition,
+} from './item';
 import type { ItemRepository } from './item-repository';
 
 const INCLUDE = { author: true, description: true } as const;
@@ -10,6 +16,48 @@ type ItemRow = Prisma.ItemGetPayload<{ include: typeof INCLUDE }>;
 
 /** Prisma error code for "record to update not found". */
 const RECORD_NOT_FOUND = 'P2025';
+
+/** Escapes LIKE wildcards so that `q` matches literally. */
+function likeLiteral(text: string): string {
+  return text.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+function listWhere(filter: ItemListFilter): Prisma.ItemWhereInput {
+  const conditions: Prisma.ItemWhereInput[] = [];
+  if (filter.publicationStatus !== undefined) {
+    conditions.push({ publicationStatus: filter.publicationStatus });
+  }
+  if (filter.submissionStatus !== undefined) {
+    conditions.push({ submissionStatus: filter.submissionStatus });
+  }
+  if (filter.ownerId !== undefined) {
+    conditions.push({ ownerId: filter.ownerId });
+  }
+  if (filter.excludeOwnerId !== undefined) {
+    conditions.push({ ownerId: { not: filter.excludeOwnerId } });
+  }
+  if (filter.kind !== undefined) conditions.push({ kind: filter.kind });
+  if (filter.text !== undefined) {
+    const contains = likeLiteral(filter.text);
+    conditions.push({
+      OR: [
+        { title: { contains, mode: 'insensitive' } },
+        { author: { name: { contains, mode: 'insensitive' } } },
+      ],
+    });
+  }
+  if (filter.after !== undefined) {
+    const { createdAt, id } = filter.after;
+    const beyond = filter.order === 'newest_first' ? 'lt' : 'gt';
+    conditions.push({
+      OR: [
+        { createdAt: { [beyond]: createdAt } },
+        { createdAt, id: { [beyond]: id } },
+      ],
+    });
+  }
+  return { AND: conditions };
+}
 
 function toRecord(row: ItemRow): ItemRecord {
   if (row.description === null) {
@@ -68,6 +116,50 @@ export class PrismaItemRepository implements ItemRepository {
       include: INCLUDE,
     });
     return row === null ? null : toRecord(row);
+  }
+
+  async list(filter: ItemListFilter): Promise<ItemRecord[]> {
+    const direction = filter.order === 'newest_first' ? 'desc' : 'asc';
+    const rows = await this.prisma.item.findMany({
+      where: listWhere(filter),
+      orderBy: [{ createdAt: direction }, { id: direction }],
+      take: filter.limit,
+      include: INCLUDE,
+    });
+    return rows.map(toRecord);
+  }
+
+  async changePublication(
+    id: string,
+    decide: (current: ItemRecord) => PublicationTransition | null,
+  ): Promise<ItemRecord | null> {
+    return this.prisma.$transaction(async (tx) => {
+      // The row lock serializes publication changes and edits of the item,
+      // so `decide` sees the claim statuses that the update will rely on.
+      await tx.$queryRaw`SELECT 1 FROM items WHERE id = ${id}::uuid FOR UPDATE`;
+      const row = await tx.item.findUnique({ where: { id }, include: INCLUDE });
+      if (row === null) return null;
+      const current = toRecord(row);
+      const transition = decide(current);
+      if (transition === null) return current;
+      const updated = await tx.item.update({
+        where: { id },
+        data: {
+          publicationStatus: transition.publicationStatus,
+          submissionStatus: transition.submissionStatus,
+          publishedAt: transition.publishedAt,
+          publicationEvents: {
+            create: {
+              action: transition.action,
+              actorId: transition.actorId,
+              note: transition.note,
+            },
+          },
+        },
+        include: INCLUDE,
+      });
+      return toRecord(updated);
+    });
   }
 
   async updateUnpublished(
