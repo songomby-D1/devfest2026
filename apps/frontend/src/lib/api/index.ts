@@ -14,11 +14,33 @@ export function createApiClient(mode: ApiMode): ApiClient {
     : createHttpClient();
 }
 
-/** The client the app uses, chosen by VITE_API_MODE at build time. */
-export const api: ApiClient = createApiClient(
-  resolveApiMode(import.meta.env.VITE_API_MODE),
-);
+let current: ApiClient | null = null;
 
-export { ApiError } from './client';
+function client(): ApiClient {
+  current ??= createApiClient(resolveApiMode(import.meta.env.VITE_API_MODE));
+  return current;
+}
+
+/** Replaces the client, for tests. Pass `null` to go back to the configured one. */
+export function setApiClient(next: ApiClient | null): void {
+  current = next;
+}
+
+/**
+ * The client the app uses, chosen by VITE_API_MODE at build time. Each call
+ * goes to the current client, so tests can swap it with `setApiClient`.
+ */
+export const api: ApiClient = new Proxy({} as ApiClient, {
+  get: (_target, property): unknown => Reflect.get(client(), property),
+});
+
+export { ApiError, NETWORK_ERROR_CODE } from './client';
 export type { ApiClient } from './client';
 export type * from './contract';
+export {
+  ACCEPTED_MEDIA_TYPES,
+  checkMediaFile,
+  formatMegabytes,
+  MEDIA_UPLOAD_LIMITS,
+} from './media-limits';
+export { describeError, type DisplayError } from './error-message';

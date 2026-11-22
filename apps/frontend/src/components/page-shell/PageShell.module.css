@@ -1,0 +1,48 @@
+/* html and body never scroll (see global.css): this page scrolls itself. */
+.page {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  color: var(--color-ink);
+  background: var(--color-wall-ivory);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-16) var(--space-32);
+  align-items: center;
+  padding: var(--space-20) max(var(--space-20), calc(56 * var(--u)));
+  border-bottom: 1px solid var(--color-ink-08);
+}
+
+.logo {
+  display: inline-flex;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-24);
+}
+
+.account {
+  margin-left: auto;
+}
+
+.wide,
+.narrow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  margin: 0 auto;
+  padding: var(--space-32) var(--space-20) var(--space-56);
+}
+
+.wide {
+  max-width: 1120px;
+}
+
+.narrow {
+  max-width: 680px;
+}

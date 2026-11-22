@@ -1,8 +1,21 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setForcedReducedMotion } from '../../lib/motion/reduced-motion';
 import { settleMotion } from '../../test/motion';
+import { setApiClient } from '../../lib/api';
+import { ApiError } from '../../lib/api';
+import { createMockClient } from '../../lib/api/mock-client';
 import { HomePage } from './HomePage';
+import { HomeRoute } from './HomeRoute';
+
+/** Renders the home as the app does: the hanging comes from the published items. */
+async function renderHome(): Promise<void> {
+  render(<HomeRoute />);
+  await waitFor(() => {
+    expect(document.querySelector('[data-intro]')).not.toBeNull();
+  });
+  await settleMotion();
+}
 
 const HOME_TITLE = 'L’art malagasy, à portée de regard.';
 
@@ -16,7 +29,7 @@ describe('HomePage', () => {
   });
 
   it('hides content until its animation starts, then reveals it', async () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<HomePage exhibits={[]} />);
     const root = container.firstElementChild as HTMLElement;
 
     expect(root.style.visibility).toBe('hidden');
@@ -26,8 +39,7 @@ describe('HomePage', () => {
   });
 
   it('keeps the headline a real h1 with the Figma copy', async () => {
-    render(<HomePage />);
-    await settleMotion();
+    await renderHome();
 
     expect(
       screen.getByRole('heading', { level: 1, name: HOME_TITLE }),
@@ -35,14 +47,13 @@ describe('HomePage', () => {
   });
 
   it('renders the two CTAs as links to the museum and the contribution flow', async () => {
-    render(<HomePage />);
-    await settleMotion();
+    await renderHome();
 
     expect(
       screen
         .getByRole('link', { name: /Entrer dans le musée/ })
         .getAttribute('href'),
-    ).toBe('/musee/peinture/01');
+    ).toBe('/musee');
     expect(
       screen
         .getByRole('link', { name: /Déposer une œuvre/ })
@@ -51,8 +62,7 @@ describe('HomePage', () => {
   });
 
   it('hangs the two paintings as figures with alt text and a cartel, and skips objects without a photo', async () => {
-    render(<HomePage />);
-    await settleMotion();
+    await renderHome();
 
     // Both pottery photos are pending (objectImages), so only the paintings hang.
     expect(screen.getAllByRole('figure')).toHaveLength(2);
@@ -64,10 +74,40 @@ describe('HomePage', () => {
     expect(screen.queryByText('Sinibe')).toBeNull();
   });
 
+  it('links each frame to its artwork in the gallery', async () => {
+    await renderHome();
+
+    expect(
+      screen
+        .getByRole('link', { name: /femme malgache debout/i })
+        .getAttribute('href'),
+    ).toBe('/musee/peinture/01');
+  });
+
+  it('opens without frames when the collection cannot load', async () => {
+    const client = createMockClient();
+    setApiClient({
+      ...client,
+      listItems: () =>
+        Promise.reject(
+          new ApiError(503, {
+            code: 'CONTENT_UNAVAILABLE',
+            message: 'down',
+            requestId: 'r-1',
+          }),
+        ),
+    });
+    await renderHome();
+
+    expect(screen.queryAllByRole('figure')).toHaveLength(0);
+    expect(
+      screen.getByRole('heading', { level: 1, name: HOME_TITLE }),
+    ).toBeTruthy();
+  });
+
   it('never starts audio on mount', async () => {
     const play = vi.spyOn(window.HTMLMediaElement.prototype, 'play');
-    render(<HomePage />);
-    await settleMotion();
+    await renderHome();
 
     expect(play).not.toHaveBeenCalled();
   });

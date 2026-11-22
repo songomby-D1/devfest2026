@@ -1,8 +1,8 @@
 # LOVA frontend
 
-The visitor-facing React app of LOVA, the digital museum of Malagasy heritage. It renders the home page and the gallery rooms from Sesedra's Figma mockups, with GSAP motion, and talks to the backend only through the gateway.
+The visitor-facing React app of LOVA, the digital museum of Malagasy heritage. It renders the home page and the gallery rooms from Sesedra's Figma mockups, with GSAP motion, plus the account, contribution, item detail and review screens, and talks to the backend only through the gateway.
 
-This page explains how the app is built and how to work on it. The rules every change must follow are in [rules.md](rules.md). Motion details are in [docs/motion.md](docs/motion.md), the review checklist in [docs/verification.md](docs/verification.md), and the origin of every media file in [media-sources.md](media-sources.md).
+This page explains how the app is built and how to work on it. The rules every change must follow are in [rules.md](rules.md). Motion details are in [docs/motion.md](docs/motion.md), the review checklist in [docs/verification.md](docs/verification.md), a hands-on walkthrough of every screen in [docs/manual-testing.md](docs/manual-testing.md), and the origin of every media file in [media-sources.md](media-sources.md).
 
 ## Quick start
 
@@ -16,7 +16,7 @@ npm run dev -w apps/frontend         # http://localhost:5173
 | Command                              | What it does                                                    |
 | ------------------------------------ | --------------------------------------------------------------- |
 | `npm run dev -w apps/frontend`       | Dev server with hot reload. `/api/*` is proxied to the gateway. |
-| `npm run test -w apps/frontend`      | Vitest, once. 7 files, 33 tests.                                |
+| `npm run test -w apps/frontend`      | Vitest, once.                                                   |
 | `npm run typecheck -w apps/frontend` | `tsc --noEmit` on `src/` and `vite.config.ts`.                  |
 | `npm run build -w apps/frontend`     | Production bundle in `apps/frontend/dist/`.                     |
 | `npm run preview -w apps/frontend`   | Serves the production bundle on `http://localhost:4173`.        |
@@ -25,22 +25,27 @@ npm run dev -w apps/frontend         # http://localhost:5173
 
 Optional local setup:
 
-- `apps/frontend/.env.example` → copy to `.env` to change `GATEWAY_URL` (default `http://localhost:3000`). It is read by `vite.config.ts` only and never reaches the browser.
+- `apps/frontend/.env.example` → copy to `.env` to change `GATEWAY_URL` (default `http://localhost:3000`, read by `vite.config.ts` only, never sent to the browser) and `VITE_API_MODE`. With `VITE_API_MODE=mock` the app runs on the in-memory gateway of `src/lib/api/mock-client.ts`; leave it unset to call the real gateway through the `/api` proxy. In mock mode, sign in as `contributrice@lova.test` (contributor) or `relecteur@lova.test` (reviewer) with any password of 12 characters or more.
 - `apps/frontend/public/fonts/licensed/`: drop `NewIconSerif-Regular.woff2`, `HelveticaNowDisplay-Medium.woff2` and `HelveticaNowDisplay-Bold.woff2` here to see the exact Figma typography. The folder is ignored by Git; without it the OFL fallbacks render.
 - `apps/frontend/public/media/`: the paintings and the valiha track, also ignored by Git until D18. See [Media](#media).
 - `http://localhost:5173/?motion=lab` (dev builds only): a panel to compare the three intros and three transitions and to force reduced motion.
 
 ## What the app shows
 
-| Route                       | Screen                                                                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                         | **Home.** The "salon": two framed paintings on an ivory wall, the headline, a description and two calls to action. Figma node `12:88`.               |
-| `/musee/:room/:nn`          | **Gallery.** One room, one artwork in the spotlight, the wall text, the wall label, the room tabs and the artwork navigation. Figma node `114:3877`. |
-| `/musee` and `/musee/:room` | Redirect to the first artwork of the room. Rooms without artworks render "Salle en préparation".                                                     |
-| `/contribuer`               | Placeholder for "Déposer une œuvre" until the contribution flow (FE-03).                                                                             |
-| anything else               | "Page introuvable".                                                                                                                                  |
+| Route                        | Screen                                                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                          | **Home.** The "salon": two framed paintings on an ivory wall, the headline, a description and two calls to action. Figma node `12:88`.               |
+| `/musee/:room/:nn`           | **Gallery.** One room, one artwork in the spotlight, the wall text, the wall label, the room tabs and the artwork navigation. Figma node `114:3877`. |
+| `/musee` and `/musee/:room`  | Redirect to the first artwork of the room. Rooms without artworks render "Salle en préparation".                                                     |
+| `/oeuvre/:id`                | **Item detail.** Media, facts, description, the two human review labels, rights; workflow statuses for the owner and reviewers; slots for FE-04.     |
+| `/connexion`, `/inscription` | Sign-in and registration. `?retour=/path` brings the visitor back after signing in.                                                                  |
+| `/contribuer`                | Submission form (all `CreateItemRequest` fields), signed-in only.                                                                                    |
+| `/contribuer/:id`            | Media upload of a draft, with format and size hints, progress and retry, and its statuses.                                                           |
+| `/mes-depots`                | The contributor's items (`scope=mine`) with submission, publication and claim statuses.                                                              |
+| `/revue`, `/revue/:id`       | Reviewer queue (`scope=review`) and the review screen: item and description claims separately, then publish, return or reject.                       |
+| anything else                | "Page introuvable". A missing item and a draft seen by a guest show the same page.                                                                   |
 
-Rooms: `peinture` (four works), `sculpture`, `savoir-faire` and `musique` (empty, with a slot for a 3D viewer, a stepped video and a player).
+Rooms are filled from the published items by kind: `painting` and `photograph` hang in `peinture`, `sculpture` in `sculpture`, `textile`, `object` and `other` in `savoir-faire`. `musique` has no item kind yet and stays "en préparation".
 
 ## Structure
 
@@ -60,8 +65,14 @@ apps/frontend/
     app/                        App, route matching, the dev motion lab
     features/home/              Home page, its hooks and content
     features/gallery/           Gallery page, hooks, dialogs, data/rooms.ts
-    features/contribute/        Placeholder page
+    features/account/           Sign-in and registration
+    features/contribute/        Submission form, media upload, my submissions
+    features/item/              Item detail page
+    features/review/            Review queue and review screen
     components/                 Reusable UI mirroring the Figma components
+    lib/api/                    The only gateway client: HTTP, mock, contract types
+    lib/session/                Signed-in account from /api/auth/me
+    lib/collection/             Published collection shared by home and gallery
     lib/router/                 History-based router and <Link>
     lib/motion/                 GSAP setup, reduced motion, font waiting, variants
     lib/audio/                  Room ambience, off by default
@@ -112,7 +123,9 @@ Cultural media is not committed until D18 clears its publication. Developers cop
 
 ### Data
 
-`features/gallery/data/rooms.ts` holds the four rooms and their artworks: number, title, artist, year, technique, dimensions, region, provenance, story, rights, image, alt text, optional focal point, `isDemo` and a `verification` status (`verified`, `unreviewed`, `uncertain`). It is a provisional view model to replace with the gateway's Content API in FE-03, and to align with papangoo's contract before that. `roomPath` and `artworkPath` build the URLs.
+`lib/api/` is the only module that calls the gateway. `contract.ts` re-exports the Gate 0 shapes from `packages/shared` as type-only imports; `http-client.ts` calls `/api/*` on the same origin, so the session cookie set by `POST /api/auth/login` travels through the Vite proxy, and uploads go through `XMLHttpRequest` for progress events; `mock-client.ts` implements the same rules in memory (visibility, ownership, reviewer-only review and decisions, no self-review, D18 publication rules, upload formats and limits). `media-limits.ts` holds the upload hints that mirror the Content defaults (images JPEG, PNG, WebP up to 12 MB; videos MP4, WebM up to 50 MB; 10 files per item; captions up to 300 characters). Errors are `ApiError` (`code`, safe `message`, `requestId`, `details`), shown by `ErrorNotice` with the request ID for support.
+
+`lib/session/` reads the account from `GET /api/auth/me` and never stores a token in the browser. `lib/collection/` loads the published collection once per visit (`GET /api/items?scope=public`, every page up to 200 items, then each item's detail for the wall label and notice) and shares it between the home and the gallery. `features/gallery/data/rooms.ts` keeps the editorial room structure; `collection.ts` maps items onto rooms and artworks.
 
 ### Components
 
@@ -140,14 +153,20 @@ Gallery-only parts live in `features/gallery/`: `GalleryDialog` (a `<dialog>` th
 `npm run test -w apps/frontend` runs Vitest in jsdom. Tests assert behavior through Testing Library roles and text:
 
 - `app/routes.test.ts`: route matching and redirects.
-- `app/App.test.tsx`: deep links, the home, not found.
-- `features/home/HomePage.test.tsx`: hidden until the intro, headline, CTAs, figures and alt text, no autoplay.
-- `features/gallery/GalleryPage.test.tsx`: counter and wall label, arrow keys, wrap-around, rapid clicks, notice with statuses, empty room, no autoplay.
+- `app/App.test.tsx`: deep links once the items load, the home, item detail, sign-in path for guests, not found.
+- `features/home/HomePage.test.tsx`: hidden until the intro, headline, CTAs, frames from the API with alt text and links, home without frames on error, no autoplay.
+- `features/gallery/GalleryPage.test.tsx`: counter and wall label, arrow keys, wrap-around, rapid clicks, notice with both review statuses, empty room, no autoplay.
+- `features/gallery/data/collection.test.ts`: mapping of API items onto rooms and artworks.
+- `features/item/ItemPage.test.tsx`: facts and separate review labels, FE-04 slots, not found for drafts, owner and reviewer views, retry.
+- `features/account/AccountPages.test.tsx` and `lib/session/session.test.ts`: sign-in and return, generic credential error with request ID, reviewer capability, registration, sign-out, expired session, safe return paths.
+- `features/contribute/ContributePage.test.tsx`: form validation, draft creation, media checks and upload, my submissions.
+- `features/review/ReviewItemPage.test.tsx`: queue, separate item and description reviews, 422 before both reviews, publish, return with a note, own submission, surfaced 403.
+- `lib/api/*.test.ts`: gateway routes, multipart upload, error mapping, and the mock gateway rules.
 - `features/gallery/useScenePlacement.test.ts`: Figma placement and viewport coverage.
 - `components/sound-toggle/SoundToggle.test.tsx`: states, click, `M` key.
 - `lib/audio/ambience.test.ts`: never plays until enabled, stops, reports unavailable files.
 
-`src/test/setup.ts` stubs `matchMedia`, `document.fonts`, media playback and `<dialog>`. `src/test/motion.ts` exports `settleMotion()`, which lets pending font loads resolve and jumps every GSAP animation to its end, because content stays hidden until its animation runs.
+`src/test/setup.ts` stubs `matchMedia`, `document.fonts`, media playback and `<dialog>`, and gives every test a fresh signed-out mock gateway (`setApiClient`). `src/test/motion.ts` exports `settleMotion()`, which lets pending font loads resolve and jumps every GSAP animation to its end, because content stays hidden until its animation runs.
 
 Browser checks (viewports, timing, sound, reduced motion, Lighthouse) are manual for now and listed in [docs/verification.md](docs/verification.md).
 
@@ -158,7 +177,7 @@ Browser checks (viewports, timing, sound, reduced motion, Lighthouse) are manual
 | Dark rectangles instead of paintings         | `public/media/` is empty. Copy the files listed in [media-sources.md](media-sources.md).                    |
 | Headline or wall text in a fallback font     | `public/fonts/licensed/` is empty. The OFL fallbacks are expected in CI.                                    |
 | "Son indisponible" after enabling sound      | The Ogg file is absent, or the browser is Safari, which does not decode Ogg Vorbis.                         |
-| `/api/...` returns 502 in development        | No gateway runs on `GATEWAY_URL`. The frontend has no API calls yet; the proxy is ready for FE-03.          |
+| `/api/...` returns 502 in development        | No gateway runs on `GATEWAY_URL`. Start the stack, or set `VITE_API_MODE=mock`.                             |
 | Page content never appears                   | A GSAP timeline failed before setting `data-motion`. Check the console; `nullTargetWarn` is off on purpose. |
 | Lighthouse mobile performance drops below 90 | Mobile audits apply a relative CPU slowdown; a loaded machine skews them. Re-run on an idle machine.        |
 
@@ -167,6 +186,6 @@ Browser checks (viewports, timing, sound, reduced motion, Lighthouse) are manual
 - Photographs of a vilany tany and a sinibe on a plain background, then set them in `objectImages`.
 - An AAC or MP3 version of the valiha track for Safari, and a visible credits line for CC BY-SA media.
 - Pick one intro and one transition in the motion lab, then remove `MotionLab` and the unused variants.
-- FE-03: replace `data/rooms.ts` with the gateway's Content API through `lib/api/`.
+- FE-04 (#71): mount `NftPanel` and `Model3dPanel` in the `data-slot` sections of `features/item/ItemPage.tsx`.
 - FE-05: the frontend Dockerfile and its entry in the root `docker-compose.yml`.
 - Rooms 02–04: the 3D viewer, the stepped video and the player, in the `mediumSlot` of `GalleryPage`.

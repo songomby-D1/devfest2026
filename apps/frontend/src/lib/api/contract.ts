@@ -4,45 +4,49 @@
 // smallest additions the screens need and are raised as a [CONTRACT CHANGE]
 // request; until it is agreed, only this module and the mock depend on them.
 
-/** Opaque UUID string. The frontend never parses or builds one. */
-export type ContentId = string;
+// Content and identity shapes come straight from packages/shared, the source
+// of truth of the Gate 0 contract, as type-only imports.
+import type { ContentId, PublicError } from '@devfest2026/shared';
 
-export type PublicationStatus = 'draft' | 'published' | 'unpublished';
+export type {
+  AdvisorySignal,
+  AdvisorySignalKind,
+  ClaimReview,
+  ClaimStatus,
+  ClaimStatuses,
+  ClaimTarget,
+  ContentId,
+  CreateItemRequest,
+  CreatorDetails,
+  DecisionKind,
+  DecisionRequest,
+  ItemDetail,
+  ItemKind,
+  ItemListQuery,
+  ItemListScope,
+  ItemPage,
+  ItemSummary,
+  LoginRequest,
+  MediaKind,
+  MediaRef,
+  Me,
+  Permission,
+  PublicationStatus,
+  RegisterRequest,
+  RegisterResponse,
+  ReviewOutcome,
+  ReviewRequest,
+  RightsDetails,
+  SubmissionStatus,
+  ValidationIssue,
+} from '@devfest2026/shared';
 
-export type ClaimStatus = 'unreviewed' | 'verified' | 'uncertain';
-
-/** Claim statuses are tracked separately for the item and its description. */
-export interface ClaimReview {
-  item: ClaimStatus;
-  description: ClaimStatus;
-}
-
-export interface Item {
-  id: ContentId;
-  publicationStatus: PublicationStatus;
-  claims: ClaimReview;
-  /** Provisional. */
-  title: string;
-  /** Provisional. */
-  description: string;
-  /** Provisional: still image used for cards and as the 3D fallback. */
-  imageUrl: string;
-}
-
-export interface ItemList {
-  items: Item[];
-}
-
-/** Provisional: the item submission body for `POST /api/items`. */
-export interface NewItem {
-  title: string;
-  description: string;
-}
-
-/** Provisional: the review body for `POST /api/items/:id/review`. */
-export interface ReviewDecision {
-  item: ClaimStatus;
-  description: ClaimStatus;
+/** Options of a media upload. The caption is at most 300 characters. */
+export interface UploadOptions {
+  caption?: string | undefined;
+  /** Called with the fraction sent, from 0 to 1. */
+  onProgress?: ((fraction: number) => void) | undefined;
+  signal?: AbortSignal | undefined;
 }
 
 // 3D and provenance types follow packages/shared/src/provenance.ts. The NFT
@@ -163,8 +167,4 @@ export interface Provenance {
 }
 
 /** Public error body. It never carries internal details. */
-export interface ApiErrorBody {
-  code: string;
-  message: string;
-  requestId: string;
-}
+export type ApiErrorBody = PublicError;

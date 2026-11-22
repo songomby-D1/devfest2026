@@ -1,0 +1,33 @@
+.facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--space-14);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--color-ink-08);
+}
+
+.row dt {
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-60);
+  padding-top: 3px;
+}
+
+.row dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.row dd[data-unknown] {
+  color: var(--color-ink-60);
+  font-style: italic;
+}

@@ -22,7 +22,7 @@ import { navigate } from '../../lib/router/router';
 import { ArtworkNotice } from './ArtworkNotice';
 import { CloseUpViewer } from './CloseUpViewer';
 import type { Artwork, Room, RoomMedium } from './data/rooms';
-import { artworkPath, roomPath, rooms } from './data/rooms';
+import { artworkPath, roomPath } from './data/rooms';
 import { GalleryDialog } from './GalleryDialog';
 import styles from './GalleryPage.module.css';
 import { useArtworkSwap } from './useArtworkSwap';
@@ -34,6 +34,8 @@ import { useSwipe } from './useSwipe';
 
 export interface GalleryPageProps {
   room: Room;
+  /** Every room with its artworks, for the tabs and the room menu. */
+  rooms: readonly Room[];
   /** Index of the artwork from the URL. Rooms without artworks pass null. */
   artworkIndex: number | null;
 }
@@ -57,7 +59,7 @@ function isEditable(target: EventTarget | null): boolean {
   );
 }
 
-export function GalleryPage({ room, artworkIndex }: GalleryPageProps) {
+export function GalleryPage({ room, rooms, artworkIndex }: GalleryPageProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const cartelRef = useRef<HTMLButtonElement>(null);
@@ -372,13 +374,9 @@ export function GalleryPage({ room, artworkIndex }: GalleryPageProps) {
             </span>
             <span className={styles.cartelTitle}>{artwork.title}</span>
             <span className={styles.cartelTechnique}>
+              {artwork.artist}
+              <br />
               {artwork.technique}
-              {artwork.isDemo && (
-                <>
-                  <br />
-                  Œuvre de démonstration
-                </>
-              )}
             </span>
             <span className={styles.cartelLink}>Lire la notice</span>
           </button>

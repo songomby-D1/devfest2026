@@ -1,11 +1,18 @@
 import { lazy, Suspense, useEffect } from 'react';
+import { NotFoundPage } from '../components/not-found/NotFoundPage';
+import { RegisterPage } from '../features/account/RegisterPage';
+import { SignInPage } from '../features/account/SignInPage';
 import { ContributePage } from '../features/contribute/ContributePage';
-import { GalleryPage } from '../features/gallery/GalleryPage';
-import { HomePage } from '../features/home/HomePage';
+import { MySubmissionsPage } from '../features/contribute/MySubmissionsPage';
+import { SubmissionPage } from '../features/contribute/SubmissionPage';
+import { GalleryRoute } from '../features/gallery/GalleryRoute';
+import { HomeRoute } from '../features/home/HomeRoute';
+import { ItemPage } from '../features/item/ItemPage';
+import { ReviewItemPage } from '../features/review/ReviewItemPage';
+import { ReviewQueuePage } from '../features/review/ReviewQueuePage';
 import { ambience } from '../lib/audio/ambience';
 import { navigate, useLocationPath } from '../lib/router/router';
 import { matchRoute } from './routes';
-import styles from './App.module.css';
 
 // Loaded on demand so three and React Three Fiber stay out of the main bundle.
 const GalleryExperience = lazy(() =>
@@ -25,17 +32,6 @@ function showMotionLab(): boolean {
   );
 }
 
-function NotFound() {
-  return (
-    <main className={styles.notFound}>
-      <h1>Page introuvable</h1>
-      <p>
-        <a href="/">Retour à l’accueil</a>
-      </p>
-    </main>
-  );
-}
-
 function Screen({ pathname }: { pathname: string }) {
   const route = matchRoute(pathname);
 
@@ -47,9 +43,23 @@ function Screen({ pathname }: { pathname: string }) {
 
   switch (route.kind) {
     case 'home':
-      return <HomePage />;
+      return <HomeRoute />;
+    case 'sign-in':
+      return <SignInPage />;
+    case 'register':
+      return <RegisterPage />;
     case 'contribute':
       return <ContributePage />;
+    case 'submission':
+      return <SubmissionPage key={route.id} id={route.id} />;
+    case 'my-submissions':
+      return <MySubmissionsPage />;
+    case 'item':
+      return <ItemPage key={route.id} id={route.id} />;
+    case 'review-queue':
+      return <ReviewQueuePage />;
+    case 'review':
+      return <ReviewItemPage key={route.id} id={route.id} />;
     case 'visit':
       return (
         <Suspense fallback={null}>
@@ -58,12 +68,12 @@ function Screen({ pathname }: { pathname: string }) {
       );
     case 'gallery':
       return (
-        <GalleryPage room={route.room} artworkIndex={route.artworkIndex} />
+        <GalleryRoute room={route.room} artworkNumber={route.artworkNumber} />
       );
     case 'redirect':
       return null;
     case 'not-found':
-      return <NotFound />;
+      return <NotFoundPage />;
   }
 }
 

@@ -28,7 +28,8 @@ function MediaImageContent({
 }: MediaImageProps) {
   const [missing, setMissing] = useState(false);
 
-  if (missing) {
+  // An item without an image has an empty source: same neutral state as a missing file.
+  if (missing || image.src === '') {
     return (
       <span
         role="img"
@@ -47,7 +48,7 @@ function MediaImageContent({
       className={className}
       style={style}
       src={image.src}
-      srcSet={image.srcSet}
+      srcSet={image.srcSet === '' ? undefined : image.srcSet}
       sizes={sizes}
       width={image.width}
       height={image.height}

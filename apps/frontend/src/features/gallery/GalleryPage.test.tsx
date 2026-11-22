@@ -8,6 +8,8 @@ import { settleMotion } from '../../test/motion';
 async function renderGalleryAt(path: string): Promise<void> {
   window.history.replaceState(null, '', path);
   render(<App />);
+  // The items load from the (mock) gateway before the room opens.
+  await screen.findByRole('navigation', { name: 'Salles' });
   await settleMotion();
 }
 
@@ -60,8 +62,8 @@ describe('GalleryPage', () => {
     expect(screen.getByText('Œuvre 04 / 04')).toBeTruthy();
   });
 
-  it('opens the notice from the wall label with the demo mention and a verification status', async () => {
-    await renderGalleryAt('/musee/peinture/01');
+  it('opens the notice with the two human review statuses and a link to the item page', async () => {
+    await renderGalleryAt('/musee/peinture/02');
 
     fireEvent.click(screen.getByRole('button', { name: /Lire la notice/ }));
     await settleMotion();
@@ -70,23 +72,18 @@ describe('GalleryPage', () => {
       .getAllByRole('dialog', { hidden: true })
       .find((element) => element.hasAttribute('open'));
     expect(openDialog).toBeTruthy();
-    expect(screen.getByRole('note').textContent).toContain(
-      'Œuvre de démonstration',
-    );
-    expect(screen.getByText('Informations non relues')).toBeTruthy();
-  });
-
-  it('shows the uncertain status for a work whose attribution is unverified', async () => {
-    await renderGalleryAt('/musee/peinture/04');
-
-    fireEvent.click(screen.getByRole('button', { name: /Lire la notice/ }));
-    await settleMotion();
-
-    expect(screen.getByText('Informations incertaines')).toBeTruthy();
+    const review = screen.getByRole('region', { name: 'Relecture humaine' });
+    expect(review.textContent).toContain('Objet');
+    expect(review.textContent).toContain('Vérifié par un relecteur');
+    expect(review.textContent).toContain('Description');
+    expect(review.textContent).toContain('Incertain après relecture');
+    expect(
+      screen.getByRole('link', { name: /fiche complète/ }).getAttribute('href'),
+    ).toMatch(/^\/oeuvre\//);
   });
 
   it('shows "Salle en préparation" and disables artwork controls in an empty room', async () => {
-    await renderGalleryAt('/musee/sculpture');
+    await renderGalleryAt('/musee/musique');
 
     expect(screen.getByRole('status').textContent).toContain(
       'Salle en préparation',

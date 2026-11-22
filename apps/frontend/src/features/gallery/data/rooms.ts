@@ -1,14 +1,13 @@
+import type { ClaimReview, ClaimStatuses, ContentId } from '../../../lib/api';
 import type { AmbienceTrack } from '../../../lib/audio/ambience';
-import { artworkImages, audioTracks } from '../../../lib/media/media';
+import { audioTracks } from '../../../lib/media/media';
 import type { ImageSource } from '../../../lib/media/media';
 
 /*
- * Gallery content. This single module stands in for the future Content API
- * through the gateway (FE-03). The shape is a provisional frontend view model
- * to align with papangoo's Content contract before integration.
- *
- * The works below are real, public-domain or CC0 artworks found on Wikimedia
- * Commons and the Smithsonian Open Access. Sources: apps/frontend/media-sources.md.
+ * Gallery structure. The rooms (titles, wall texts, ambience) are editorial
+ * and stay here; their artworks come from the published items of the Content
+ * API through the gateway, mapped onto rooms by `buildRooms` in collection.ts.
+ * In mock mode the items are the fixtures of lib/api/fixtures.ts.
  */
 
 export type RoomSlug = 'peinture' | 'sculpture' | 'savoir-faire' | 'musique';
@@ -16,28 +15,26 @@ export type RoomSlug = 'peinture' | 'sculpture' | 'savoir-faire' | 'musique';
 /** Medium of the room, which selects the exhibit slot of the template. */
 export type RoomMedium = 'painting' | 'sculpture' | 'craft' | 'music';
 
-/** Per-claim review status required by the MVP. */
-export type VerificationStatus = 'verified' | 'unreviewed' | 'uncertain';
-
 export interface Artwork {
+  id: ContentId;
   /** Two-digit position in the room, also used in the URL: /musee/peinture/01. */
   number: string;
   title: string;
   artist: string;
+  /** Period, as given by the contributor. */
   year: string;
   technique: string;
-  dimensions: string;
-  region: string;
-  provenance: string;
+  /** Label and value pairs of the notice, only the known ones. */
+  details: readonly (readonly [string, string])[];
   story: readonly string[];
   rights: string;
   image: ImageSource;
   alt: string;
   /** CSS object-position used when the frame opening crops the image. */
   focalPoint?: string | undefined;
-  /** Demo items illustrate the visit and are not part of the collection. */
-  isDemo: boolean;
-  verification: VerificationStatus;
+  /** The two human review statuses, item and description. */
+  claims: ClaimStatuses;
+  reviews: readonly ClaimReview[];
 }
 
 export interface RoomAmbience {
@@ -63,6 +60,7 @@ export interface Room {
   artworks: readonly Artwork[];
 }
 
+/** The rooms without their artworks: `buildRooms` fills them from the API. */
 export const rooms: readonly Room[] = [
   {
     slug: 'peinture',
@@ -81,92 +79,7 @@ export const rooms: readonly Room[] = [
       usesRedRoomScene: true,
       track: audioTracks.valiha,
     },
-    artworks: [
-      {
-        number: '01',
-        title: 'Femme malgache',
-        artist: 'Antonio Zeno Shindler',
-        year: 'vers 1893',
-        technique: 'Huile sur toile',
-        dimensions: '106,8 × 71,1 cm',
-        region: 'Madagascar, lieu non précisé',
-        provenance:
-          'Smithsonian American Art Museum, Washington, n° d’inventaire 1985.66.165,709.',
-        story: [
-          'Une femme debout, drapée dans un lamba rayé, devant des maisons. Le titre d’origine est « Malagasy Woman ».',
-          'Antonio Zeno Shindler (1813–1899) a peint des portraits de peuples du monde pour la Smithsonian Institution.',
-        ],
-        rights:
-          'Domaine public : l’auteur est mort en 1899. Image diffusée par le Smithsonian Open Access sous licence CC0.',
-        image: artworkImages.malagasyWoman,
-        alt: 'Peinture d’une femme malgache debout, drapée dans un lamba rayé, devant des maisons.',
-        isDemo: true,
-        verification: 'unreviewed',
-      },
-      {
-        number: '02',
-        title: 'Antongona',
-        artist: 'Anonyme, monogramme « W.J. »',
-        year: '1875',
-        technique: 'Encre, aquarelle et gouache sur papier',
-        dimensions: '23,5 × 34,3 cm',
-        region: 'Imerina, Hautes Terres',
-        provenance:
-          'Collection privée. Vendu par Abbott and Holder, Londres, en 2020. Inscription au dos : « Edward Birchall Esq, Leeds ».',
-        story: [
-          'Une colline de granit de l’Imerina, ses maisons et ses terrasses, peintes en couleurs en 1875.',
-          'Antongona est l’un des anciens sites fortifiés des collines qui entourent Antananarivo.',
-        ],
-        rights:
-          'Domaine public : œuvre de 1875. Reproduction photographique d’une œuvre en deux dimensions, via Wikimedia Commons.',
-        image: artworkImages.antongona,
-        alt: 'Aquarelle d’une colline rocheuse de l’Imerina avec des maisons, de la terre rouge et des terrasses.',
-        focalPoint: '50% 45%',
-        isDemo: true,
-        verification: 'unreviewed',
-      },
-      {
-        number: '03',
-        title: 'Pont d’Ambaniala',
-        artist: 'William Ellis',
-        year: '1838',
-        technique: 'Lithographie',
-        dimensions: 'Non renseignées',
-        region: 'Imerina, Hautes Terres',
-        provenance:
-          'Planche de « History of Madagascar », volume 2, Londres, 1838.',
-        story: [
-          'Une chaussée traverse les rizières, avec des zébus et les collines à l’horizon.',
-          'William Ellis (1794–1872), missionnaire et auteur, a publié cette vue dans son histoire de Madagascar.',
-        ],
-        rights:
-          'Domaine public : l’auteur est mort en 1872. Reproduction via Wikimedia Commons.',
-        image: artworkImages.bridgeAtAmbaniala,
-        alt: 'Lithographie d’une chaussée traversant des rizières, avec des zébus et des collines.',
-        isDemo: true,
-        verification: 'unreviewed',
-      },
-      {
-        number: '04',
-        title: 'Scène de divination par le sikidy, Tananarive',
-        artist: 'Henri Ratovo',
-        year: '1912',
-        technique: 'Peinture, technique non confirmée',
-        dimensions: 'Non renseignées',
-        region: 'Antananarivo, Hautes Terres',
-        provenance:
-          'Reproduction issue d’un catalogue de vente (MutualArt). Détenteur actuel non confirmé.',
-        story: [
-          'Un intérieur aux murs de terre rouge, où des personnes en lamba assistent à une séance de sikidy, la divination par les graines.',
-        ],
-        rights:
-          'Domaine public à Madagascar (loi n° 94-036). La date de décès de l’auteur, 1929 selon des sources non confirmées, reste à vérifier.',
-        image: artworkImages.sikidy,
-        alt: 'Peinture d’un intérieur aux murs rouges où des personnes en lamba entourent un devin.',
-        isDemo: true,
-        verification: 'uncertain',
-      },
-    ],
+    artworks: [],
   },
   {
     slug: 'sculpture',
