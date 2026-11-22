@@ -39,7 +39,10 @@ function ReviewItem({ id }: { id: string }) {
     );
   }
   if (state.status === 'error') {
-    if (state.error instanceof ApiError && (state.error.status === 404 || state.error.status === 400)) {
+    if (
+      state.error instanceof ApiError &&
+      (state.error.status === 404 || state.error.status === 400)
+    ) {
       return <p className={forms.status}>Ce dépôt est introuvable.</p>;
     }
     return <ErrorNotice error={state.error} onRetry={reload} />;
@@ -55,10 +58,19 @@ function ReviewItem({ id }: { id: string }) {
         <header className={forms.form}>
           <h1 className={forms.title}>{item.title}</h1>
           <div className={forms.badges}>
-            <StatusBadge label="Publication">{PUBLICATION_LABEL[item.publicationStatus]}</StatusBadge>
-            <StatusBadge label="Dépôt">{SUBMISSION_LABEL[item.submissionStatus]}</StatusBadge>
-            <StatusBadge label="Droits" tone={item.rights.confirmed ? 'positive' : 'negative'}>
-              {item.rights.confirmed ? 'confirmés par le contributeur' : 'non confirmés'}
+            <StatusBadge label="Publication">
+              {PUBLICATION_LABEL[item.publicationStatus]}
+            </StatusBadge>
+            <StatusBadge label="Dépôt">
+              {SUBMISSION_LABEL[item.submissionStatus]}
+            </StatusBadge>
+            <StatusBadge
+              label="Droits"
+              tone={item.rights.confirmed ? 'positive' : 'negative'}
+            >
+              {item.rights.confirmed
+                ? 'confirmés par le contributeur'
+                : 'non confirmés'}
             </StatusBadge>
           </div>
         </header>
@@ -76,11 +88,15 @@ function ReviewItem({ id }: { id: string }) {
           <section aria-label="Signaux indicatifs">
             <h2 className={forms.legend}>Signaux indicatifs</h2>
             <p className={forms.smallPrint}>
-              Indices automatiques : ils aident la relecture mais ne fixent jamais un statut.
+              Indices automatiques : ils aident la relecture mais ne fixent
+              jamais un statut.
             </p>
             <ul className={forms.list}>
               {signals.map((signal) => (
-                <li key={`${signal.kind}-${signal.createdAt}`} className={forms.smallPrint}>
+                <li
+                  key={`${signal.kind}-${signal.createdAt}`}
+                  className={forms.smallPrint}
+                >
                   {SIGNAL_LABEL[signal.kind]} · score {signal.score.toFixed(2)}
                   {signal.note !== null && <> · {signal.note}</>}
                 </li>
@@ -103,12 +119,19 @@ function ReviewItem({ id }: { id: string }) {
         ) : (
           <>
             <ClaimReviewForm item={item} target="item" onReviewed={setData} />
-            <ClaimReviewForm item={item} target="description" onReviewed={setData} />
+            <ClaimReviewForm
+              item={item}
+              target="description"
+              onReviewed={setData}
+            />
             <DecisionForm item={item} onDecided={setData} />
           </>
         )}
         <div className={forms.actions}>
-          <Link to={`/oeuvre/${encodeURIComponent(item.id)}`} className={forms.textLink}>
+          <Link
+            to={`/oeuvre/${encodeURIComponent(item.id)}`}
+            className={forms.textLink}
+          >
             Voir la fiche de l’œuvre
           </Link>
           <Link to="/revue" className={forms.textLink}>

@@ -1,5 +1,11 @@
 import { ApiError, NETWORK_ERROR_CODE, type ApiClient } from './client';
-import type { ApiErrorBody, ItemListQuery, UploadOptions } from './contract';
+import type {
+  ApiErrorBody,
+  ItemListQuery,
+  MintRecord,
+  UploadOptions,
+} from './contract';
+import { toModel3d } from './model3d-adapter';
 
 type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -145,11 +151,7 @@ export function createHttpClient(
         form.append('caption', options.caption.trim());
       }
       form.append('file', file);
-      const result = await upload(
-        `${baseUrl}${item(id)}/media`,
-        form,
-        options,
-      );
+      const result = await upload(`${baseUrl}${item(id)}/media`, form, options);
       if (result.status < 200 || result.status >= 300) {
         throw errorFrom(result.status, result.body);
       }
@@ -157,9 +159,21 @@ export function createHttpClient(
     },
     reviewItem: (id, review) => postJson(`${item(id)}/review`, review),
     decideItem: (id, decision) => postJson(`${item(id)}/decision`, decision),
-    mintItem: (id, idempotencyKey) =>
-      postJson(`${item(id)}/mint`, {}, { 'Idempotency-Key': idempotencyKey }),
+    // 202 creates a pending mint, 200 replays the mint of a known key.
+    mintItem: async (id, idempotencyKey) => {
+      const response = await send(`${item(id)}/mint`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: '{}',
+      });
+      const mint = (await response.json()) as MintRecord;
+      return { created: response.status === 202, mint };
+    },
     getProvenance: (id) => request(`${item(id)}/provenance`),
-    getModel3d: (id) => request(`${item(id)}/model3d`),
+    getModel3d: async (id) =>
+      toModel3d(id, await request<unknown>(`${item(id)}/model3d`)),
   };
 }

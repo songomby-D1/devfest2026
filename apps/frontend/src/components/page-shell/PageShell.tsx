@@ -19,7 +19,11 @@ export interface PageShellProps {
  * navigation, the account menu and a scrolling column. The museum screens keep
  * their own full-viewport stage.
  */
-export function PageShell({ children, current, width = 'wide' }: PageShellProps) {
+export function PageShell({
+  children,
+  current,
+  width = 'wide',
+}: PageShellProps) {
   const session = useSession();
   return (
     <div className={styles.page}>
@@ -47,7 +51,9 @@ export function PageShell({ children, current, width = 'wide' }: PageShellProps)
         </nav>
         <AccountMenu className={styles.account} />
       </header>
-      <main className={width === 'narrow' ? styles.narrow : styles.wide}>{children}</main>
+      <main className={width === 'narrow' ? styles.narrow : styles.wide}>
+        {children}
+      </main>
     </div>
   );
 }

@@ -20,7 +20,13 @@ export interface FormFieldProps {
 }
 
 /** A labelled form control with its hint and its error, linked for assistive technology. */
-export function FormField({ label, required = false, hint, error, children }: FormFieldProps) {
+export function FormField({
+  label,
+  required = false,
+  hint,
+  error,
+  children,
+}: FormFieldProps) {
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;

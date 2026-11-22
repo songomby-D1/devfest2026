@@ -20,8 +20,14 @@ describe('matchRoute', () => {
   });
 
   it('maps the item pages with their decoded id', () => {
-    expect(matchRoute('/oeuvre/abc-123')).toEqual({ kind: 'item', id: 'abc-123' });
-    expect(matchRoute('/contribuer/abc')).toEqual({ kind: 'submission', id: 'abc' });
+    expect(matchRoute('/oeuvre/abc-123')).toEqual({
+      kind: 'item',
+      id: 'abc-123',
+    });
+    expect(matchRoute('/contribuer/abc')).toEqual({
+      kind: 'submission',
+      id: 'abc',
+    });
     expect(matchRoute('/revue/abc')).toEqual({ kind: 'review', id: 'abc' });
     expect(matchRoute('/oeuvre/a%20b')).toEqual({ kind: 'item', id: 'a b' });
     expect(matchRoute('/oeuvre/%E0%A4%A')).toEqual({ kind: 'not-found' });
@@ -30,7 +36,10 @@ describe('matchRoute', () => {
   });
 
   it('redirects /musee to the first room', () => {
-    expect(matchRoute('/musee')).toEqual({ kind: 'redirect', to: '/musee/peinture' });
+    expect(matchRoute('/musee')).toEqual({
+      kind: 'redirect',
+      to: '/musee/peinture',
+    });
   });
 
   it('resolves a room and keeps the artwork number for the API data', () => {
@@ -46,7 +55,9 @@ describe('matchRoute', () => {
 
   it('rejects unknown rooms, unknown pages and extra segments', () => {
     expect(matchRoute('/musee/cuisine')).toEqual({ kind: 'not-found' });
-    expect(matchRoute('/musee/peinture/01/extra')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/musee/peinture/01/extra')).toEqual({
+      kind: 'not-found',
+    });
     expect(matchRoute('/toString')).toEqual({ kind: 'not-found' });
   });
 });

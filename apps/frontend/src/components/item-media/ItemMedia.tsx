@@ -54,7 +54,11 @@ function MediaFigure({ media, title }: { media: MediaRef; title: string }) {
 export function ItemMedia({ media, title }: ItemMediaProps) {
   if (media.length === 0) {
     return (
-      <div className={styles.empty} role="img" aria-label={`${title} : aucun média`}>
+      <div
+        className={styles.empty}
+        role="img"
+        aria-label={`${title} : aucun média`}
+      >
         Aucun média pour cette œuvre.
       </div>
     );

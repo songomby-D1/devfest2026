@@ -28,9 +28,15 @@ export function SubmissionRow({ item, to }: { item: ItemSummary; to: string }) {
         {item.creatorName !== null && <> · {item.creatorName}</>}
       </p>
       <div className={forms.badges}>
-        <StatusBadge label="Dépôt">{SUBMISSION_LABEL[item.submissionStatus]}</StatusBadge>
-        <StatusBadge label="Publication">{PUBLICATION_LABEL[item.publicationStatus]}</StatusBadge>
-        <StatusBadge label="Relecture de l’objet">{CLAIM_STATUS_LABEL[item.claims.item]}</StatusBadge>
+        <StatusBadge label="Dépôt">
+          {SUBMISSION_LABEL[item.submissionStatus]}
+        </StatusBadge>
+        <StatusBadge label="Publication">
+          {PUBLICATION_LABEL[item.publicationStatus]}
+        </StatusBadge>
+        <StatusBadge label="Relecture de l’objet">
+          {CLAIM_STATUS_LABEL[item.claims.item]}
+        </StatusBadge>
         <StatusBadge label="Relecture de la description">
           {CLAIM_STATUS_LABEL[item.claims.description]}
         </StatusBadge>
@@ -57,7 +63,10 @@ export function ScopedItemList({
       }),
     scope,
   );
-  const [more, setMore] = useState<{ items: ItemSummary[]; nextCursor: string | null } | null>(null);
+  const [more, setMore] = useState<{
+    items: ItemSummary[];
+    nextCursor: string | null;
+  } | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState<unknown>(null);
 
@@ -96,7 +105,10 @@ export function ScopedItemList({
               api
                 .listItems({ scope, cursor: nextCursor })
                 .then((page) => {
-                  setMore({ items: [...(more?.items ?? []), ...page.items], nextCursor: page.nextCursor });
+                  setMore({
+                    items: [...(more?.items ?? []), ...page.items],
+                    nextCursor: page.nextCursor,
+                  });
                 })
                 .catch((error: unknown) => {
                   setMoreError(error);
@@ -113,4 +125,3 @@ export function ScopedItemList({
     </>
   );
 }
-

@@ -12,12 +12,12 @@ export function useImagePreload(images: readonly ImageSource[]): void {
       loaders = images
         .filter((image) => image.src !== '')
         .map((image) => {
-        const loader = new Image();
-        loader.srcset = image.srcSet;
-        loader.sizes = '(max-width: 767px) 40vw, 18vw';
-        loader.src = image.src;
-        return loader;
-      });
+          const loader = new Image();
+          loader.srcset = image.srcSet;
+          loader.sizes = '(max-width: 767px) 40vw, 18vw';
+          loader.src = image.src;
+          return loader;
+        });
     }, PRELOAD_DELAY_MS);
     return () => {
       window.clearTimeout(timer);

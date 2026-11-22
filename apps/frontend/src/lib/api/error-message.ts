@@ -6,7 +6,8 @@ import { ApiError, NETWORK_ERROR_CODE } from './client';
  * the page: only `message` and the `requestId` for support.
  */
 const MESSAGES: Record<string, string> = {
-  [NETWORK_ERROR_CODE]: 'Connexion au serveur impossible. Vérifiez votre réseau.',
+  [NETWORK_ERROR_CODE]:
+    'Connexion au serveur impossible. Vérifiez votre réseau.',
   UNAUTHENTICATED: 'Votre session a expiré. Connectez-vous à nouveau.',
   SESSION_INVALID: 'Votre session a expiré. Connectez-vous à nouveau.',
   INVALID_CREDENTIALS: 'Adresse e-mail ou mot de passe incorrect.',

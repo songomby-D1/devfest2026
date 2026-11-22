@@ -15,7 +15,11 @@ export interface DecisionFormProps {
   onDecided: (item: ItemDetail) => void;
 }
 
-const DECISIONS: readonly { value: DecisionKind; label: string; hint: string }[] = [
+const DECISIONS: readonly {
+  value: DecisionKind;
+  label: string;
+  hint: string;
+}[] = [
   {
     value: 'publish',
     label: 'Publier',
@@ -72,7 +76,12 @@ export function DecisionForm({ item, onDecided }: DecisionFormProps) {
   };
 
   return (
-    <form className={forms.fieldset} onSubmit={submit} noValidate aria-labelledby={`${id}-title`}>
+    <form
+      className={forms.fieldset}
+      onSubmit={submit}
+      noValidate
+      aria-labelledby={`${id}-title`}
+    >
       <h3 id={`${id}-title`} className={forms.legend}>
         Décision sur le dépôt
       </h3>

@@ -11,7 +11,12 @@ export interface ErrorNoticeProps {
 }
 
 /** A public error: its safe message, a retry action and the request ID for support. */
-export function ErrorNotice({ error, onRetry, title, className }: ErrorNoticeProps) {
+export function ErrorNotice({
+  error,
+  onRetry,
+  title,
+  className,
+}: ErrorNoticeProps) {
   const { message, requestId } = describeError(error);
   return (
     <div className={cx(styles.notice, className)} role="alert">

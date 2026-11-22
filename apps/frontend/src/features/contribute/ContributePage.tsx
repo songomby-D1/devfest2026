@@ -28,12 +28,18 @@ function SubmissionForm() {
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const text = (field: TextField, label: string, options: { required?: boolean; multiline?: boolean; hint?: string } = {}) => (
+  const text = (
+    field: TextField,
+    label: string,
+    options: { required?: boolean; multiline?: boolean; hint?: string } = {},
+  ) => (
     <FormField
       label={label}
       required={options.required}
       error={errors[field]}
-      hint={options.hint ?? `${String(ITEM_LIMITS[field])} caractères au maximum.`}
+      hint={
+        options.hint ?? `${String(ITEM_LIMITS[field])} caractères au maximum.`
+      }
     >
       {(control) =>
         options.multiline === true ? (
@@ -43,7 +49,10 @@ function SubmissionForm() {
             value={values[field]}
             maxLength={ITEM_LIMITS[field]}
             onChange={(event) => {
-              setValues((previous) => ({ ...previous, [field]: event.target.value }));
+              setValues((previous) => ({
+                ...previous,
+                [field]: event.target.value,
+              }));
             }}
           />
         ) : (
@@ -54,7 +63,10 @@ function SubmissionForm() {
             value={values[field]}
             maxLength={ITEM_LIMITS[field]}
             onChange={(event) => {
-              setValues((previous) => ({ ...previous, [field]: event.target.value }));
+              setValues((previous) => ({
+                ...previous,
+                [field]: event.target.value,
+              }));
             }}
           />
         )
@@ -69,7 +81,9 @@ function SubmissionForm() {
     if (Object.keys(next).length > 0) {
       // Focus the first invalid field so its error is read out.
       requestAnimationFrame(() => {
-        formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+        formRef.current
+          ?.querySelector<HTMLElement>('[aria-invalid="true"]')
+          ?.focus();
       });
       return;
     }
@@ -92,7 +106,9 @@ function SubmissionForm() {
 
   return (
     <form ref={formRef} className={forms.form} onSubmit={submit} noValidate>
-      {failure !== null && <ErrorNotice error={failure} title="Le dépôt n’a pas été enregistré." />}
+      {failure !== null && (
+        <ErrorNotice error={failure} title="Le dépôt n’a pas été enregistré." />
+      )}
       <fieldset className={forms.fieldset}>
         <legend className={forms.legend}>L’œuvre</legend>
         {text('title', 'Titre', { required: true })}
@@ -149,15 +165,24 @@ function SubmissionForm() {
               type="checkbox"
               name="rightsConfirmed"
               checked={values.rightsConfirmed}
-              aria-invalid={errors.rightsConfirmed === undefined ? undefined : true}
-              aria-describedby={errors.rightsConfirmed === undefined ? undefined : 'rights-error'}
+              aria-invalid={
+                errors.rightsConfirmed === undefined ? undefined : true
+              }
+              aria-describedby={
+                errors.rightsConfirmed === undefined
+                  ? undefined
+                  : 'rights-error'
+              }
               onChange={(event) => {
-                setValues((previous) => ({ ...previous, rightsConfirmed: event.target.checked }));
+                setValues((previous) => ({
+                  ...previous,
+                  rightsConfirmed: event.target.checked,
+                }));
               }}
             />
             <span>
-              Je confirme détenir le droit de publier cette œuvre, sa description
-              et les médias que j’ajouterai.
+              Je confirme détenir le droit de publier cette œuvre, sa
+              description et les médias que j’ajouterai.
             </span>
           </label>
           {errors.rightsConfirmed !== undefined && (
@@ -173,7 +198,8 @@ function SubmissionForm() {
           {submitting ? 'Enregistrement…' : 'Enregistrer et ajouter les médias'}
         </button>
         <span className={forms.smallPrint}>
-          L’œuvre reste un brouillon invisible du public jusqu’à sa relecture et sa publication.
+          L’œuvre reste un brouillon invisible du public jusqu’à sa relecture et
+          sa publication.
         </span>
       </div>
     </form>
@@ -186,13 +212,16 @@ export function ContributePage() {
     <PageShell current="contribute" width="narrow">
       <h1 className={forms.title}>Déposer une œuvre</h1>
       <p className={forms.lead}>
-        Décrivez l’œuvre, puis ajoutez ses photos ou vidéos. Un relecteur vérifie
-        ensuite séparément l’objet et sa description avant toute publication.{' '}
+        Décrivez l’œuvre, puis ajoutez ses photos ou vidéos. Un relecteur
+        vérifie ensuite séparément l’objet et sa description avant toute
+        publication.{' '}
         <Link to="/mes-depots" className={forms.textLink}>
           Voir mes dépôts
         </Link>
       </p>
-      <RequireUser action="déposer une œuvre">{() => <SubmissionForm />}</RequireUser>
+      <RequireUser action="déposer une œuvre">
+        {() => <SubmissionForm />}
+      </RequireUser>
     </PageShell>
   );
 }

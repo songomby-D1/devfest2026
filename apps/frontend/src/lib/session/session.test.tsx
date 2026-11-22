@@ -17,7 +17,8 @@ function Probe() {
   return (
     <p>
       {session.status}
-      {session.status === 'signed-in' && ` ${session.me.email} ${session.me.permissions.join(',')}`}
+      {session.status === 'signed-in' &&
+        ` ${session.me.email} ${session.me.permissions.join(',')}`}
     </p>
   );
 }
@@ -31,7 +32,9 @@ describe('session', () => {
   it('reads the signed-in account and its reviewer permission from /auth/me', async () => {
     setApiClient(createMockClient({ signedInAs: 'reviewer' }));
     render(<Probe />);
-    expect(await screen.findByText('signed-in relecteur@lova.test reviewer')).toBeTruthy();
+    expect(
+      await screen.findByText('signed-in relecteur@lova.test reviewer'),
+    ).toBeTruthy();
   });
 
   it('signs in, then signs out', async () => {
@@ -39,7 +42,10 @@ describe('session', () => {
     await screen.findByText('guest');
 
     await act(async () => {
-      await signIn({ email: 'contributrice@lova.test', password: 'a-long-enough-phrase' });
+      await signIn({
+        email: 'contributrice@lova.test',
+        password: 'a-long-enough-phrase',
+      });
     });
     expect(screen.getByText(/signed-in contributrice@lova.test/)).toBeTruthy();
 
@@ -65,7 +71,11 @@ describe('session', () => {
 
     act(() => {
       handleAuthError(
-        new ApiError(401, { code: 'UNAUTHENTICATED', message: 'x', requestId: 'r' }),
+        new ApiError(401, {
+          code: 'UNAUTHENTICATED',
+          message: 'x',
+          requestId: 'r',
+        }),
       );
     });
     expect(screen.getByText('guest')).toBeTruthy();

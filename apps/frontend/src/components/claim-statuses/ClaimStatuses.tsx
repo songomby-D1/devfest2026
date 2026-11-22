@@ -1,4 +1,8 @@
-import type { ClaimReview, ClaimStatus, ClaimStatuses as Claims } from '../../lib/api';
+import type {
+  ClaimReview,
+  ClaimStatus,
+  ClaimStatuses as Claims,
+} from '../../lib/api';
 import {
   CLAIM_STATUS_LABEL,
   CLAIM_TARGET_HINT,
@@ -35,7 +39,10 @@ export function ClaimStatuses({
 }: ClaimStatusesProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
-    <section className={cx(styles.block, className)} aria-label="Relecture humaine">
+    <section
+      className={cx(styles.block, className)}
+      aria-label="Relecture humaine"
+    >
       <Heading className={styles.heading}>Relecture humaine</Heading>
       <p className={styles.intro}>
         Statuts attribués par des relecteurs de LOVA, séparément pour l’objet et
@@ -53,9 +60,14 @@ export function ClaimStatuses({
               <span className={styles.text}>
                 <span className={styles.target}>
                   {CLAIM_TARGET_LABEL[target]}
-                  <span className={styles.hint}> ({CLAIM_TARGET_HINT[target]})</span>
+                  <span className={styles.hint}>
+                    {' '}
+                    ({CLAIM_TARGET_HINT[target]})
+                  </span>
                 </span>
-                <span className={styles.status}>{CLAIM_STATUS_LABEL[status]}</span>
+                <span className={styles.status}>
+                  {CLAIM_STATUS_LABEL[status]}
+                </span>
                 {review !== undefined && status !== 'unreviewed' && (
                   <span className={styles.rationale}>
                     Note du relecteur : {review.rationale}

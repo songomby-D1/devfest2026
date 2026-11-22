@@ -9,13 +9,17 @@ import { navigate } from '../../lib/router/router';
 import { safeReturnPath, signIn } from '../../lib/session/session';
 
 function returnPath(): string {
-  return safeReturnPath(new URLSearchParams(window.location.search).get('retour'));
+  return safeReturnPath(
+    new URLSearchParams(window.location.search).get('retour'),
+  );
 }
 
 export function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
   const [failure, setFailure] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const target = returnPath();

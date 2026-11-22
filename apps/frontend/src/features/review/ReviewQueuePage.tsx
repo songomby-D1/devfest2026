@@ -17,7 +17,11 @@ export function ReviewQueuePage() {
           <ScopedItemList
             scope="review"
             linkOf={(item) => `/revue/${encodeURIComponent(item.id)}`}
-            empty={<p className={forms.status}>Aucun dépôt en attente de relecture.</p>}
+            empty={
+              <p className={forms.status}>
+                Aucun dépôt en attente de relecture.
+              </p>
+            }
           />
         )}
       </RequireUser>

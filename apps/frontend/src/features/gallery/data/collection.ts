@@ -31,14 +31,17 @@ export function imageOf(item: ItemDetail): { image: ImageSource; alt: string } {
   const creator = item.creator.name ?? item.creatorName;
   return {
     image: { src, srcSet: '', ...DEFAULT_SIZE },
-    alt: media?.caption ?? (creator === null ? item.title : `${item.title}, ${creator}`),
+    alt:
+      media?.caption ??
+      (creator === null ? item.title : `${item.title}, ${creator}`),
   };
 }
 
 /** Maps a published item of the Content API onto the gallery's artwork view. */
 export function toArtwork(item: ItemDetail, index: number): Artwork {
   const { image, alt } = imageOf(item);
-  const artist = item.creator.name ?? item.creatorName ?? 'Auteur non renseigné';
+  const artist =
+    item.creator.name ?? item.creatorName ?? 'Auteur non renseigné';
   const technique = item.creator.technique ?? KIND_LABEL[item.kind];
   const details: [string, string | null][] = [
     ['Auteur', artist],
@@ -54,7 +57,9 @@ export function toArtwork(item: ItemDetail, index: number): Artwork {
     artist,
     year: item.period ?? '',
     technique,
-    details: details.filter((entry): entry is [string, string] => entry[1] !== null),
+    details: details.filter(
+      (entry): entry is [string, string] => entry[1] !== null,
+    ),
     story: item.description
       .split(/\n\s*\n/)
       .map((paragraph) => paragraph.trim())

@@ -22,7 +22,12 @@ export function AccountMenu({ theme = 'light', className }: AccountMenuProps) {
   const [busy, setBusy] = useState(false);
 
   if (session.status === 'unknown' || session.status === 'loading') {
-    return <span className={cx(styles.menu, styles[theme], className)} aria-hidden="true" />;
+    return (
+      <span
+        className={cx(styles.menu, styles[theme], className)}
+        aria-hidden="true"
+      />
+    );
   }
 
   if (session.status === 'guest') {

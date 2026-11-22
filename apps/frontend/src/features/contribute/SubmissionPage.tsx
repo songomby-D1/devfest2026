@@ -32,7 +32,10 @@ function Submission({ id }: { id: string }) {
     );
   }
   if (state.status === 'error') {
-    if (state.error instanceof ApiError && (state.error.status === 404 || state.error.status === 400)) {
+    if (
+      state.error instanceof ApiError &&
+      (state.error.status === 404 || state.error.status === 400)
+    ) {
       return <p className={forms.status}>Ce dépôt est introuvable.</p>;
     }
     return <ErrorNotice error={state.error} onRetry={reload} />;
@@ -43,28 +46,38 @@ function Submission({ id }: { id: string }) {
     return (
       <p className={forms.status} role="note">
         Seul le contributeur de cette œuvre peut gérer ses médias.{' '}
-        <Link to={`/oeuvre/${encodeURIComponent(item.id)}`} className={forms.textLink}>
+        <Link
+          to={`/oeuvre/${encodeURIComponent(item.id)}`}
+          className={forms.textLink}
+        >
           Voir la fiche
         </Link>
       </p>
     );
   }
-  const editable = item.publicationStatus !== 'published' && item.submissionStatus !== 'rejected';
+  const editable =
+    item.publicationStatus !== 'published' &&
+    item.submissionStatus !== 'rejected';
 
   return (
     <>
       <header className={forms.form}>
         <h1 className={forms.title}>{item.title}</h1>
         <div className={forms.badges}>
-          <StatusBadge label="Publication">{PUBLICATION_LABEL[item.publicationStatus]}</StatusBadge>
-          <StatusBadge label="Dépôt">{SUBMISSION_LABEL[item.submissionStatus]}</StatusBadge>
+          <StatusBadge label="Publication">
+            {PUBLICATION_LABEL[item.publicationStatus]}
+          </StatusBadge>
+          <StatusBadge label="Dépôt">
+            {SUBMISSION_LABEL[item.submissionStatus]}
+          </StatusBadge>
         </div>
         <p className={forms.smallPrint}>
           Identifiant de l’œuvre : <code>{item.id}</code>
         </p>
         {item.media.length === 0 && (
           <p className={forms.success} role="status">
-            Brouillon enregistré. Ajoutez au moins une photo ou une vidéo pour la relecture.
+            Brouillon enregistré. Ajoutez au moins une photo ou une vidéo pour
+            la relecture.
           </p>
         )}
       </header>
@@ -77,7 +90,9 @@ function Submission({ id }: { id: string }) {
             setData({
               ...item,
               media: [...item.media, media],
-              thumbnailUrl: item.thumbnailUrl ?? (media.kind === 'image' ? media.url : null),
+              thumbnailUrl:
+                item.thumbnailUrl ??
+                (media.kind === 'image' ? media.url : null),
             });
           }}
         />
@@ -97,7 +112,10 @@ function Submission({ id }: { id: string }) {
       <ItemFacts item={item} />
 
       <div className={forms.actions}>
-        <Link to={`/oeuvre/${encodeURIComponent(item.id)}`} className={forms.secondary}>
+        <Link
+          to={`/oeuvre/${encodeURIComponent(item.id)}`}
+          className={forms.secondary}
+        >
           Voir la fiche de l’œuvre
         </Link>
         <Link to="/mes-depots" className={forms.textLink}>
@@ -112,7 +130,9 @@ function Submission({ id }: { id: string }) {
 export function SubmissionPage({ id }: { id: string }) {
   return (
     <PageShell current="mine" width="narrow">
-      <RequireUser action="gérer ce dépôt">{() => <Submission id={id} />}</RequireUser>
+      <RequireUser action="gérer ce dépôt">
+        {() => <Submission id={id} />}
+      </RequireUser>
     </PageShell>
   );
 }

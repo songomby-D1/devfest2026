@@ -43,7 +43,9 @@ export function buildHomeExhibits(rooms: readonly Room[]): HomeExhibit[] {
   const drafts: HomeExhibitDraft[] = [];
 
   if (painting !== undefined) {
-    const framed = painting.artworks.filter((artwork) => artwork.image.src !== '');
+    const framed = painting.artworks.filter(
+      (artwork) => artwork.image.src !== '',
+    );
     FRAME_SLOTS.forEach((slot, index) => {
       const artwork = framed[index];
       if (artwork === undefined) return;
@@ -51,7 +53,9 @@ export function buildHomeExhibits(rooms: readonly Room[]): HomeExhibit[] {
         ...slot,
         kind: 'frame',
         title: artwork.title,
-        region: [artwork.artist, artwork.year].filter((part) => part !== '').join(', '),
+        region: [artwork.artist, artwork.year]
+          .filter((part) => part !== '')
+          .join(', '),
         image: artwork.image,
         alt: artwork.alt,
         focalPoint: artwork.focalPoint,

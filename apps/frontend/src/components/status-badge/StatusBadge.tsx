@@ -8,7 +8,11 @@ export interface StatusBadgeProps {
 }
 
 /** A labelled status, such as "Publication : Brouillon". Text carries the meaning, not color. */
-export function StatusBadge({ label, children, tone = 'neutral' }: StatusBadgeProps) {
+export function StatusBadge({
+  label,
+  children,
+  tone = 'neutral',
+}: StatusBadgeProps) {
   return (
     <span className={styles.badge} data-tone={tone}>
       <span className={styles.label}>{label} :</span> {children}

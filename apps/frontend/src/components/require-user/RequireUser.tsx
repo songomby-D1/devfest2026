@@ -1,7 +1,12 @@
 import type { ReactNode } from 'react';
 import type { Me } from '../../lib/api';
 import { Link } from '../../lib/router/Link';
-import { currentPath, isReviewer, signInPath, useSession } from '../../lib/session/session';
+import {
+  currentPath,
+  isReviewer,
+  signInPath,
+  useSession,
+} from '../../lib/session/session';
 import forms from '../forms/forms.module.css';
 
 export interface RequireUserProps {
@@ -15,7 +20,11 @@ export interface RequireUserProps {
  * Renders its children for a signed-in account. A guest gets a sign-in path
  * that comes back here, instead of a silent failure.
  */
-export function RequireUser({ action, reviewer = false, children }: RequireUserProps) {
+export function RequireUser({
+  action,
+  reviewer = false,
+  children,
+}: RequireUserProps) {
   const session = useSession();
 
   if (session.status === 'unknown' || session.status === 'loading') {

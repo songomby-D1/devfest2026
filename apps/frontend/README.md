@@ -32,18 +32,18 @@ Optional local setup:
 
 ## What the app shows
 
-| Route                       | Screen                                                                                                                                               |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                         | **Home.** The "salon": two framed paintings on an ivory wall, the headline, a description and two calls to action. Figma node `12:88`.               |
-| `/musee/:room/:nn`          | **Gallery.** One room, one artwork in the spotlight, the wall text, the wall label, the room tabs and the artwork navigation. Figma node `114:3877`. |
-| `/musee` and `/musee/:room` | Redirect to the first artwork of the room. Rooms without artworks render "Salle en préparation".                                                     |
-| `/oeuvre/:id`               | **Item detail.** Media, facts, description, the two human review labels, rights; workflow statuses for the owner and reviewers; slots for FE-04.     |
-| `/connexion`, `/inscription` | Sign-in and registration. `?retour=/path` brings the visitor back after signing in.                                                                 |
-| `/contribuer`               | Submission form (all `CreateItemRequest` fields), signed-in only.                                                                                    |
-| `/contribuer/:id`           | Media upload of a draft, with format and size hints, progress and retry, and its statuses.                                                          |
-| `/mes-depots`               | The contributor's items (`scope=mine`) with submission, publication and claim statuses.                                                             |
-| `/revue`, `/revue/:id`      | Reviewer queue (`scope=review`) and the review screen: item and description claims separately, then publish, return or reject.                      |
-| anything else               | "Page introuvable". A missing item and a draft seen by a guest show the same page.                                                                  |
+| Route                        | Screen                                                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                          | **Home.** The "salon": two framed paintings on an ivory wall, the headline, a description and two calls to action. Figma node `12:88`.               |
+| `/musee/:room/:nn`           | **Gallery.** One room, one artwork in the spotlight, the wall text, the wall label, the room tabs and the artwork navigation. Figma node `114:3877`. |
+| `/musee` and `/musee/:room`  | Redirect to the first artwork of the room. Rooms without artworks render "Salle en préparation".                                                     |
+| `/oeuvre/:id`                | **Item detail.** Media, facts, description, the two human review labels, rights; workflow statuses for the owner and reviewers; slots for FE-04.     |
+| `/connexion`, `/inscription` | Sign-in and registration. `?retour=/path` brings the visitor back after signing in.                                                                  |
+| `/contribuer`                | Submission form (all `CreateItemRequest` fields), signed-in only.                                                                                    |
+| `/contribuer/:id`            | Media upload of a draft, with format and size hints, progress and retry, and its statuses.                                                           |
+| `/mes-depots`                | The contributor's items (`scope=mine`) with submission, publication and claim statuses.                                                              |
+| `/revue`, `/revue/:id`       | Reviewer queue (`scope=review`) and the review screen: item and description claims separately, then publish, return or reject.                       |
+| anything else                | "Page introuvable". A missing item and a draft seen by a guest show the same page.                                                                   |
 
 Rooms are filled from the published items by kind: `painting` and `photograph` hang in `peinture`, `sculpture` in `sculpture`, `textile`, `object` and `other` in `savoir-faire`. `musique` has no item kind yet and stays "en préparation".
 

@@ -28,7 +28,11 @@ type UploadState =
 const { image, video } = MEDIA_UPLOAD_LIMITS;
 
 /** Adds one image or video to a draft, with format and size hints, progress and retry. */
-export function MediaUpload({ itemId, mediaCount, onUploaded }: MediaUploadProps) {
+export function MediaUpload({
+  itemId,
+  mediaCount,
+  onUploaded,
+}: MediaUploadProps) {
   const id = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -82,15 +86,20 @@ export function MediaUpload({ itemId, mediaCount, onUploaded }: MediaUploadProps
   };
 
   return (
-    <form className={forms.form} onSubmit={submit} noValidate aria-labelledby={`${id}-title`}>
+    <form
+      className={forms.form}
+      onSubmit={submit}
+      noValidate
+      aria-labelledby={`${id}-title`}
+    >
       <h2 id={`${id}-title`} className={forms.legend}>
         Ajouter une photo ou une vidéo
       </h2>
       <p id={`${id}-hint`} className={forms.smallPrint}>
         Images JPEG, PNG ou WebP jusqu’à {formatMegabytes(image.maxBytes)} ;
         vidéos MP4 ou WebM jusqu’à {formatMegabytes(video.maxBytes)} ;{' '}
-        {MEDIA_UPLOAD_LIMITS.maxPerItem} fichiers au plus par œuvre ({mediaCount}{' '}
-        déjà ajouté{mediaCount > 1 ? 's' : ''}).
+        {MEDIA_UPLOAD_LIMITS.maxPerItem} fichiers au plus par œuvre (
+        {mediaCount} déjà ajouté{mediaCount > 1 ? 's' : ''}).
       </p>
       {full ? (
         <p className={forms.status}>Le nombre maximal de médias est atteint.</p>
@@ -105,7 +114,11 @@ export function MediaUpload({ itemId, mediaCount, onUploaded }: MediaUploadProps
               id={`${id}-file`}
               type="file"
               accept={ACCEPTED_MEDIA_TYPES.join(',')}
-              aria-describedby={fileError === null ? `${id}-hint` : `${id}-hint ${id}-file-error`}
+              aria-describedby={
+                fileError === null
+                  ? `${id}-hint`
+                  : `${id}-hint ${id}-file-error`
+              }
               aria-invalid={fileError === null ? undefined : true}
               disabled={uploading}
               onChange={(event) => {
@@ -143,7 +156,9 @@ export function MediaUpload({ itemId, mediaCount, onUploaded }: MediaUploadProps
                 value={state.progress}
                 aria-label="Progression de l’envoi"
               />
-              <p className={forms.smallPrint}>Envoi… {Math.round(state.progress * 100)} %</p>
+              <p className={forms.smallPrint}>
+                Envoi… {Math.round(state.progress * 100)} %
+              </p>
             </div>
           )}
           {state.status === 'done' && (
@@ -163,7 +178,9 @@ export function MediaUpload({ itemId, mediaCount, onUploaded }: MediaUploadProps
               className={forms.primary}
               disabled={uploading || file === null || fileError !== null}
             >
-              {state.status === 'failed' ? 'Réessayer l’envoi' : 'Envoyer le fichier'}
+              {state.status === 'failed'
+                ? 'Réessayer l’envoi'
+                : 'Envoyer le fichier'}
             </button>
           </div>
         </>

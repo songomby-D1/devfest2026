@@ -15,6 +15,8 @@ import {
   SUBMISSION_LABEL,
 } from '../../lib/content/labels';
 import { Link } from '../../lib/router/Link';
+import { Model3dPanel } from '../model3d';
+import { NftPanel } from '../nft';
 import { isReviewer, useSession } from '../../lib/session/session';
 import styles from './ItemPage.module.css';
 
@@ -24,7 +26,9 @@ export interface ItemPageProps {
 
 /** A 404, or a 400 for an id that is not a UUID, both read as "not found". */
 export function isNotFound(error: unknown): boolean {
-  return error instanceof ApiError && (error.status === 404 || error.status === 400);
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 400)
+  );
 }
 
 const SIGNAL_LABEL: Record<AdvisorySignal['kind'], string> = {
@@ -45,7 +49,10 @@ function AdvisorySignals({ signals }: { signals: readonly AdvisorySignal[] }) {
       </p>
       <ul className={forms.list}>
         {signals.map((signal) => (
-          <li key={`${signal.kind}-${signal.createdAt}`} className={styles.signal}>
+          <li
+            key={`${signal.kind}-${signal.createdAt}`}
+            className={styles.signal}
+          >
             {SIGNAL_LABEL[signal.kind]} · score {signal.score.toFixed(2)}
             {signal.note !== null && <> · {signal.note}</>}
           </li>
@@ -64,8 +71,14 @@ function ItemContent({ item }: { item: ItemDetail }) {
     <article className={styles.layout}>
       <div className={styles.mediaColumn}>
         <ItemMedia media={item.media} title={item.title} />
-        {/* TODO(#71): FE-04 mounts <Model3dPanel contentId={item.id} /> here. */}
-        <section data-slot="model3d" aria-label="Modèle 3D" className={styles.slot} />
+        {/* FE-04 (#71): the 3D view, with the item's image as its still fallback. */}
+        <div data-slot="model3d">
+          <Model3dPanel
+            contentId={item.id}
+            alt={`Modèle 3D : ${item.title}`}
+            fallbackImageUrl={item.thumbnailUrl}
+          />
+        </div>
       </div>
 
       <div className={styles.textColumn}>
@@ -82,7 +95,11 @@ function ItemContent({ item }: { item: ItemDetail }) {
             <div className={forms.badges}>
               <StatusBadge
                 label="Publication"
-                tone={item.publicationStatus === 'published' ? 'positive' : 'neutral'}
+                tone={
+                  item.publicationStatus === 'published'
+                    ? 'positive'
+                    : 'neutral'
+                }
               >
                 {PUBLICATION_LABEL[item.publicationStatus]}
               </StatusBadge>
@@ -101,12 +118,18 @@ function ItemContent({ item }: { item: ItemDetail }) {
             </div>
             <div className={forms.actions}>
               {item.isOwner && item.publicationStatus !== 'published' && (
-                <Link to={`/contribuer/${encodeURIComponent(item.id)}`} className={forms.secondary}>
+                <Link
+                  to={`/contribuer/${encodeURIComponent(item.id)}`}
+                  className={forms.secondary}
+                >
                   Gérer les médias
                 </Link>
               )}
               {reviewer && !item.isOwner && (
-                <Link to={`/revue/${encodeURIComponent(item.id)}`} className={forms.secondary}>
+                <Link
+                  to={`/revue/${encodeURIComponent(item.id)}`}
+                  className={forms.secondary}
+                >
                   Relire cette œuvre
                 </Link>
               )}
@@ -116,7 +139,10 @@ function ItemContent({ item }: { item: ItemDetail }) {
 
         <ItemFacts item={item} />
 
-        <section aria-labelledby="description-title" className={styles.description}>
+        <section
+          aria-labelledby="description-title"
+          className={styles.description}
+        >
           <h2 id="description-title" className={styles.sectionTitle}>
             Description
           </h2>
@@ -130,7 +156,9 @@ function ItemContent({ item }: { item: ItemDetail }) {
 
         <ClaimStatuses claims={item.claims} reviews={item.reviews} />
 
-        {showWorkflow && <AdvisorySignals signals={item.advisorySignals ?? []} />}
+        {showWorkflow && (
+          <AdvisorySignals signals={item.advisorySignals ?? []} />
+        )}
 
         <section aria-labelledby="rights-title">
           <h2 id="rights-title" className={styles.sectionTitle}>
@@ -138,12 +166,18 @@ function ItemContent({ item }: { item: ItemDetail }) {
           </h2>
           <p className={styles.rights}>{item.rights.statement}</p>
           {item.publishedAt !== null && (
-            <p className={forms.smallPrint}>Publiée le {formatDate(item.publishedAt)}.</p>
+            <p className={forms.smallPrint}>
+              Publiée le {formatDate(item.publishedAt)}.
+            </p>
           )}
         </section>
 
-        {/* TODO(#71): FE-04 mounts <NftPanel contentId={item.id} isOwner={item.isOwner} /> here. */}
-        <section data-slot="nft" aria-label="Provenance numérique" className={styles.slot} />
+        {/* FE-04 (#71): provenance for everyone, the certify action for the owner. Mint needs a published item. */}
+        {item.publicationStatus === 'published' && (
+          <div data-slot="nft">
+            <NftPanel contentId={item.id} isOwner={item.isOwner} />
+          </div>
+        )}
       </div>
     </article>
   );
@@ -154,7 +188,10 @@ export function ItemPage({ id }: ItemPageProps) {
   // The session decides what the item route returns: reload when it changes.
   const session = useSession();
   const viewer = session.status === 'signed-in' ? session.me.userId : 'guest';
-  const { state, reload } = useResource(() => api.getItem(id), `${id}:${viewer}`);
+  const { state, reload } = useResource(
+    () => api.getItem(id),
+    `${id}:${viewer}`,
+  );
 
   if (state.status === 'error' && isNotFound(state.error)) {
     return <NotFoundPage title="Œuvre introuvable" />;
@@ -167,7 +204,9 @@ export function ItemPage({ id }: ItemPageProps) {
           Chargement de l’œuvre…
         </p>
       )}
-      {state.status === 'error' && <ErrorNotice error={state.error} onRetry={reload} />}
+      {state.status === 'error' && (
+        <ErrorNotice error={state.error} onRetry={reload} />
+      )}
       {state.status === 'ready' && <ItemContent item={state.data} />}
     </PageShell>
   );

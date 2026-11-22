@@ -75,8 +75,3 @@
 .signal {
   font-size: 13px;
 }
-
-/* Empty until FE-04 (#71) mounts its panels. */
-.slot:empty {
-  display: none;
-}

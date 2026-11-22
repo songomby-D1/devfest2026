@@ -33,20 +33,26 @@ export function validateClaimForm(values: ClaimFormValues): ClaimFormErrors {
   if (values.outcome === '') errors.outcome = 'Choisissez un résultat.';
   const rationale = values.rationale.trim();
   if (rationale === '') {
-    errors.rationale = 'Expliquez votre décision : la justification est enregistrée avec la relecture.';
+    errors.rationale =
+      'Expliquez votre décision : la justification est enregistrée avec la relecture.';
   } else if (rationale.length > REVIEW_LIMITS.rationale) {
     errors.rationale = `${String(REVIEW_LIMITS.rationale)} caractères au maximum.`;
   }
   const evidence = evidenceList(values.evidence);
   if (evidence.length > REVIEW_LIMITS.evidenceItems) {
     errors.evidence = `${String(REVIEW_LIMITS.evidenceItems)} sources au maximum.`;
-  } else if (evidence.some((entry) => entry.length > REVIEW_LIMITS.evidenceText)) {
+  } else if (
+    evidence.some((entry) => entry.length > REVIEW_LIMITS.evidenceText)
+  ) {
     errors.evidence = `Chaque source compte ${String(REVIEW_LIMITS.evidenceText)} caractères au maximum.`;
   }
   return errors;
 }
 
-export function validateDecision(decision: DecisionKind | '', note: string): string | null {
+export function validateDecision(
+  decision: DecisionKind | '',
+  note: string,
+): string | null {
   if (decision === '') return 'Choisissez une décision.';
   if (decision !== 'publish' && note.trim() === '') {
     return 'Une note est obligatoire pour renvoyer ou refuser : elle explique au contributeur quoi corriger ou pourquoi.';

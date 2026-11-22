@@ -1,4 +1,8 @@
-import type { CreateItemRequest, ItemKind, ValidationIssue } from '../../lib/api';
+import type {
+  CreateItemRequest,
+  ItemKind,
+  ValidationIssue,
+} from '../../lib/api';
 
 /** Field lengths of the gateway's CreateItemRequest, as the Content service checks them. */
 export const ITEM_LIMITS = {
@@ -12,7 +16,8 @@ export const ITEM_LIMITS = {
   rightsStatement: 2000,
 } as const;
 
-export type ItemFormField = keyof typeof ITEM_LIMITS | 'kind' | 'rightsConfirmed';
+export type ItemFormField =
+  keyof typeof ITEM_LIMITS | 'kind' | 'rightsConfirmed';
 
 export interface ItemFormValues {
   title: string;
@@ -73,7 +78,8 @@ export function validateItemForm(values: ItemFormValues): ItemFormErrors {
 
 export function toCreateRequest(values: ItemFormValues): CreateItemRequest {
   if (values.kind === '') throw new Error('kind is required');
-  const optional = (value: string) => (value.trim() === '' ? null : value.trim());
+  const optional = (value: string) =>
+    value.trim() === '' ? null : value.trim();
   return {
     title: values.title.trim(),
     kind: values.kind,
@@ -88,14 +94,21 @@ export function toCreateRequest(values: ItemFormValues): CreateItemRequest {
   };
 }
 
-const FIELDS = new Set<string>([...Object.keys(ITEM_LIMITS), 'kind', 'rightsConfirmed']);
+const FIELDS = new Set<string>([
+  ...Object.keys(ITEM_LIMITS),
+  'kind',
+  'rightsConfirmed',
+]);
 
 /** Maps the service's validation details onto the form fields. */
-export function serverFieldErrors(details: readonly ValidationIssue[]): ItemFormErrors {
+export function serverFieldErrors(
+  details: readonly ValidationIssue[],
+): ItemFormErrors {
   const errors: ItemFormErrors = {};
   for (const issue of details) {
     if (FIELDS.has(issue.field)) {
-      errors[issue.field as ItemFormField] = `Refusé par le serveur : ${issue.reason}.`;
+      errors[issue.field as ItemFormField] =
+        `Refusé par le serveur : ${issue.reason}.`;
     }
   }
   return errors;

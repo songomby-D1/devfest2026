@@ -51,9 +51,16 @@ export function ArtworkNotice({
         ))}
       </section>
 
-      <ClaimStatuses claims={artwork.claims} reviews={artwork.reviews} headingLevel={3} />
+      <ClaimStatuses
+        claims={artwork.claims}
+        reviews={artwork.reviews}
+        headingLevel={3}
+      />
       <p className={styles.rights}>{artwork.rights}</p>
-      <Link to={`/oeuvre/${encodeURIComponent(artwork.id)}`} className={styles.more}>
+      <Link
+        to={`/oeuvre/${encodeURIComponent(artwork.id)}`}
+        className={styles.more}
+      >
         Voir la fiche complète de l’œuvre
       </Link>
     </article>

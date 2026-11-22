@@ -1,7 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { ErrorNotice } from '../../components/error-notice/ErrorNotice';
 import { Logo } from '../../components/logo/Logo';
-import { loadCollection, useCollection } from '../../lib/collection/published-items';
+import {
+  loadCollection,
+  useCollection,
+} from '../../lib/collection/published-items';
 import { Link } from '../../lib/router/Link';
 import { navigate } from '../../lib/router/router';
 import { buildRooms } from './data/collection';
@@ -56,8 +59,12 @@ function resolve(
 export function GalleryRoute({ room, artworkNumber }: GalleryRouteProps) {
   const collection = useCollection();
   const items = collection.status === 'ready' ? collection.items : null;
-  const rooms = useMemo(() => (items === null ? null : buildRooms(items)), [items]);
-  const resolution = rooms === null ? null : resolve(rooms, room.slug, artworkNumber);
+  const rooms = useMemo(
+    () => (items === null ? null : buildRooms(items)),
+    [items],
+  );
+  const resolution =
+    rooms === null ? null : resolve(rooms, room.slug, artworkNumber);
 
   const redirectTo = resolution?.redirectTo ?? null;
   useEffect(() => {
@@ -69,7 +76,11 @@ export function GalleryRoute({ room, artworkNumber }: GalleryRouteProps) {
   if (collection.status === 'error') {
     return (
       <div className={styles.screen}>
-        <Link to="/" className={styles.logo} aria-label="LOVA, retour à l’accueil">
+        <Link
+          to="/"
+          className={styles.logo}
+          aria-label="LOVA, retour à l’accueil"
+        >
           <Logo />
         </Link>
         <main className={styles.body}>

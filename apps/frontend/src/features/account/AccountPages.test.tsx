@@ -10,8 +10,14 @@ describe('account pages', () => {
     window.history.replaceState(null, '', '/connexion?retour=%2Fcontribuer');
     render(<App />);
 
-    await user.type(screen.getByLabelText(/Adresse e-mail/), 'contributrice@lova.test');
-    await user.type(screen.getByLabelText(/Mot de passe/), 'a-long-enough-phrase');
+    await user.type(
+      screen.getByLabelText(/Adresse e-mail/),
+      'contributrice@lova.test',
+    );
+    await user.type(
+      screen.getByLabelText(/Mot de passe/),
+      'a-long-enough-phrase',
+    );
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     await waitFor(() => {
@@ -28,12 +34,20 @@ describe('account pages', () => {
     window.history.replaceState(null, '', '/connexion');
     render(<App />);
 
-    await user.type(screen.getByLabelText(/Adresse e-mail/), 'inconnu@lova.test');
-    await user.type(screen.getByLabelText(/Mot de passe/), 'a-long-enough-phrase');
+    await user.type(
+      screen.getByLabelText(/Adresse e-mail/),
+      'inconnu@lova.test',
+    );
+    await user.type(
+      screen.getByLabelText(/Mot de passe/),
+      'a-long-enough-phrase',
+    );
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     const alert = await screen.findByRole('alert');
-    expect(alert.textContent).toContain('Adresse e-mail ou mot de passe incorrect.');
+    expect(alert.textContent).toContain(
+      'Adresse e-mail ou mot de passe incorrect.',
+    );
     expect(alert.textContent).toMatch(/Référence pour le support : mock-\d+/);
     expect(window.location.pathname).toBe('/connexion');
   });
@@ -43,12 +57,20 @@ describe('account pages', () => {
     window.history.replaceState(null, '', '/connexion?retour=%2Fmes-depots');
     render(<App />);
 
-    await user.type(screen.getByLabelText(/Adresse e-mail/), 'relecteur@lova.test');
-    await user.type(screen.getByLabelText(/Mot de passe/), 'a-long-enough-phrase');
+    await user.type(
+      screen.getByLabelText(/Adresse e-mail/),
+      'relecteur@lova.test',
+    );
+    await user.type(
+      screen.getByLabelText(/Mot de passe/),
+      'a-long-enough-phrase',
+    );
     await user.click(screen.getByRole('button', { name: 'Se connecter' }));
 
     expect(await screen.findByText('Relecteur')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Relecture' }).getAttribute('href')).toBe('/revue');
+    expect(
+      screen.getByRole('link', { name: 'Relecture' }).getAttribute('href'),
+    ).toBe('/revue');
   });
 
   it('registers, signs in at once and signs out', async () => {
@@ -56,9 +78,15 @@ describe('account pages', () => {
     window.history.replaceState(null, '', '/inscription?retour=%2Fmes-depots');
     render(<App />);
 
-    await user.type(screen.getByLabelText(/Adresse e-mail/), 'nouvelle@lova.test');
+    await user.type(
+      screen.getByLabelText(/Adresse e-mail/),
+      'nouvelle@lova.test',
+    );
     await user.type(screen.getByLabelText(/Nom affiché/), 'Nouvelle');
-    await user.type(screen.getByLabelText(/^Mot de passe/), 'a-long-enough-phrase');
+    await user.type(
+      screen.getByLabelText(/^Mot de passe/),
+      'a-long-enough-phrase',
+    );
     await user.type(screen.getByLabelText(/Confirmer/), 'a-long-enough-phrase');
     await user.click(screen.getByRole('button', { name: 'Créer mon compte' }));
 
@@ -69,7 +97,9 @@ describe('account pages', () => {
     expect(await screen.findByText('Aucun dépôt pour le moment.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Se déconnecter' }));
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Se déconnecter' })).toBeNull();
+      expect(
+        screen.queryByRole('button', { name: 'Se déconnecter' }),
+      ).toBeNull();
     });
   });
 

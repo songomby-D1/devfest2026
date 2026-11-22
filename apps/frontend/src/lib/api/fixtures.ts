@@ -1,19 +1,12 @@
-import type {
-  ClaimReview,
-  ItemDetail,
-  Me,
-  MediaRef,
-  Model3d,
-  Provenance,
-} from './contract';
+import type { ClaimReview, ItemDetail, Me, MediaRef } from './contract';
 
 // Demo fixtures for VITE_API_MODE=mock, shaped exactly like packages/shared.
-// Together they cover every value of PublicationStatus, SubmissionStatus,
-// ClaimStatus, the 3D status and the mint status so each screen state can be
-// built without the backend. The four paintings are the real public-domain
-// works of media-sources.md; their files sit in the Git-ignored public/media/,
-// so a missing file exercises the missing-media state. Other items have no
-// media on purpose.
+// Together they cover every value of PublicationStatus, SubmissionStatus and
+// ClaimStatus so each screen state can be built without the backend;
+// provenance-fixtures.ts covers the 3D and mint states. The four paintings are
+// the real public-domain works of media-sources.md; their files sit in the
+// Git-ignored public/media/, so a missing file exercises the missing-media
+// state. Other items have no media on purpose.
 
 export const fixtureIds = {
   sculpture: '6f1c2b0e-3a52-4c1e-9d0f-8a1b2c3d4e01',
@@ -53,11 +46,7 @@ export const fixtureUsers = {
 const CREATED = '2026-11-01T09:00:00.000Z';
 const PUBLISHED = '2026-11-10T09:00:00.000Z';
 
-function paintingMedia(
-  id: string,
-  file: string,
-  caption: string,
-): MediaRef {
+function paintingMedia(id: string, file: string, caption: string): MediaRef {
   return {
     id,
     kind: 'image',
@@ -409,30 +398,4 @@ export const fixtureItems: readonly { ownerId: string; item: ItemDetail }[] = [
       submissionStatus: 'in_review',
     }),
   },
-];
-
-export const fixtureModels: Model3d[] = [
-  {
-    contentId: fixtureIds.sculpture,
-    status: 'ready',
-    variants: {
-      poster: '/demo/sculpture/poster.webp',
-      glb1k: '/demo/sculpture/model-1k.glb',
-      glb2k: '/demo/sculpture/model-2k.glb',
-    },
-  },
-  { contentId: fixtureIds.painting, status: 'missing' },
-  { contentId: fixtureIds.textile, status: 'processing' },
-];
-
-export const fixtureProvenance: Provenance[] = [
-  {
-    contentId: fixtureIds.sculpture,
-    mint: 'confirmed',
-    tokenId: '1',
-    transactionHash:
-      '0x0000000000000000000000000000000000000000000000000000000000000001',
-  },
-  { contentId: fixtureIds.painting, mint: 'failed' },
-  { contentId: fixtureIds.textile, mint: null },
 ];

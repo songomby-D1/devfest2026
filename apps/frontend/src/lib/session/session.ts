@@ -109,7 +109,8 @@ export function signInPath(returnTo: string): string {
 /** Keeps only same-site paths, so a crafted link cannot send the user elsewhere. */
 export function safeReturnPath(raw: string | null): string {
   if (raw === null || !/^\/(?![/\\])/.test(raw)) return '/';
-  if (raw.startsWith('/connexion') || raw.startsWith('/inscription')) return '/';
+  if (raw.startsWith('/connexion') || raw.startsWith('/inscription'))
+    return '/';
   return raw;
 }
 

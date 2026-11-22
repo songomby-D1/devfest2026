@@ -32,7 +32,10 @@ export type MediaCheck =
   | { ok: false; reason: 'type' | 'empty' | 'size'; message: string };
 
 /** Checks a file against the accepted formats and size limits before upload. */
-export function checkMediaFile(file: { type: string; size: number }): MediaCheck {
+export function checkMediaFile(file: {
+  type: string;
+  size: number;
+}): MediaCheck {
   const type = file.type.toLowerCase();
   const kind: MediaKind | null = (
     MEDIA_UPLOAD_LIMITS.image.types as readonly string[]

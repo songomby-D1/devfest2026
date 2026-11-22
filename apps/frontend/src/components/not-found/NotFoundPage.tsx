@@ -5,7 +5,9 @@ export interface NotFoundPageProps {
 }
 
 /** The same page for a missing path, a missing item and an item the visitor may not see. */
-export function NotFoundPage({ title = 'Page introuvable' }: NotFoundPageProps) {
+export function NotFoundPage({
+  title = 'Page introuvable',
+}: NotFoundPageProps) {
   return (
     <main className={styles.notFound}>
       <h1>{title}</h1>

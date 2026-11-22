@@ -7,18 +7,11 @@ import type {
   ItemSummary,
   MediaRef,
   Me,
-  MintResult,
-  Model3d,
-  Provenance,
   ValidationIssue,
 } from './contract';
-import {
-  fixtureItems,
-  fixtureModels,
-  fixtureProvenance,
-  fixtureUsers,
-} from './fixtures';
+import { fixtureItems, fixtureUsers } from './fixtures';
 import { checkMediaFile, MEDIA_UPLOAD_LIMITS } from './media-limits';
+import { createMockProvenance } from './mock-provenance';
 
 export interface MockClientOptions {
   /** Simulated network latency in milliseconds. */
@@ -30,17 +23,21 @@ export interface MockClientOptions {
 
 let requestCounter = 0;
 
+function nextRequestId(): string {
+  requestCounter += 1;
+  return `mock-${String(requestCounter)}`;
+}
+
 function fail(
   status: number,
   code: string,
   message: string,
   details?: ValidationIssue[],
 ): ApiError {
-  requestCounter += 1;
   return new ApiError(status, {
     code,
     message,
-    requestId: `mock-${String(requestCounter)}`,
+    requestId: nextRequestId(),
     ...(details === undefined ? {} : { details }),
   });
 }
@@ -74,7 +71,10 @@ function validateCreate(body: CreateItemRequest): ValidationIssue[] {
   for (const [field, max] of Object.entries(CREATE_LIMITS)) {
     const value = body[field as keyof CreateItemRequest];
     if (typeof value === 'string' && value.trim().length > max) {
-      issues.push({ field, reason: `must be at most ${String(max)} characters` });
+      issues.push({
+        field,
+        reason: `must be at most ${String(max)} characters`,
+      });
     }
   }
   return issues;
@@ -116,8 +116,8 @@ interface Account {
  * In-memory implementation of the gateway contract. Each client owns a copy of
  * the fixtures and one simulated session cookie, so tests stay isolated. The
  * rules follow the Content service: visibility, ownership, reviewer-only
- * review and decisions, no self-review, D18 publication rules. A mint stays
- * `pending` on the request and is confirmed on the next provenance read.
+ * review and decisions, no self-review, D18 publication rules.
+ * mock-provenance.ts holds the mint, provenance and 3D routes.
  */
 export function createMockClient(options: MockClientOptions = {}): ApiClient {
   const { latencyMs = 0, createId = () => crypto.randomUUID() } = options;
@@ -130,13 +130,6 @@ export function createMockClient(options: MockClientOptions = {}): ApiClient {
       { me: structuredClone(me) as Account['me'], password: null },
     ]),
   );
-  const models = new Map<ContentId, Model3d>(
-    fixtureModels.map((model) => [model.contentId, structuredClone(model)]),
-  );
-  const provenance = new Map<ContentId, Provenance>(
-    fixtureProvenance.map((entry) => [entry.contentId, structuredClone(entry)]),
-  );
-  const mintsByKey = new Map<string, MintResult>();
   let sessionUserId: string | null =
     options.signedInAs === undefined
       ? null
@@ -381,7 +374,11 @@ export function createMockClient(options: MockClientOptions = {}): ApiClient {
         if (!check.ok) {
           throw check.reason === 'size'
             ? fail(413, 'PAYLOAD_TOO_LARGE', 'The file is too large.')
-            : fail(415, 'UNSUPPORTED_MEDIA_TYPE', 'This file type is not accepted.');
+            : fail(
+                415,
+                'UNSUPPORTED_MEDIA_TYPE',
+                'This file type is not accepted.',
+              );
         }
         if (entry.item.media.length >= MEDIA_UPLOAD_LIMITS.maxPerItem) {
           throw fail(
@@ -517,30 +514,15 @@ export function createMockClient(options: MockClientOptions = {}): ApiClient {
         }
         return view(entry);
       }),
-    mintItem: (id, idempotencyKey) =>
-      respond(() => {
-        findEntry(id);
-        const previous = mintsByKey.get(idempotencyKey);
-        if (previous) return previous;
-        const result: MintResult = { contentId: id, status: 'pending' };
-        mintsByKey.set(idempotencyKey, result);
-        provenance.set(id, { contentId: id, mint: 'pending' });
-        return result;
-      }),
-    getProvenance: (id) =>
-      respond(() => {
-        findEntry(id);
-        const entry = provenance.get(id) ?? { contentId: id, mint: null };
-        if (entry.mint === 'pending') {
-          entry.mint = 'confirmed';
-          entry.tokenId = String(provenance.size);
+    ...createMockProvenance({
+      // Like the NFT service: unknown, draft and unpublished items are the same 404.
+      assertPublished: (id) => {
+        if (items.get(id)?.item.publicationStatus !== 'published') {
+          throw notFound();
         }
-        return entry;
-      }),
-    getModel3d: (id) =>
-      respond(() => {
-        findEntry(id);
-        return models.get(id) ?? { contentId: id, status: 'missing' as const };
-      }),
+      },
+      respond,
+      nextRequestId,
+    }),
   };
 }

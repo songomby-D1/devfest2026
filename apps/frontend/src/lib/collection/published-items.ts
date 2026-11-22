@@ -95,7 +95,8 @@ export async function loadCollection(): Promise<void> {
     const items = await loadDetails(await listAllPublished());
     if (own === generation) setState({ status: 'ready', items });
   } catch (error) {
-    if (own === generation) setState({ status: 'error', error: toApiError(error) });
+    if (own === generation)
+      setState({ status: 'error', error: toApiError(error) });
   }
 }
 

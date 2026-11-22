@@ -78,7 +78,9 @@ describe('HomePage', () => {
     await renderHome();
 
     expect(
-      screen.getByRole('link', { name: /Femme malgache/ }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: /femme malgache debout/i })
+        .getAttribute('href'),
     ).toBe('/musee/peinture/01');
   });
 

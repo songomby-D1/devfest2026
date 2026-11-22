@@ -19,7 +19,9 @@ describe('App routing', () => {
   it('renders the gallery room from a deep link once the items load', async () => {
     window.history.replaceState(null, '', '/musee/peinture/02');
     render(<App />);
-    expect(screen.getByRole('status').textContent).toContain('Ouverture de la salle');
+    expect(screen.getByRole('status').textContent).toContain(
+      'Ouverture de la salle',
+    );
 
     await screen.findByRole('heading', {
       level: 1,

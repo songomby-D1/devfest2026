@@ -23,7 +23,11 @@ export interface ClaimReviewFormProps {
 const OUTCOMES: readonly ReviewOutcome[] = ['verified', 'uncertain'];
 
 /** Records the outcome of one claim target, independently of the other. */
-export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormProps) {
+export function ClaimReviewForm({
+  item,
+  target,
+  onReviewed,
+}: ClaimReviewFormProps) {
   const id = useId();
   const [values, setValues] = useState<ClaimFormValues>({
     outcome: '',
@@ -66,7 +70,12 @@ export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormPro
   };
 
   return (
-    <form className={forms.fieldset} onSubmit={submit} noValidate aria-labelledby={`${id}-title`}>
+    <form
+      className={forms.fieldset}
+      onSubmit={submit}
+      noValidate
+      aria-labelledby={`${id}-title`}
+    >
       <h3 id={`${id}-title`} className={forms.legend}>
         Affirmations sur : {label.toLowerCase()}
       </h3>
@@ -76,7 +85,9 @@ export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormPro
       </p>
       <fieldset
         className={forms.radioGroup}
-        aria-describedby={errors.outcome === undefined ? undefined : `${id}-outcome-error`}
+        aria-describedby={
+          errors.outcome === undefined ? undefined : `${id}-outcome-error`
+        }
       >
         <legend className="visually-hidden">Résultat pour : {label}</legend>
         {OUTCOMES.map((outcome) => (
@@ -111,7 +122,10 @@ export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormPro
             value={values.rationale}
             maxLength={REVIEW_LIMITS.rationale}
             onChange={(event) => {
-              setValues((previous) => ({ ...previous, rationale: event.target.value }));
+              setValues((previous) => ({
+                ...previous,
+                rationale: event.target.value,
+              }));
             }}
           />
         )}
@@ -126,7 +140,10 @@ export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormPro
             {...control}
             value={values.evidence}
             onChange={(event) => {
-              setValues((previous) => ({ ...previous, evidence: event.target.value }));
+              setValues((previous) => ({
+                ...previous,
+                evidence: event.target.value,
+              }));
             }}
           />
         )}
@@ -139,7 +156,9 @@ export function ClaimReviewForm({ item, target, onReviewed }: ClaimReviewFormPro
       )}
       <div className={forms.actions}>
         <button type="submit" className={forms.primary} disabled={submitting}>
-          {submitting ? 'Enregistrement…' : `Enregistrer la relecture : ${label.toLowerCase()}`}
+          {submitting
+            ? 'Enregistrement…'
+            : `Enregistrer la relecture : ${label.toLowerCase()}`}
         </button>
       </div>
     </form>

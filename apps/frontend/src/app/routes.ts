@@ -57,7 +57,11 @@ export function matchRoute(pathname: string): Route {
   if (segments.length === 1 && Object.hasOwn(PAGES, first)) {
     return PAGES[first] ?? { kind: 'not-found' };
   }
-  if (segments.length === 2 && second !== undefined && Object.hasOwn(ITEM_PAGES, first)) {
+  if (
+    segments.length === 2 &&
+    second !== undefined &&
+    Object.hasOwn(ITEM_PAGES, first)
+  ) {
     const id = decode(second);
     if (id === null || id === '') return { kind: 'not-found' };
     return { kind: ITEM_PAGES[first as keyof typeof ITEM_PAGES], id };

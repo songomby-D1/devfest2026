@@ -34,13 +34,16 @@ export function HomeRoute() {
   }, []);
 
   // The hanging is fixed once the intro starts: late data never pops frames in.
-  const ready = exhibits ?? (collection.status === 'error' || timedOut ? [] : null);
+  const ready =
+    exhibits ?? (collection.status === 'error' || timedOut ? [] : null);
   useEffect(() => {
     if (hung === null && ready !== null) setHung(ready);
   }, [hung, ready]);
 
   if (hung === null) {
-    return <div className={styles.home} data-motion="pending" aria-busy="true" />;
+    return (
+      <div className={styles.home} data-motion="pending" aria-busy="true" />
+    );
   }
   return <HomePage exhibits={hung} />;
 }

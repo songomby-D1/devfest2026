@@ -53,7 +53,9 @@ export function RegisterPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
-  const target = safeReturnPath(new URLSearchParams(window.location.search).get('retour'));
+  const target = safeReturnPath(
+    new URLSearchParams(window.location.search).get('retour'),
+  );
 
   const set = (field: keyof typeof values) => (value: string) => {
     setValues((previous) => ({ ...previous, [field]: value }));
@@ -79,8 +81,11 @@ export function RegisterPage() {
         if (error instanceof ApiError && error.code === 'VALIDATION_FAILED') {
           const fieldErrors: Errors = {};
           for (const issue of error.details) {
-            if (issue.field === 'email') fieldErrors.email = 'Adresse e-mail refusée par le serveur.';
-            if (issue.field === 'password') fieldErrors.password = 'Mot de passe refusé par le serveur (12 à 128 caractères).';
+            if (issue.field === 'email')
+              fieldErrors.email = 'Adresse e-mail refusée par le serveur.';
+            if (issue.field === 'password')
+              fieldErrors.password =
+                'Mot de passe refusé par le serveur (12 à 128 caractères).';
           }
           setErrors(fieldErrors);
         }
@@ -145,7 +150,11 @@ export function RegisterPage() {
             />
           )}
         </FormField>
-        <FormField label="Confirmer le mot de passe" required error={errors.confirmation}>
+        <FormField
+          label="Confirmer le mot de passe"
+          required
+          error={errors.confirmation}
+        >
           {(control) => (
             <input
               {...control}
