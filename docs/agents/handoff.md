@@ -9,6 +9,12 @@
 - [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
 - [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
 
+## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
+
+- [PROPOSED] 3D-04c ([#13](https://github.com/songomby-D1/devfest2026/issues/13)), stacked on PR #101: the LiDAR service stores the 3D-04a outputs in an S3-compatible bucket and streams them at `GET /files/{assetId}/{variant}` with Range (206/416), HEAD, immutable caching and the `{ code, message, requestId }` error shape. Uploads go through `PUT /assets/{assetId}/files/{variant}` behind the interim admin token. See [the OpenAPI contract](../api/lidar.yaml).
+- [NOT IMPLEMENTED] The gateway route `/api/lidar/files/*` (Agent 1), the SeaweedFS service and the LiDAR bucket and credentials (Agent 1, D05), and the merge of `apps/backend/lidar/compose.fragment.yml`.
+- [DECISION REQUIRED: Agent 1] The display response of #101 does not yet match the frozen 3D contract (`missing` and `glb1k`/`glb2k`). The gateway adapts it, or a follow-up aligns it.
+
 ## Earlier session: open-question settlements (rivon0507)
 
 - [PROPOSED] [ADR 0002](../decisions/0002-open-question-settlements.md) gathers every open question from the Auth contract, the UX-01 journey, the 3D spike and the pending decisions into 22 proposed settlements (S1–S22) chosen by rivon0507, each with the owner who confirms it. Source documents are unchanged.
