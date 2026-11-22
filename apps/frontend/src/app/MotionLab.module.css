@@ -1,0 +1,54 @@
+.lab {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 220px;
+  padding: 12px 14px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--color-paper);
+  background: rgb(0 0 0 / 0.82);
+  border: 1px solid var(--color-paper-16);
+  border-radius: 8px;
+}
+
+.title {
+  margin: 0;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.group legend {
+  padding: 0 0 4px;
+  color: var(--color-paper-70);
+}
+
+.option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.replay {
+  height: 32px;
+  color: var(--color-ink);
+  cursor: pointer;
+  background: var(--color-paper);
+  border: 0;
+  border-radius: var(--radius-pill);
+}

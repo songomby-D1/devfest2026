@@ -8,6 +8,18 @@
 - [DECISION REQUIRED: papangoo] Confirm the formats, limits, cache lifetime and acceptance criteria in the PR (D18). EXIF and other embedded metadata are not stripped: no doc requires it for storage, but published images may carry a location.
 - [DECISION REQUIRED: endy-rkt] Gateway routes for `PUT` and `DELETE /api/items/{id}/media/{mediaId}`, the root Compose storage settings from the fragment, and approval of the additive root `package-lock.json` change for the new Content dependencies.
 
+## Earlier session: Agent 1 merged, Agent 3 brought up to date (Claude, agent N3)
+
+- [IMPLEMENTED] #109 (Gate 0) and #110 (Agent 1 foundations, with LiDAR and Content in root Compose) are merged into `develop`. Merged `develop` into `agent3-ux-fe-3d` for #104; Content's integration test takes the `develop` version, which already carries the workspace fix.
+
+## Earlier session: Agent 1 follow-up merged into Agent 3 (Claude, agent N3)
+
+- [IMPLEMENTED] Merged the updated `origin/agent1-foundation` (#110) into `agent3-ux-fe-3d`: the Draco ignore in ESLint and Prettier, the root `lint` script that generates the Prisma clients first, and LiDAR #101 and #108 integrated into the shared PostgreSQL and SeaweedFS. The handoff and log keep both sides; the root lockfile was regenerated from #110's with the frontend dependencies.
+- This resolves the earlier Agent 3 blockers on the root lockfile and on `apps/frontend/public/draco/`.
+- [IMPLEMENTED] Merged `develop` again to bring in CONTENT-01 #112, which made #104 conflict. Content now has a `package.json`, so the root workspace runs it; the root lockfile was regenerated.
+- [DECISION REQUIRED: Agent 2, rivon0507] Three workspace-compatibility edits in `apps/backend/content/`, mirroring the NFT and LiDAR ones: `"rootDir": "."` in `tsconfig.json` because ts-jest resolves the root TypeScript 6 (the build keeps `rootDir: src` and `dist/main.js`), the test scripts call `jest` from the PATH because the root workspace hoists it, and the integration test resolves the Prisma CLI through Node. Content passes 70 of 70 tests, including Testcontainers.
+- [NOT IMPLEMENTED: Agent 1] `apps/backend/content/compose.fragment.yml` is not merged into root Compose yet, and #110 needs the same `develop` merge.
+
 ## Earlier session: Content integration and merge to develop (Claude, agent N1)
 
 - [IMPLEMENTED] Merged `develop` (CONTENT-01 #112, CONTENT-05c #113, CONTENT-02 #114) into `agent1-foundation` and added the `content` service to root Compose from `apps/backend/content/compose.fragment.yml`, on the shared PostgreSQL and unpublished. Brought in the Content workspace fix from `agent3-ux-fe-3d` (`rootDir`, `jest` from the PATH, the Prisma CLI resolved through Node), pending Agent 2's approval. Regenerated the root lockfile.
@@ -25,6 +37,14 @@
 - [BLOCKER: salandri-42] `nft-service` stays unhealthy in Compose: `apps/backend/nft/.env` needs `CONTRACT_ADDRESS`, `MINTER_PRIVATE_KEY` and `PINATA_JWT`. A local mode without real secrets, for example `IPFS_DRIVER=fake` and a local chain, would let the full stack start.
 - [DECISION REQUIRED: endy-rkt] SeaweedFS 4.54 warns that the filer IAM gRPC service is unauthenticated: any container on `internal_net` can create users and policies. Setting `jwt.filer_signing.key` in `security.toml` closes it; include it in the SeaweedFS spike (endy-rkt-03).
 - [NOT IMPLEMENTED: Agent 3] LiDAR ignores the gateway's `LIDAR_SERVICE_TOKEN` and does not send `SERVICE_TOKEN_LIDAR_TO_CONTENT` to Content. Asset registration and uploads need the admin token and are reachable only inside the Compose network, for example with `docker compose exec lidar`, until an operator route exists.
+
+## Earlier session: Agent 1 foundation merged into Agent 3 (Claude, agent N3)
+
+- [IMPLEMENTED] Merged `origin/agent1-foundation` (Gate 0 contract, root workspace, Compose infra, Auth, gateway) into `agent3-ux-fe-3d`. Conflicts resolved: `.nvmrc` takes Agent 1's 22.23.5 pin; `.npmrc` keeps `save-exact` and `engine-strict`; the root `package.json` keeps Agent 1's manifest and scripts with `engines.node` narrowed to `>=22.12 <23` for Vite; the README keeps Agent 1's formatted table plus the frontend rows; the backlog keeps Agent 1's formatting with FE-01 and FE-02 in Review; this handoff and the log keep both sides.
+- [IMPLEMENTED] Regenerated `package-lock.json` from Agent 1's lockfile with `npm install` so it carries the frontend dependencies; `npm ci` now passes on the root workspace, which resolves the earlier lockfile blocker.
+- Checks run on Node 22.23.4: `npm ci` passed; `npm run typecheck` passed; `npm run test` passed (frontend 99, Auth 63 with 19 PostgreSQL tests skipped, gateway 42, NFT 32, shared 4); `npm run build` passed. `npm run lint` and `npm run format:check` pass except on `apps/frontend/public/draco/`, the generated decoder; ESLint needs `prisma generate` to have run first for Auth.
+- [BLOCKER: Agent 1] `eslint.config.mjs` and `.prettierignore` still need to ignore `apps/frontend/public/draco/`. Agent 1 owns these root files, so this merge does not edit them.
+- [CONTRACT CHANGE] Gate 0 is now frozen in [the platform contract](../specs/platform-contract.md) and `packages/shared`. Next: realign `apps/frontend/src/lib/api/contract.ts` with it, including the `decision` and media routes, and drop the provisional markers it settles.
 
 ## Earlier session: Agent 1 foundations (Randriatseheno)
 
@@ -63,6 +83,8 @@
 - [PROPOSED] CONTENT-01 ([#52](https://github.com/songomby-D1/devfest2026/issues/52)): `apps/backend/content/` is a standalone NestJS 11 service on Node 22 with Prisma 7.10.1 and its first migration (`authors`, `items`, `descriptions`). The item ID is the ContentId, `publicationStatus` defaults to `draft`, and claim status is stored separately on the item and on its description. Internal routes: `POST /internal/v1/items`, `GET /internal/v1/items/{id}` and `PATCH /internal/v1/items/{id}`, behind a per-caller service-token guard, with the `{ code, message, requestId }` error shape. Bodies follow the Gate 0 contract on `agent1-foundation` (`CreateItemRequest`, `ItemDetail`). Contract: [content.yaml](../api/content.yaml). Compose: `apps/backend/content/compose.fragment.yml` for Agent 1.
 - [DECISION REQUIRED: papangoo] Confirm the proposed acceptance criteria in the PR, the 1:1 author-per-item model, the claim reset on material edits (D18) and the edit rule (owner only, not while published).
 - [DECISION REQUIRED: endy-rkt] Contract needs: a gateway route for `PATCH /api/items/{id}`, and the caller header name (`x-caller-user-id` in the platform contract, `x-caller-account-id` in the Auth contract; Content accepts both).
+- [NOT IMPLEMENTED] Listing, publication and the publication lookup for NFT and LiDAR (CONTENT-02), media (CONTENT-03), reviews and rights clearance (CONTENT-04). Switch to the root workspace and lockfile when endy-rkt-19 lands.
+
 - [NOT IMPLEMENTED] Media (CONTENT-03), reviews and rights clearance (CONTENT-04); listing and publication landed with CONTENT-02. Switch to the root workspace and lockfile when endy-rkt-19 lands.
 
 ## Earlier session: 3D-04c file storage and delivery (Agent 3, for rivon0507)
@@ -80,6 +102,30 @@
 
 - [PROPOSED] UX-01 ([#65](https://github.com/songomby-D1/devfest2026/issues/65)): drafted the [primary user journey](../../apps/frontend/docs/user-journey.md) with personas, the eight journey steps, screens, the gateway route behind each step, states (loading, empty, error, 3D processing and missing, mint pending, confirmed and failed), desktop and mobile notes and proposed acceptance criteria.
 - [DECISION REQUIRED: Sesedra] Confirm or amend the journey before UX-02. Open questions Q1 to Q6 in the document go to papangoo, endy-rkt and salandri-42, notably the missing publish route (Q1) and caller-scoped item lists (Q2). The frozen contract is unchanged.
+
+## Earlier session: Agent 3 frontend start (Claude, agent N3)
+
+- [IMPLEMENTED] On branch `agent3-ux-fe-3d`, stacked on FE-01 ([#80](https://github.com/songomby-D1/devfest2026/pull/80)) with `develop` merged in, following the [parallel workflow](parallel-workflow.md). The doc-only merge conflicts in this log and the backlog were resolved by keeping both sides.
+- [IMPLEMENTED] Wired the ArtworkViewer (3D-05a) into the FE-01 workspace, the follow-up announced in [#94](https://github.com/songomby-D1/devfest2026/pull/94): `@google/model-viewer` 4.4.0, `three` 0.183.2, `@testing-library/jest-dom` and `user-event` in `apps/frontend/package.json`, Draco copied before `dev` and `build`, and `copy-draco.mjs` now resolves `three` through Node because the root workspace hoists it.
+- [IMPLEMENTED] Added `apps/frontend/src/lib/api/`: contract types for the Gate 0 freeze, an HTTP client for the eight `/api/items` routes and an in-memory mock selected by `VITE_API_MODE=mock`, with fixtures covering every publication, claim, 3D and mint status.
+- Checks run: typecheck, 42 Vitest tests, Vite build, ESLint and Prettier on `apps/frontend` pass on Node 22.23.4, with `public/draco/` excluded by hand.
+- [BLOCKER: Agent 1] Gate 0 has not happened: no contract-freeze PR exists. The client follows the contract as written in the parallel workflow.
+- [CONTRACT CHANGE] The frozen contract does not define the item fields or request bodies. `title`, `description`, `imageUrl`, the `POST /api/items` and review bodies, and `tokenId`/`transactionHash` on provenance are marked provisional in `contract.ts`.
+- [BLOCKER: Agent 1] The root lockfile is out of sync: the `apps/backend/*` workspace glob picks up `nft-service`, so `npm ci` fails on `develop` + #80. The new frontend dependencies also need a lockfile regeneration. The lockfile was left untouched; checks ran after a local `npm install`.
+- [BLOCKER: Agent 1] `eslint.config.mjs` and `.prettierignore` must ignore `apps/frontend/public/draco/`, the copied decoder, or `npm run lint` and `format:check` fail after a `dev` or `build`.
+- [IMPLEMENTED] Merged FE-02 [#96](https://github.com/songomby-D1/devfest2026/pull/96) and the WebGL room [#102](https://github.com/songomby-D1/devfest2026/pull/102) into the branch. The FE-02 router stays the host in `main.tsx`; the WebGL room is lazy-loaded at `/visite` (its query-string deep links are unchanged), so three and React Three Fiber stay out of the 358 kB main bundle. `three` is aligned to 0.183.2 with `@types/three` 0.183.1 so `@google/model-viewer` 4.4.0 keeps its `^0.183.0` peer; the typecheck passes with drei 10.7.9 and fiber 9.8.2. The `engines: >=24` change from #102 was dropped: D15 keeps Node 22 and the root manifest belongs to Agent 1.
+- Checks run: typecheck, 99 Vitest tests, Vite build, ESLint and Prettier on `apps/frontend`. Headless Chromium (SwiftShader) at 1440×900 renders `/`, `/musee/peinture/01` and `/visite` with no console errors. GPU frame rate is still unmeasured.
+- [NOT IMPLEMENTED] FE-02 screens still read local fixtures, not `lib/api`. The `/musee/:room/:number` WebGL-or-2.5D switch planned in #102, the `--g-*` token migration and the sound-toggle wiring remain for Sesedra's integration follow-up.
+- [REVIEWED] Posted an `[A3]` comment review on [#101](https://github.com/songomby-D1/devfest2026/pull/101) (LiDAR). Its 3D response uses `none`, hides `pending`, and nests variants as `{ '1k', '2k' }` with `bytes`, instead of the contract's `ready|processing|missing` and `variants: { poster, glb1k, glb2k }`. Its errors are not `{ code, message, requestId }`. It edits Agent 1's root files instead of delivering a Compose fragment, and conflicts with `develop` on `docker-compose.yml`. CI skipped its lint and test jobs. Locally after `prisma generate`: typecheck clean, 45 unit and 53 total tests pass.
+- Next: on ShidoADR's answer, align the LiDAR response and error shape (items 1–2 of the review), then connect the FE-02 item view to `lib/api` and `ArtworkViewer`.
+
+## Earlier session: WebGL museum room (Sesedra)
+
+- [CREATED, NOT MERGED] Branch `feature/gallery-3d`, built in a separate worktree from the FE-01 base commit while FE-02 continued in the main checkout. It adds `apps/frontend/src/features/gallery-3d/`, a self-contained React Three Fiber room: entrance screen, camera travelling, damped lateral rail (wheel, drag, keyboard), one spot per work whose intensity follows the visitor, gilded frames built from geometry, procedural clay pots on pedestals with drag rotation in inspection mode, focus camera with zoom levels, HTML wall label and notice, a CSS fallback without WebGL and reduced-motion handling. `main.tsx` mounts it directly; `App.tsx` and its test are untouched.
+- Dependencies added on the oral go reported by Sesedra, to confirm at PR review: `three` 0.187.0, `@react-three/fiber` 9.8.2, `@react-three/drei` 10.7.9, `@types/three` 0.187.0. Three 0.187 was chosen because drei's dependencies pin `@types/three` 0.187 and a second typings copy broke the typecheck.
+- Demo media stay out of Git: six Wikimedia Commons portraits (public domain, credits shown in the notice) and a CC0 parquet texture live in the ignored `apps/frontend/public/media/`; a missing file shows a missing-media state. The sculptures are procedural and labelled as demonstration content.
+- Reconnection with FE-02: the module uses scoped `--g-*` custom properties that mirror the Figma variables and system font fallbacks; switch them to `tokens.css` and `fonts.css` once FE-02 lands, route `/galerie` to `GalleryExperience`, and wire the sound toggle to `lib/audio/ambience`. Deep links already exist: `?salle`, `?oeuvre=<id>`, `&zoom=<n>`, `&inspect`, `?rendu=css`.
+- [NOT IMPLEMENTED] GPU frame rate was not measured: checks ran in headless Chrome on SwiftShader. Measure on the demo laptop and a phone before rehearsal. The 1.2 MB bundle should be code-split so the room loads lazily.
 
 ## Earlier session: NFT lot L0 (salandri-42)
 
@@ -136,6 +182,15 @@
 - Next: 3D-01b ([#8](https://github.com/songomby-D1/devfest2026/issues/8)) tests a real Reality Composer scan. 3D-02 ([#9](https://github.com/songomby-D1/devfest2026/issues/9)) depends only on 3D-01 in the [backlog](../product/task.md), which still shows 3D-01 as Backlog until this work is approved. 3D-03 waits on endy-rkt-06 (D12). 3D-04 and 3D-05 follow 3D-03 and the content, UX and frontend foundation tasks.
 
 ## Previous session: CI
+
+- [CREATED, NOT MERGED] Branch `feature/frontend-init`, proposed by Sesedra. It contains the FE-01 React shell in `apps/frontend/`, the root npm workspace, pinned quality tooling, the lockfile, `.nvmrc`, `.npmrc` and a filled `.gitignore`. It also adds the [frontend rules](../../apps/frontend/rules.md) and [ADR 0001](../decisions/0001-frontend-toolchain.md).
+- [DECISION REQUIRED: endy-rkt] Before merge: name the frontend owner under D02, approve the dependencies in ADR 0001 (Node stays on 22, as in CI), and approve Prettier formatting of `.github/workflows/ci.yml`, `.github/dependabot.yml`, `eslint.config.mjs` and the docs (endy-rkt-17). Without that formatting, the CI `lint` job fails once the root manifest lands.
+- [CREATED, NOT MERGED] Branch `feature/home-gallery` (FE-02), stacked on `feature/frontend-init`: the home hanging and the gallery room from Sesedra's Figma frames (nodes 12:88 and 114:3877), with GSAP intros, exit transitions, a notice panel, a close-up viewer, keyboard and swipe navigation, reduced-motion fades and a single-viewport mobile layout. Real public-domain works replace the Figma placeholders; sources are in [media-sources.md](../../apps/frontend/media-sources.md). Media and licensed fonts stay in ignored local folders until D18, so CI and reviewers see the missing-media state.
+- Frontend documentation: [apps/frontend/README.md](../../apps/frontend/README.md) (how it is built and run), [docs/motion.md](../../apps/frontend/docs/motion.md) (every choreography with timings) and [docs/verification.md](../../apps/frontend/docs/verification.md) (review checklist).
+- Verified on Node 22.23.5: 33 tests, typecheck, eslint and build pass. In Chrome: no scroll from 390×844 to 2560×1440, intro controls usable at 1.4 s, sound never autoplays, reduced motion shows fades only, no console messages. Lighthouse desktop scores 99–100 for performance and 100 for accessibility; mobile accessibility is 100 and mobile performance is 91–94, after dropping to 87 while the machine was loaded.
+- [DECISION REQUIRED: endy-rkt] `gsap` and `@gsap/react`, added in FE-02, and the Prettier baseline still wait for approval, so `ci-ok` stays red on both PRs until then.
+- [NOT IMPLEMENTED] Pottery photographs (vilany tany, sinibe) on a plain background, an AAC or MP3 valiha track for Safari, a visible credits line for CC BY-SA media, the frontend Dockerfile and Compose entry (FE-05), and removal of the dev-only motion lab once Sesedra picks an intro and a transition.
+- A parallel branch `feature/gallery-3d` (WebGL room, 34 files, new dependencies) starts from the FE-01 branch and edits `apps/frontend/package.json`, `package-lock.json` and `src/main.tsx`. Integrate it after FE-02 and resolve those three files together. Its dependencies need the same approval from endy-rkt.
 
 - [CREATED, NOT EXECUTED] Added [CI](../../.github/workflows/ci.yml), [Dependabot](../../.github/dependabot.yml) and the [CI guide](../development/ci.md). Contributor and agent docs point to the guide and the required `ci-ok` status.
 - PyYAML 6.0.3 parsed both YAML files. `actionlint` was unavailable. No hosted jobs, scans, builds or tests ran.
