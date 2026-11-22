@@ -1,6 +1,7 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { AssetsModule } from './assets/assets.module.js';
 import { APP_CONFIG, type AppConfig } from './config/app-config.js';
+import { GenerationModule } from './generation/generation.module.js';
 import { HealthModule } from './health/health.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 
@@ -10,7 +11,7 @@ export class AppModule {
     return {
       module: AppModule,
       global: true,
-      imports: [PrismaModule, HealthModule, AssetsModule],
+      imports: [PrismaModule, HealthModule, AssetsModule, GenerationModule],
       providers: [{ provide: APP_CONFIG, useValue: config }],
       exports: [APP_CONFIG],
     };

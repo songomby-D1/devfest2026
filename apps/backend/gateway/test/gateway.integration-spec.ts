@@ -613,6 +613,89 @@ describe('gateway', () => {
     });
   });
 
+  describe('image-to-3D generations', () => {
+    const GENERATION_ID = '5c2a7e10-8b3d-4f6a-9e1c-2d3b4a5f6e7d';
+    const IMAGE = `data:image/png;base64,${'A'.repeat(1_200_000)}`;
+
+    it('requires a session and never calls LiDAR for a guest', async () => {
+      await request(http)
+        .post('/api/generations')
+        .set('origin', ORIGIN)
+        .send({ image: 'data:image/png;base64,AAAA' })
+        .expect(401);
+      await request(http).get(`/api/generations/${GENERATION_ID}`).expect(401);
+      expect(lidar.requests).toHaveLength(0);
+    });
+
+    it('forwards an image larger than the default JSON limit with the caller identity', async () => {
+      lidar.respond((_req, res) => {
+        json(res, 202, { id: GENERATION_ID, status: 'queued' });
+      });
+      await request(http)
+        .post('/api/generations')
+        .set('origin', ORIGIN)
+        .set('cookie', COOKIE)
+        .send({ image: IMAGE, title: 'Sobika' })
+        .expect(202, { id: GENERATION_ID, status: 'queued' });
+      const forwarded = lidar.last();
+      expect(forwarded.url).toBe('/internal/v1/generations');
+      expectServiceHeaders(forwarded, TOKENS.lidar);
+      expect(forwarded.headers['x-caller-user-id']).toBe(ACCOUNT_ID);
+      expect(parseJson(forwarded)).toEqual({ image: IMAGE, title: 'Sobika' });
+    });
+
+    it('relays the status and the model of one generation', async () => {
+      lidar.respond((req, res) => {
+        if (req.url.endsWith('/model.glb')) {
+          res
+            .writeHead(200, { 'content-type': 'model/gltf-binary' })
+            .end('glTF');
+          return;
+        }
+        json(res, 200, { id: GENERATION_ID, status: 'ready' });
+      });
+      await request(http)
+        .get(`/api/generations/${GENERATION_ID}`)
+        .set('cookie', COOKIE)
+        .expect(200, { id: GENERATION_ID, status: 'ready' });
+      expect(lidar.last().url).toBe(
+        `/internal/v1/generations/${GENERATION_ID}`,
+      );
+      const model = await request(http)
+        .get(`/api/generations/${GENERATION_ID}/model.glb`)
+        .set('cookie', COOKIE)
+        .expect(200);
+      expect(model.headers['content-type']).toBe('model/gltf-binary');
+    });
+
+    it('rejects a malformed generation ID before calling LiDAR', async () => {
+      await request(http)
+        .get('/api/generations/not-a-uuid')
+        .set('cookie', COOKIE)
+        .expect(400);
+      expect(lidar.requests).toHaveLength(0);
+    });
+
+    it('keeps LiDAR public errors such as an exhausted quota', async () => {
+      lidar.respond((_req, res) => {
+        json(res, 402, {
+          code: 'GENERATION_CREDITS_EXHAUSTED',
+          message: 'The 3D generation quota is exhausted.',
+          requestId: 'x',
+        });
+      });
+      const response = await request(http)
+        .post('/api/generations')
+        .set('origin', ORIGIN)
+        .set('cookie', COOKIE)
+        .send({ image: 'data:image/png;base64,AAAA' })
+        .expect(402);
+      expect(response.body).toMatchObject({
+        code: 'GENERATION_CREDITS_EXHAUSTED',
+      });
+    });
+  });
+
   it('reports upstream health', async () => {
     content.respond((_req, res) => {
       res.writeHead(503).end();

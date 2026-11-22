@@ -11,6 +11,8 @@ import { sessionCookieName } from '../session/session-cookie.js';
 /** Auth and operator bodies are small; other JSON bodies are item records and reviews. */
 const SMALL_JSON_LIMIT = '10kb';
 const JSON_LIMIT = '1mb';
+/** Image-to-3D requests carry one compressed image as a data URI (LiDAR caps it at 1.4 MB). */
+const GENERATION_JSON_LIMIT = '2mb';
 
 function securityHeaders(
   _request: Request,
@@ -56,6 +58,7 @@ export function configureApp(
     ),
   );
   app.use(['/api/auth', '/api/admin'], json({ limit: SMALL_JSON_LIMIT }));
+  app.use('/api/generations', json({ limit: GENERATION_JSON_LIMIT }));
   app.use('/api', json({ limit: JSON_LIMIT }));
   app.use(expressErrorHandler);
   app.enableShutdownHooks();

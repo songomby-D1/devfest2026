@@ -168,3 +168,34 @@ export interface Provenance {
 
 /** Public error body. It never carries internal details. */
 export type ApiErrorBody = PublicError;
+
+/*
+ * Image-to-3D generation (LiDAR, relayed by the gateway under /api/generations).
+ * Not in packages/shared yet: local types until the contract is agreed.
+ */
+export type GenerationStatus =
+  'queued' | 'modeling' | 'storing' | 'ready' | 'failed';
+
+export type GenerationErrorCode =
+  'GENERATION_REJECTED' | 'GENERATION_FAILED' | 'GENERATION_EXPIRED';
+
+export interface Generation {
+  id: string;
+  title: string;
+  status: GenerationStatus;
+  /** 0 to 100. */
+  progress: number;
+  /** Same-origin GLB path once ready. */
+  modelUrl: string | null;
+  posterUrl: string | null;
+  errorCode: GenerationErrorCode | null;
+  createdAt: string;
+}
+
+export interface CreateGenerationRequest {
+  /** `data:image/jpeg;base64,...`, at most 1.4 MB once decoded. */
+  image: string;
+  title?: string;
+  /** Optional hint for the texture, at most 600 characters. */
+  texturePrompt?: string;
+}

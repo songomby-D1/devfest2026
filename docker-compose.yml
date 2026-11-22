@@ -229,6 +229,9 @@ services:
       STORAGE_FORCE_PATH_STYLE: 'true'
       STORAGE_ACCESS_KEY_ID: ${SEAWEEDFS_LIDAR_ACCESS_KEY:?Set SEAWEEDFS_LIDAR_ACCESS_KEY}
       STORAGE_SECRET_ACCESS_KEY: ${SEAWEEDFS_LIDAR_SECRET_KEY:?Set SEAWEEDFS_LIDAR_SECRET_KEY}
+      # Image-to-3D generation: optional, disabled unless both values are set.
+      MESHY_API_KEY: ${MESHY_API_KEY:-}
+      LIDAR_INBOUND_TOKEN_GATEWAY: ${SERVICE_TOKEN_GATEWAY_TO_LIDAR:-}
     expose: ['3000']
     healthcheck:
       test:

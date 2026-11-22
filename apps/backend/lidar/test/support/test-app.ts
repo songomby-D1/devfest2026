@@ -76,6 +76,7 @@ export async function createTestApp(
       forcePathStyle: true,
       credentials: new StorageCredentials('test-access-key', 'test-secret-key'),
     },
+    generation: null,
   };
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register(config)],

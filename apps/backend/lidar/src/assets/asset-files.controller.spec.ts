@@ -53,6 +53,7 @@ const config: AppConfig = {
     forcePathStyle: true,
     credentials: new StorageCredentials('unused', 'unused'),
   },
+  generation: null,
 };
 
 function pendingAsset(): AssetRecord {

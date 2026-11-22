@@ -11,6 +11,13 @@ type ModelViewerAttributes = DetailedHTMLProps<
   'camera-controls'?: boolean;
   'tone-mapping'?: 'neutral' | 'aces' | 'agx';
   'max-camera-orbit'?: string;
+  'auto-rotate'?: boolean;
+  'rotation-speed'?: string;
+  'shadow-intensity'?: string;
+  exposure?: string;
+  ar?: boolean;
+  'ar-modes'?: string;
+  'interaction-prompt'?: 'auto' | 'none';
 };
 
 declare module 'react' {

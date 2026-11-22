@@ -7,6 +7,19 @@ describe('matchRoute', () => {
     expect(matchRoute('/visite/extra')).toEqual({ kind: 'not-found' });
   });
 
+  it('maps the exhibitions and redirects their index to the first one', () => {
+    expect(matchRoute('/expositions')).toEqual({
+      kind: 'redirect',
+      to: '/expositions/1',
+    });
+    expect(matchRoute('/expositions/1')).toEqual({
+      kind: 'exhibition',
+      id: '1',
+    });
+    expect(matchRoute('/expositions/1/extra')).toEqual({ kind: 'not-found' });
+    expect(matchRoute('/expositions/%E0%A4%A')).toEqual({ kind: 'not-found' });
+  });
+
   it('maps the root to the home screen', () => {
     expect(matchRoute('/')).toEqual({ kind: 'home' });
   });
