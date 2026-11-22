@@ -23,6 +23,36 @@ export interface Chapter {
   readonly generated: boolean;
 }
 
+export interface Tariff {
+  readonly id: string;
+  readonly label: string;
+  readonly detail: string;
+  /** In ariary; 0 is free. */
+  readonly price: number;
+}
+
+/** The exhibition on site, for visitors who prefer the real thing. */
+export interface Visit {
+  readonly venue: string;
+  readonly address: string;
+  readonly city: string;
+  /** Calendar days, `YYYY-MM-DD`, in Antananarivo time. */
+  readonly opens: string;
+  readonly closes: string;
+  /** 0 is Sunday, as in Date#getUTCDay. */
+  readonly closedWeekdays: readonly number[];
+  readonly hours: string;
+  /** Entry times, `HH:MM`. */
+  readonly slots: readonly string[];
+  readonly slotMinutes: number;
+  readonly tariffs: readonly Tariff[];
+  /** How the visitor pays at the desk. */
+  readonly payment: string;
+  /** Which tariffs need a document at the desk. */
+  readonly proof: string;
+  readonly maxTickets: number;
+}
+
 export interface Exhibition {
   readonly id: string;
   readonly number: string;
@@ -30,6 +60,7 @@ export interface Exhibition {
   readonly subtitle: string;
   readonly curator: string;
   readonly chapters: readonly Chapter[];
+  readonly visit: Visit;
 }
 
 const MODELS = '/models/exposition';
@@ -130,6 +161,47 @@ export const exhibitions: readonly Exhibition[] = [
         generated: false,
       },
     ],
+    // Demo data: venue, dates and prices are not yet confirmed with the museum.
+    visit: {
+      venue: 'Musée d’Art et d’Archéologie',
+      address: '17 rue du Docteur Villette, Isoraka',
+      city: 'Antananarivo',
+      opens: '2026-12-05',
+      closes: '2027-02-27',
+      closedWeekdays: [0, 1],
+      hours: 'Du mardi au samedi, 9 h – 12 h et 14 h – 17 h',
+      slots: ['09:00', '10:30', '14:00', '15:30'],
+      slotMinutes: 90,
+      tariffs: [
+        {
+          id: 'resident',
+          label: 'Résident',
+          detail: 'Nationaux et résidents à Madagascar',
+          price: 5000,
+        },
+        {
+          id: 'non-resident',
+          label: 'Non-résident',
+          detail: 'Visiteurs étrangers',
+          price: 25000,
+        },
+        {
+          id: 'etudiant',
+          label: 'Étudiant',
+          detail: 'Sur présentation de la carte',
+          price: 2000,
+        },
+        {
+          id: 'enfant',
+          label: 'Enfant',
+          detail: 'Moins de 12 ans, accompagné',
+          price: 0,
+        },
+      ],
+      payment: 'en espèces ou par Mobile Money',
+      proof: 'Tarifs résident et étudiant sur justificatif à l’accueil.',
+      maxTickets: 8,
+    },
   },
 ];
 

@@ -196,6 +196,48 @@
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+/* Visible on wide screens; on narrow ones the icon stays and the name is read aloud. */
+.actionLabel {
+  white-space: nowrap;
+}
+
+.realVisit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-14) var(--space-16);
+  margin-top: var(--space-20);
+  color: var(--color-paper);
+  text-decoration: none;
+  background: linear-gradient(
+    90deg,
+    rgb(103 39 31 / 0.55),
+    rgb(103 39 31 / 0.15)
+  );
+  border-left: 2px solid var(--color-gold);
+  transition: background var(--duration-base) var(--ease-out);
+}
+
+.realVisit:hover {
+  background: linear-gradient(
+    90deg,
+    rgb(103 39 31 / 0.8),
+    rgb(103 39 31 / 0.3)
+  );
+}
+
+.realVisitKicker {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+}
+
+.realVisitText {
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
 /* Wall text ------------------------------------------------------------- */
 
 .story {
@@ -1015,7 +1057,28 @@
   }
 
   .ghost {
-    padding: 0 var(--space-14);
+    padding: 0 var(--spacing-sm);
+  }
+
+  .actionLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .realVisit {
+    margin-top: var(--space-10);
+    padding: var(--space-10) var(--space-14);
+  }
+
+  .realVisitKicker {
+    display: none;
+  }
+
+  .realVisitText {
+    font-size: 18px;
   }
 
   .vignette {
